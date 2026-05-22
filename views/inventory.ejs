@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory Form | Logistic Management System</title>
+
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --sidebar-collapsed: 80px;
+        --sidebar-expanded: 260px;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: var(--sidebar-collapsed);
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: #0d1b2a;
+        overflow: hidden;
+        transition: 0.3s;
+        z-index: 1000;
+      }
+
+      .sidebar.expand {
+        width: var(--sidebar-expanded);
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .toggle-btn {
+        border: none;
+        background: none;
+        color: white;
+        font-size: 28px;
+      }
+
+      .logo-text {
+        display: none;
+        color: #4cc9f0;
+        font-weight: bold;
+        font-size: 22px;
+      }
+
+      .sidebar.expand .logo-text {
+        display: block;
+      }
+
+      .sidebar a {
+        display: flex;
+        align-items: center;
+        color: white;
+        text-decoration: none;
+        padding: 18px 25px;
+      }
+
+      .sidebar a:hover {
+        background: #1b263b;
+        color: #4cc9f0;
+      }
+
+      .sidebar i {
+        font-size: 24px;
+        min-width: 30px;
+      }
+
+      .menu-text {
+        display: none;
+        margin-left: 15px;
+      }
+
+      .sidebar.expand .menu-text {
+        display: block;
+      }
+
+      /* Main */
+      .main {
+        margin-left: var(--sidebar-collapsed);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: 0.3s;
+        background: #f4f7fc;
+      }
+
+      .main.expand {
+        margin-left: var(--sidebar-expanded);
+      }
+
+      /* Topbar */
+      .topbar {
+        background: white;
+        padding: 15px 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      /* Form card */
+      .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      }
+
+      .form-title {
+        color: #0d1b2a;
+        font-weight: bold;
+      }
+
+      /* footer */
+      footer {
+        margin-top: auto;
+        background: white;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar.expand {
+          width: 220px;
+        }
+
+        .main.expand {
+          margin-left: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="toggle-btn" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <span class="logo-text">LMS</span>
+      </div>
+
+      <a href="/dashboard"
+        ><i class="bi bi-speedometer2"></i
+        ><span class="menu-text">Dashboard</span></a
+      >
+      <a href="/inventory"
+        ><i class="bi bi-box-seam"></i
+        ><span class="menu-text">Inventory</span></a
+      >
+      <a href="/shipments"
+        ><i class="bi bi-truck"></i><span class="menu-text">Shipments</span></a
+      >
+      <a href="/warehouse"
+        ><i class="bi bi-building"></i
+        ><span class="menu-text">Warehouse</span></a
+      >
+      <a href="/users"
+        ><i class="bi bi-people"></i><span class="menu-text">Users</span></a
+      >
+    </div>
+
+    <!-- Main -->
+    <div class="main" id="main">
+      <!-- Topbar -->
+      <div class="topbar d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-0">Inventory Management</h4>
+          <small class="text-muted">Add and manage stock across branches</small>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-bell fs-4"></i>
+          <img src="https://i.pravatar.cc/40" class="rounded-circle" />
+        </div>
+      </div>
+
+      <!-- Inventory Modal -->
+      <div
+        class="modal fade"
+        id="inventoryModal"
+        tabindex="-1"
+        aria-labelledby="inventoryModalLabel"
+        aria-hidden="true"
+      >
+        <div
+          class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+        >
+          <div class="modal-content">
+            <!-- Header -->
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="inventoryModalLabel">
+                <i class="bi bi-box-seam"></i> Inventory Entry Form
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+              <form id="inventoryForm">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Product Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Enter product name"
+                    />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">SKU Code</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="SKU-001"
+                    />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label">Category</label>
+                    <select class="form-select">
+                      <option>Electronics</option>
+                      <option>Furniture</option>
+                      <option>Food</option>
+                      <option>Medicine</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control" />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label">Unit Price</label>
+                    <input type="number" class="form-control" />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Warehouse Branch</label>
+                    <select class="form-select">
+                      <option>Manila</option>
+                      <option>Cebu</option>
+                      <option>Davao</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Supplier</label>
+                    <input type="text" class="form-control" />
+                  </div>
+
+                  <div class="col-md-12">
+                    <label class="form-label">Product Description</label>
+                    <textarea class="form-control" rows="4"></textarea>
+                  </div>
+
+                  <div class="col-md-12">
+                    <label class="form-label">Upload Product Image</label>
+                    <input type="file" class="form-control" />
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+
+              <button type="reset" form="inventoryForm" class="btn btn-warning">
+                Reset
+              </button>
+
+              <button
+                type="submit"
+                form="inventoryForm"
+                class="btn btn-primary"
+              >
+                <i class="bi bi-save"></i> Save Inventory
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory Records Table -->
+      <div class="form-card mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="form-title mb-0">
+            <i class="bi bi-table"></i> Inventory Records
+          </h4>
+          <div class="d-flex gap-2">
+            <button
+              class="btn btn-success"
+              data-bs-toggle="modal"
+              data-bs-target="#addUserModal"
+            >
+              <i class="bi bi-file-earmark-excel"></i> Export
+            </button>
+
+            <button
+              class="btn btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#inventoryModal"
+            >
+              <i class="bi bi-plus-circle"></i> Add Inventory
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Warehouse</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Laptop Dell</td>
+                <td>SKU-001</td>
+                <td>Electronics</td>
+                <td>25</td>
+                <td>₱45,000</td>
+                <td>Manila</td>
+                <td>ABC Supplier</td>
+                <td>
+                  <span class="badge bg-success"> Active </span>
+                </td>
+                <td>2026-05-22</td>
+                <td>
+                  <button class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>2</td>
+                <td>Office Chair</td>
+                <td>SKU-002</td>
+                <td>Furniture</td>
+                <td>15</td>
+                <td>₱5,500</td>
+                <td>Cebu</td>
+                <td>XYZ Supply</td>
+                <td>
+                  <span class="badge bg-warning text-dark"> Low Stock </span>
+                </td>
+                <td>2026-05-22</td>
+                <td>
+                  <button class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>3</td>
+                <td>Medical Gloves</td>
+                <td>SKU-003</td>
+                <td>Medicine</td>
+                <td>0</td>
+                <td>₱500</td>
+                <td>Davao</td>
+                <td>MedSupply</td>
+                <td>
+                  <span class="badge bg-danger"> Out of Stock </span>
+                </td>
+                <td>2026-05-22</td>
+                <td>
+                  <button class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer>© 2026 Logistic Management System | Inventory Module</footer>
+    </div>
+
+    <script>
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("expand");
+        document.getElementById("main").classList.toggle("expand");
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
