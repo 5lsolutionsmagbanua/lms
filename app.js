@@ -6,8 +6,11 @@ var logger = require("morgan");
 var { CheckConnection } = require("./repository/dbconnection");
 
 var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
 var dashboardRouter = require("./routes/dashboard");
+var vendorRouter = require("./routes/vendor");
+var branchRouter = require("./routes/branch");
+var clientRouter = require("./routes/client");
+var usersRouter = require("./routes/users");
 var inventoryRouter = require("./routes/inventory");
 var shipmentsRouter = require("./routes/shipments");
 var warehouseRouter = require("./routes/warehouse");
@@ -15,7 +18,7 @@ var warehouseRouter = require("./routes/warehouse");
 var app = express();
 // console.log("working", CheckConnection())
 // view engine setup
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(__dirname, "views/layout"));
 app.set("view engine", "ejs");
 
 app.use(logger("dev"));
@@ -25,8 +28,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 app.use("/dashboard", dashboardRouter);
+app.use("/vendor", vendorRouter);
+app.use("/branch", branchRouter);
+app.use("/client", clientRouter);
+app.use("/users", usersRouter);
 app.use("/inventory", inventoryRouter);
 app.use("/shipments", shipmentsRouter);
 app.use("/warehouse", warehouseRouter);

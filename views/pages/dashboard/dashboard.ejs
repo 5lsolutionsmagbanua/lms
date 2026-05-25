@@ -1,0 +1,247 @@
+<div class="main-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- Page Heading -->
+    <div class="page-heading">
+      <div class="page-heading-copy">
+        <span class="page-icon">
+          <i class="bi bi-truck" aria-hidden="true"></i>
+        </span>
+        <div>
+          <p class="eyebrow mb-1">Overview</p>
+          <h1 class="h3 mb-1">Logistic Dashboard</h1>
+          <p class="text-muted mb-0">
+            Monitor warehouse operations, shipments, and delivery performance.
+          </p>
+        </div>
+      </div>
+
+      <div class="heading-actions">
+        <button class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-download"></i> Export
+        </button>
+        <button class="btn btn-primary btn-sm">
+          <i class="bi bi-plus-circle"></i> Add Shipment
+        </button>
+      </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <section class="row g-3 mt-1">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="metric-card metric-primary">
+          <div class="metric-top">
+            <span class="metric-label">Total Orders</span>
+            <span class="metric-icon">
+              <i class="bi bi-cart"></i>
+            </span>
+          </div>
+          <div class="metric-value">1,245</div>
+          <div class="metric-meta">
+            <span class="text-success">+15%</span>
+            <span>this month</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="metric-card metric-warning">
+          <div class="metric-top">
+            <span class="metric-label">Pending</span>
+            <span class="metric-icon">
+              <i class="bi bi-clock-history"></i>
+            </span>
+          </div>
+          <div class="metric-value">134</div>
+          <div class="metric-meta">
+            <span class="text-warning">Needs action</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="metric-card metric-success">
+          <div class="metric-top">
+            <span class="metric-label">Delivered</span>
+            <span class="metric-icon">
+              <i class="bi bi-check-circle"></i>
+            </span>
+          </div>
+          <div class="metric-value">987</div>
+          <div class="metric-meta">
+            <span class="text-success">79%</span>
+            <span>completed</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="metric-card metric-danger">
+          <div class="metric-top">
+            <span class="metric-label">Warehouses</span>
+            <span class="metric-icon">
+              <i class="bi bi-building"></i>
+            </span>
+          </div>
+          <div class="metric-value">12</div>
+          <div class="metric-meta">
+            <span class="text-danger">3 branches</span>
+            <span>active</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Charts and Activity -->
+    <section class="row g-3 mt-2">
+      <div class="col-12 col-xl-8">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="h5 mb-1 section-title">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Shipment Performance</span>
+              </h2>
+              <p class="text-muted mb-0">
+                Monthly shipment processing overview.
+              </p>
+            </div>
+          </div>
+
+          <div class="chart-bars">
+            <div class="chart-column bar-45">
+              <span></span><small>Jan</small>
+            </div>
+            <div class="chart-column bar-60">
+              <span></span><small>Feb</small>
+            </div>
+            <div class="chart-column bar-52">
+              <span></span><small>Mar</small>
+            </div>
+            <div class="chart-column bar-70">
+              <span></span><small>Apr</small>
+            </div>
+            <div class="chart-column bar-85">
+              <span></span><small>May</small>
+            </div>
+            <div class="chart-column bar-90">
+              <span></span><small>Jun</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-4">
+        <div class="panel h-100">
+          <div class="panel-header">
+            <div>
+              <h2 class="h5 mb-1 section-title">
+                <i class="bi bi-activity"></i>
+                <span>Branch Activity</span>
+              </h2>
+              <p class="text-muted mb-0">Latest warehouse updates.</p>
+            </div>
+          </div>
+
+          <div class="activity-list">
+            <div class="activity-item">
+              <span class="activity-dot bg-primary"></span>
+              <div>
+                <p class="mb-1 fw-semibold">New shipment received</p>
+                <p class="text-muted small mb-0">
+                  Manila warehouse processed 45 items.
+                </p>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <span class="activity-dot bg-success"></span>
+              <div>
+                <p class="mb-1 fw-semibold">Delivery completed</p>
+                <p class="text-muted small mb-0">
+                  Cebu branch delivered 18 packages.
+                </p>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <span class="activity-dot bg-warning"></span>
+              <div>
+                <p class="mb-1 fw-semibold">Delayed route</p>
+                <p class="text-muted small mb-0">
+                  Davao route delayed by weather conditions.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Shipments -->
+    <section class="panel mt-3">
+      <div class="panel-header">
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-table"></i>
+            <span>Recent Shipments</span>
+          </h2>
+          <p class="text-muted mb-0">
+            Latest shipment records across all branches.
+          </p>
+        </div>
+
+        <button class="btn btn-outline-secondary btn-sm">View All</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Tracking ID</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Branch</th>
+              <th>Date</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>#TRK001</td>
+              <td>John Doe</td>
+              <td><span class="badge text-bg-success">Delivered</span></td>
+              <td>Manila</td>
+              <td>May 22</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">View</button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>#TRK002</td>
+              <td>Anna Cruz</td>
+              <td><span class="badge text-bg-warning">Pending</span></td>
+              <td>Cebu</td>
+              <td>May 22</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">View</button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>#TRK003</td>
+              <td>Mike Santos</td>
+              <td><span class="badge text-bg-primary">In Transit</span></td>
+              <td>Davao</td>
+              <td>May 21</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">View</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>

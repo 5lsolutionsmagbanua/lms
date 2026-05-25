@@ -1,0 +1,126 @@
+<aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <a class="brand-mark" href="/dashboard" aria-label="adminHMD dashboard">
+      <span class="brand-icon d-flex align-items-center justify-content-center">
+        <img
+          src="assets/images/brand/logo/logo.png"
+          alt="Logo"
+          style="width: 50px; height: 50px; object-fit: cover"
+        />
+      </span>
+      <span class="brand-copy">
+        <span class="brand-title">LMS</span>
+        <span class="brand-subtitle">5L Logistic Management System</span>
+      </span>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- Dashboard -->
+    <a class="nav-link active" href="/dashboard" aria-current="page">
+      <span class="nav-icon">
+        <i class="bi bi-speedometer2" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Dashboard</span>
+    </a>
+
+    <!-- Master Users Dropdown -->
+    <a
+      class="nav-link"
+      data-bs-toggle="collapse"
+      href="#masterUsersMenu"
+      role="button"
+      aria-expanded="false"
+    >
+      <span class="nav-icon">
+        <i class="bi bi-people" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Master Users</span>
+      <span class="ms-auto">
+        <i class="bi bi-chevron-down"></i>
+      </span>
+    </a>
+
+    <div class="collapse ps-1" id="masterUsersMenu">
+      <a class="nav-link" href="/vendor">
+        <i class="bi bi-shop"></i> <span>Vendor</span>
+      </a>
+
+      <a class="nav-link" href="/branch">
+        <i class="bi bi-diagram-3"></i> <span>Branch</span>
+      </a>
+
+      <a class="nav-link" href="/access">
+        <i class="bi bi-shield-lock"></i> <span>Access</span>
+      </a>
+
+      <a class="nav-link" href="/prefix">
+        <i class="bi bi-tag"></i> <span>Prefix</span>
+      </a>
+
+      <a class="nav-link" href="/client">
+        <i class="bi bi-people"></i> <span>Client</span>
+      </a>
+
+      <a class="nav-link" href="/employees">
+        <i class="bi bi-person-badge"></i> <span>Employees</span>
+      </a>
+
+      <a class="nav-link" href="/users">
+        <i class="bi bi-person-circle"></i> <span>Users</span>
+      </a>
+
+      <a class="nav-link" href="/salesman">
+        <i class="bi bi-briefcase"></i> <span>Salesman</span>
+      </a>
+
+      <a class="nav-link" href="/currency">
+        <i class="bi bi-cash-coin"></i> <span>Currency</span>
+      </a>
+    </div>
+
+    <!-- Inventory -->
+    <a class="nav-link" href="/inventory">
+      <span class="nav-icon">
+        <i class="bi bi-box-seam" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Inventory</span>
+    </a>
+
+    <!-- Shipments -->
+    <a class="nav-link" href="/shipments">
+      <span class="nav-icon">
+        <i class="bi bi-truck" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Shipments</span>
+    </a>
+
+    <!-- Warehouse -->
+    <a class="nav-link" href="/warehouse">
+      <span class="nav-icon">
+        <i class="bi bi-building" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Warehouses</span>
+    </a>
+
+    <!-- Profile -->
+    <a class="nav-link" href="/profile">
+      <span class="nav-icon">
+        <i class="bi bi-person-badge" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Profile</span>
+    </a>
+
+    <!-- Settings -->
+    <a class="nav-link" href="/settings">
+      <span class="nav-icon">
+        <i class="bi bi-gear" aria-hidden="true"></i>
+      </span>
+      <span class="nav-text">Settings</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>
+    <span class="sidebar-footer-text">System running smoothly</span>
+  </div>
+</aside>

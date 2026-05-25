@@ -1,0 +1,208 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- Panel -->
+    <section class="panel">
+      <!-- Header Actions -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-shop"></i>
+            <span style="font-weight: 700; color: #000">
+              Vendor Management
+            </span>
+          </h2>
+          <p class="text-muted mb-0">
+            Search, sync, import, and manage vendor records.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addVendorModal"
+          >
+            <i class="bi bi-plus-circle"></i> Add Vendor
+          </button>
+
+          <button class="btn btn-sm btn-success">
+            <i class="bi bi-upload"></i> Upload Excel
+          </button>
+
+          <button class="btn btn-sm btn-dark">
+            <i class="bi bi-download"></i> Download Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search vendors..."
+          data-table-search="vendorTable"
+          aria-label="Search vendors"
+        />
+      </div>
+
+      <!-- Table -->
+      <!-- Table -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="vendorTable"
+          data-searchable-table
+        >
+          <!-- BLACK THEAD -->
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Business Name</th>
+              <th>SO Prefix</th>
+              <th>PR Prefix</th>
+              <th>Business Type</th>
+              <th>Contact Person</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Mobile</th>
+              <th>Address</th>
+              <th>TIN</th>
+              <th>Created At</th>
+              <th>Created By</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>ABC Trading Corp</td>
+              <td>SO-2026-05-0001</td>
+              <td>PR-2026-05-0001</td>
+              <td>Distributor</td>
+              <td>Juan Dela Cruz</td>
+              <td>abc@email.com</td>
+              <td>+63 2 8123 4567</td>
+              <td>+63 917 123 4567</td>
+              <td>Quezon City</td>
+              <td>123-456-789-000</td>
+              <td>May 25, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">2</td>
+              <td>Metro Logistics Inc</td>
+              <td>SO-2026-05-0002</td>
+              <td>PR-2026-05-0002</td>
+              <td>Logistics</td>
+              <td>Maria Santos</td>
+              <td>metro@logistics.com</td>
+              <td>+63 2 8888 1122</td>
+              <td>+63 918 222 3344</td>
+              <td>Manila</td>
+              <td>111-222-333-000</td>
+              <td>May 24, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">3</td>
+              <td>Global Supply Co</td>
+              <td>SO-2026-05-0003</td>
+              <td>PR-2026-05-0003</td>
+              <td>Supplier</td>
+              <td>John Reyes</td>
+              <td>global@supply.com</td>
+              <td>+63 2 7777 8899</td>
+              <td>+63 919 555 7788</td>
+              <td>Quezon City</td>
+              <td>222-333-444-000</td>
+              <td>May 23, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">4</td>
+              <td>Prime Distribution</td>
+              <td>SO-2026-05-0004</td>
+              <td>PR-2026-05-0004</td>
+              <td>Distributor</td>
+              <td>Anna Lopez</td>
+              <td>prime@dist.com</td>
+              <td>+63 2 6666 4455</td>
+              <td>+63 920 111 2233</td>
+              <td>Pasig City</td>
+              <td>333-444-555-000</td>
+              <td>May 22, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">5</td>
+              <td>Skyline Traders</td>
+              <td>SO-2026-05-0005</td>
+              <td>PR-2026-05-0005</td>
+              <td>Trading</td>
+              <td>Mark Cruz</td>
+              <td>skyline@trade.com</td>
+              <td>+63 2 9999 1010</td>
+              <td>+63 921 888 9999</td>
+              <td>Taguig</td>
+              <td>444-555-666-000</td>
+              <td>May 21, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

@@ -1,0 +1,127 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- Panel -->
+    <section class="panel">
+      <!-- Header Actions -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-diagram-3"></i>
+            <span style="font-weight: 700; color: #000">
+              Branch Management
+            </span>
+          </h2>
+          <p class="text-muted mb-0">
+            Manage branch records, codes, and status.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addBranchModal"
+          >
+            <i class="bi bi-plus-circle"></i> Add Branch
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search branch..."
+          data-table-search="branchTable"
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="branchTable"
+          data-searchable-table
+        >
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Branch Name</th>
+              <th>Branch Code</th>
+              <th>Created At</th>
+              <th>Created By</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>Main Branch</td>
+              <td>BR-001</td>
+              <td>May 25, 2026</td>
+              <td>Admin</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">2</td>
+              <td>North Branch</td>
+              <td>BR-002</td>
+              <td>May 24, 2026</td>
+              <td>Admin</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">3</td>
+              <td>South Branch</td>
+              <td>BR-003</td>
+              <td>May 23, 2026</td>
+              <td>Admin</td>
+              <td>
+                <span class="badge text-bg-warning">Inactive</span>
+              </td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
