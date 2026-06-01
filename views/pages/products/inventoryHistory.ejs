@@ -1,0 +1,136 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+
+    <!-- Panel -->
+    <section class="panel">
+
+      <!-- Header -->
+      <div class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-clock-history"></i>
+            <span style="font-weight:700; color:#000;">
+              Inventory History
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Track inventory movement and transaction history.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search inventory history..."
+          data-table-search="inventoryHistoryTable"
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="inventoryHistoryTable"
+          data-searchable-table
+        >
+
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Product Name</th>
+              <th>Product Code</th>
+              <th>Branch Name</th>
+              <th>Quantity</th>
+              <th>Type</th>
+              <th>Process Date</th>
+              <th>Process By</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>Wireless Barcode Scanner</td>
+              <td>PRD-1001</td>
+              <td>Quezon City Branch</td>
+              <td>+20 PCS</td>
+              <td>
+                <span class="badge text-bg-success">Stock In</span>
+              </td>
+              <td>May 28, 2026</td>
+              <td>Juan Dela Cruz</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">2</td>
+              <td>Shipping Box Large</td>
+              <td>PRD-1002</td>
+              <td>Manila Branch</td>
+              <td>-50 BOX</td>
+              <td>
+                <span class="badge text-bg-danger">Stock Out</span>
+              </td>
+              <td>May 27, 2026</td>
+              <td>Maria Santos</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">3</td>
+              <td>Pallet Jack</td>
+              <td>PRD-1003</td>
+              <td>Pasig Branch</td>
+              <td>+5 UNIT</td>
+              <td>
+                <span class="badge text-bg-primary">Adjustment</span>
+              </td>
+              <td>May 26, 2026</td>
+              <td>Mark Cruz</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">4</td>
+              <td>Bubble Wrap Roll</td>
+              <td>PRD-1004</td>
+              <td>Taguig Branch</td>
+              <td>-10 ROLL</td>
+              <td>
+                <span class="badge text-bg-warning">Transfer</span>
+              </td>
+              <td>May 25, 2026</td>
+              <td>Anna Reyes</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">5</td>
+              <td>Label Printer</td>
+              <td>PRD-1005</td>
+              <td>Makati Branch</td>
+              <td>+3 PCS</td>
+              <td>
+                <span class="badge text-bg-success">Stock In</span>
+              </td>
+              <td>May 24, 2026</td>
+              <td>Admin</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+  </div>
+</main>

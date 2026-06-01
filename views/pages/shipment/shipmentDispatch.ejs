@@ -1,0 +1,432 @@
+<div class="modal fade" id="viewDispatchModal">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <!-- HEADER -->
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-receipt-cutoff"></i>
+          Waybill / Dispatch Details
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- WAYBILL HEADER INFO -->
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Waybill No.</label>
+            <input class="form-control" value="WB-26-06-0001" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Dispatch No.</label>
+            <input class="form-control" value="DSP-26-06-0001" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Shipment Plan</label>
+            <input class="form-control" value="SP-26-06-0001" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <input class="form-control" value="Dispatched" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Vehicle</label>
+            <input class="form-control" value="TRK-001" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Driver</label>
+            <input class="form-control" value="Juan Dela Cruz" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Route</label>
+            <input class="form-control" value="QC → Manila" readonly />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">ETA</label>
+            <input class="form-control" value="10:00 AM" readonly />
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- CONSIGNEE / CLIENT INFO -->
+        <h6 class="fw-bold">Consignee Information</h6>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Client</label>
+            <input class="form-control" value="ABC Trading Corp" readonly />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Contact Person</label>
+            <input class="form-control" value="Juan Dela Cruz" readonly />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Contact No.</label>
+            <input class="form-control" value="+639171234567" readonly />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Delivery Address</label>
+            <textarea class="form-control" rows="2" readonly>
+Quezon City, Metro Manila
+            </textarea>
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- WAYBILL ITEMS -->
+        <h6 class="fw-bold">Waybill Items</h6>
+
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-dark text-white">
+              <tr>
+                <th>Product Code</th>
+                <th>Description</th>
+                <th>Branch</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>PRD-001</td>
+                <td>Industrial Lubricant</td>
+                <td>Main Branch</td>
+                <td>50</td>
+                <td>PCS</td>
+                <td><span class="badge bg-success">Ready</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr />
+
+        <!-- REMARKS -->
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control" rows="3" readonly>
+Handle with care. Deliver before 10 AM.
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS (WAYBILL EXPORT) -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+        <button class="btn btn-outline-primary">
+          <i class="bi bi-printer"></i>
+          Print Waybill
+        </button>
+
+        <button class="btn btn-success">
+          <i class="bi bi-file-earmark-excel"></i>
+          Export Excel
+        </button>
+
+        <button class="btn btn-danger">
+          <i class="bi bi-file-pdf"></i>
+          Export PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addDispatchModal">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-truck-front"></i>
+          Add Dispatch Shipment
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Dispatch No.</label>
+            <input
+              type="text"
+              class="form-control"
+              value="DSP-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Shipment Plan</label>
+            <select class="form-select">
+              <option>Select Shipment Plan</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Vehicle</label>
+            <select class="form-select">
+              <option>Select Vehicle</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Driver</label>
+            <select class="form-select">
+              <option>Select Driver</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Helper</label>
+            <select class="form-select">
+              <option>Select Helper</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Dispatch Date</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Departure Time</label>
+            <input type="time" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">ETA</label>
+            <input type="datetime-local" class="form-control" />
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Route</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Quezon City → Manila"
+            />
+          </div>
+        </div>
+
+        <hr />
+
+        <h6 class="fw-bold">Dispatch Items</h6>
+
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Order ID</th>
+                <th>Client</th>
+                <th>Product Code</th>
+                <th>Description</th>
+                <th>Branch</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>SO-26-01-001</td>
+                <td>ABC Trading</td>
+                <td>PRD-001</td>
+                <td>Industrial Lubricant</td>
+                <td>Main Branch</td>
+                <td>50</td>
+                <td>PCS</td>
+                <td>
+                  <span class="badge bg-success">Ready</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-3">
+          <label class="form-label">Remarks</label>
+          <textarea class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Save Dispatch
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-truck-front"></i>
+            <span style="font-weight: 700; color: #000">
+              Dispatch Shipment
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage shipment dispatching, vehicle assignment, and delivery
+            schedules.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i>
+            Sync
+          </button>
+
+          <button class="btn btn-success btn-sm">
+            <i class="bi bi-upload"></i>
+            Upload Excel
+          </button>
+
+          <button class="btn btn-dark btn-sm">
+            <i class="bi bi-download"></i>
+            Download Excel
+          </button>
+
+          <button
+            class="btn btn-warning btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#dateRangeModal"
+          >
+            <i class="bi bi-calendar-range"></i>
+            Date Range
+          </button>
+
+          <button
+            class="btn btn-primary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#addDispatchModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Dispatch
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search dispatch shipment..."
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-dark text-white">
+            <tr>
+              <th>ID</th>
+              <th>Dispatch No.</th>
+              <th>Shipment Plan</th>
+              <th>Dispatch Date</th>
+              <th>Vehicle</th>
+              <th>Driver</th>
+              <th>Route</th>
+              <th>Total Orders</th>
+              <th>Departure Time</th>
+              <th>ETA</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Created At</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>DSP-26-06-0001</td>
+              <td>SP-26-06-0001</td>
+              <td>06/01/2026</td>
+              <td>TRK-001</td>
+              <td>Juan Dela Cruz</td>
+              <td>QC → Manila</td>
+              <td>15</td>
+              <td>08:00 AM</td>
+              <td>10:00 AM</td>
+              <td>
+                <span class="badge bg-success">Dispatched</span>
+              </td>
+              <td>Admin</td>
+              <td>06/01/2026</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDispatchModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDispatchModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button
+                  class="btn btn-success btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#exportDispatchModal"
+                >
+                  <i class="bi bi-file-earmark-arrow-down"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

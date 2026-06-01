@@ -31,7 +31,12 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: linear-gradient(180deg, #f8fbff 0%, var(--admin-bg) 42%, #eef4fa 100%);
+  background: linear-gradient(
+    180deg,
+    #f8fbff 0%,
+    var(--admin-bg) 42%,
+    #eef4fa 100%
+  );
   color: var(--admin-text);
   font-family: "Segoe UI", Arial, sans-serif;
 }
@@ -59,7 +64,9 @@ a {
   color: #ffffff;
   box-shadow: 18px 0 42px rgba(15, 23, 42, 0.18);
   transform: translateX(0);
-  transition: width 0.2s ease, transform 0.2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
 }
 
 .sidebar-header {
@@ -105,7 +112,9 @@ a {
 .nav-text,
 .sidebar-footer-text {
   min-width: 0;
-  transition: opacity 0.16s ease, width 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    width 0.16s ease;
 }
 
 .brand-title,
@@ -140,7 +149,10 @@ a {
   border-radius: 8px;
   color: #d1d5db;
   font-weight: 700;
-  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
   white-space: nowrap;
 }
 
@@ -258,7 +270,10 @@ a {
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .sidebar-toggle:hover,
@@ -302,7 +317,10 @@ a {
   background: #ffffff;
   color: var(--admin-text);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .icon-button:hover,
@@ -449,7 +467,11 @@ html[data-theme="dark"] .profile-button .avatar-sm {
   border-radius: 8px;
   font-weight: 700;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .btn:hover,
@@ -481,7 +503,10 @@ html[data-theme="dark"] .profile-button .avatar-sm {
   min-height: 164px;
   padding: 1.35rem;
   overflow: hidden;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .metric-card::before {
@@ -562,7 +587,9 @@ html[data-theme="dark"] .profile-button .avatar-sm {
 
 .panel {
   padding: 1.35rem;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .panel:hover {
@@ -607,7 +634,11 @@ html[data-theme="dark"] .profile-button .avatar-sm {
   min-height: 28px;
   display: block;
   border-radius: 8px 8px 3px 3px;
-  background: linear-gradient(180deg, var(--admin-primary), var(--admin-success));
+  background: linear-gradient(
+    180deg,
+    var(--admin-primary),
+    var(--admin-success)
+  );
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
 }
 
@@ -818,7 +849,12 @@ html[data-theme="dark"] .profile-button .avatar-sm {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: conic-gradient(var(--admin-primary) 0 42%, var(--admin-success) 42% 68%, var(--admin-warning) 68% 86%, var(--admin-danger) 86% 100%);
+  background: conic-gradient(
+    var(--admin-primary) 0 42%,
+    var(--admin-success) 42% 68%,
+    var(--admin-warning) 68% 86%,
+    var(--admin-danger) 86% 100%
+  );
   box-shadow: var(--admin-shadow-sm);
 }
 
@@ -1132,7 +1168,12 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="dark"] body {
-  background: linear-gradient(180deg, #111827 0%, var(--admin-bg) 48%, #0b1120 100%);
+  background: linear-gradient(
+    180deg,
+    #111827 0%,
+    var(--admin-bg) 48%,
+    #0b1120 100%
+  );
 }
 
 .brand-icon {
@@ -1376,7 +1417,11 @@ body,
 .modal-content,
 .form-control,
 .form-select {
-  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .table {

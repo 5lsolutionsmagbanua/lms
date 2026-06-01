@@ -1,0 +1,121 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+
+    <!-- PANEL -->
+    <section class="panel">
+
+      <!-- HEADER -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-clock-history"></i>
+
+            <span style="font-weight:700; color:#000;">
+              Receiving Activity
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Monitor receiving transaction logs and warehouse activities.
+          </p>
+        </div>
+
+        <!-- ACTION -->
+        <div class="d-flex flex-wrap gap-2">
+
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i>
+            Sync
+          </button>
+
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="px-3 pb-2">
+
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search receiving activity..."
+          data-table-search="receivingActivityTable"
+        />
+
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive">
+
+        <table
+          class="table align-middle mb-0"
+          id="receivingActivityTable"
+          data-searchable-table
+        >
+
+          <thead class="table-dark text-white">
+
+            <tr>
+              <th>ID</th>
+              <th>Receiving ID</th>
+              <th>Remarks</th>
+              <th>Created At</th>
+              <th>Created By</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>RR-2026-0001</td>
+              <td>Items successfully received from vendor</td>
+              <td>May 29, 2026 08:30 AM</td>
+              <td>Admin</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">2</td>
+              <td>RR-2026-0002</td>
+              <td>Partial delivery received</td>
+              <td>May 29, 2026 09:15 AM</td>
+              <td>Maria Santos</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">3</td>
+              <td>RR-2026-0003</td>
+              <td>Warehouse inventory updated</td>
+              <td>May 29, 2026 10:05 AM</td>
+              <td>Juan Dela Cruz</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">4</td>
+              <td>RR-2026-0004</td>
+              <td>Delivery receipt verified</td>
+              <td>May 29, 2026 11:20 AM</td>
+              <td>Mark Cruz</td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">5</td>
+              <td>RR-2026-0005</td>
+              <td>Receiving report exported to PDF</td>
+              <td>May 29, 2026 01:45 PM</td>
+              <td>Admin</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </div>
+</main>

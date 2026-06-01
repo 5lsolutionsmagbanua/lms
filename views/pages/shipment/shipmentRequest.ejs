@@ -1,0 +1,515 @@
+<div class="modal fade" id="editShipmentModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i>
+          Edit Shipment
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Shipment ID</label>
+            <input
+              type="text"
+              class="form-control"
+              value="SH-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Request Date</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Shipment Type</label>
+            <select class="form-select">
+              <option>Delivery</option>
+              <option>Transfer</option>
+              <option>Replacement</option>
+              <option>Return</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option>Pending</option>
+              <option>Approved</option>
+              <option>In Transit</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Client</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Contact Person</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label"> Delivery Address </label>
+
+            <textarea class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shipment Request Modal -->
+<div
+  class="modal fade"
+  id="shipmentRequestModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-truck"></i>
+          Shipment Request Form
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form>
+          <div class="row g-3">
+            <!-- Shipment Information -->
+            <div class="col-12">
+              <h6 class="fw-bold border-bottom pb-2">Shipment Information</h6>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Shipment ID</label>
+              <input
+                type="text"
+                class="form-control"
+                value="SH-26-06-0001"
+                readonly
+              />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Request Date</label>
+              <input type="date" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Shipment Type</label>
+              <select class="form-select">
+                <option>Delivery</option>
+                <option>Transfer</option>
+                <option>Replacement</option>
+                <option>Return</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Priority</label>
+              <select class="form-select">
+                <option>Normal</option>
+                <option>High</option>
+                <option>Urgent</option>
+              </select>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="col-12 mt-4">
+              <h6 class="fw-bold border-bottom pb-2">Customer Information</h6>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Client</label>
+              <select class="form-select">
+                <option>Select Client</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Sales Order No.</label>
+              <select class="form-select">
+                <option>Select Sales Order</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Branch</label>
+              <select class="form-select">
+                <option>Select Branch</option>
+              </select>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="col-12 mt-4">
+              <h6 class="fw-bold border-bottom pb-2">Delivery Information</h6>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Delivery Address</label>
+              <textarea class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Contact Person</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Juan Dela Cruz"
+              />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Contact Number</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="+639XXXXXXXXX"
+              />
+            </div>
+
+            <!-- Shipment Items -->
+            <div class="col-12 mt-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">Shipment Items</h6>
+
+                <button type="button" class="btn btn-success btn-sm">
+                  <i class="bi bi-plus-circle"></i>
+                  Add Item
+                </button>
+              </div>
+
+              <hr />
+            </div>
+
+            <div class="col-12">
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Product Code</th>
+                      <th>Description</th>
+                      <th>Branch</th>
+                      <th>Order Qty</th>
+                      <th>Unit</th>
+                      <th width="80">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr>
+                      <td>
+                        <input type="text" class="form-control" />
+                      </td>
+
+                      <td>
+                        <input type="text" class="form-control" />
+                      </td>
+
+                      <td>
+                        <select class="form-select">
+                          <option>Main Branch</option>
+                        </select>
+                      </td>
+
+                      <td>
+                        <input type="number" class="form-control" />
+                      </td>
+
+                      <td>
+                        <input type="text" class="form-control" />
+                      </td>
+
+                      <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="col-12">
+              <label class="form-label">Remarks</label>
+
+              <textarea class="form-control" rows="3"></textarea>
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+
+              <select class="form-select">
+                <option>Pending</option>
+                <option>Approved</option>
+                <option>Cancelled</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Save Shipment Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-truck"></i>
+            <span style="font-weight: 700; color: #000">
+              Shipment Management
+            </span>
+          </h2>
+          <p class="text-muted mb-0">
+            Manage shipment requests and delivery schedules.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button class="btn btn-success btn-sm">
+            <i class="bi bi-upload"></i> Upload Excel
+          </button>
+
+          <button class="btn btn-dark btn-sm">
+            <i class="bi bi-download"></i> Download Excel
+          </button>
+
+          <button
+            class="btn btn-primary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#shipmentRequestModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Shipment
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-3">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search shipment..."
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Shipment ID</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Client</th>
+              <th>Branch</th>
+              <th>Contact Person</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>SH-26-06-0001</td>
+              <td>Jun 01, 2026</td>
+              <td>Delivery</td>
+              <td>ABC Trading Corp</td>
+              <td>Main Branch</td>
+              <td>Juan Dela Cruz</td>
+              <td>
+                <span class="badge bg-warning"> Pending </span>
+              </td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>2</td>
+              <td>SH-26-06-0002</td>
+              <td>Jun 01, 2026</td>
+              <td>Transfer</td>
+              <td>Metro Logistics</td>
+              <td>North Branch</td>
+              <td>Maria Santos</td>
+              <td>
+                <span class="badge bg-success"> Approved </span>
+              </td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>3</td>
+              <td>SH-26-06-0003</td>
+              <td>Jun 02, 2026</td>
+              <td>Delivery</td>
+              <td>Skyline Traders</td>
+              <td>South Branch</td>
+              <td>Mark Cruz</td>
+              <td>
+                <span class="badge bg-info"> In Transit </span>
+              </td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>4</td>
+              <td>SH-26-06-0004</td>
+              <td>Jun 03, 2026</td>
+              <td>Replacement</td>
+              <td>Global Supply</td>
+              <td>Main Branch</td>
+              <td>John Reyes</td>
+              <td>
+                <span class="badge bg-secondary"> Cancelled </span>
+              </td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>5</td>
+              <td>SH-26-06-0005</td>
+              <td>Jun 03, 2026</td>
+              <td>Return</td>
+              <td>Prime Distribution</td>
+              <td>East Branch</td>
+              <td>Anna Lopez</td>
+              <td>
+                <span class="badge bg-success"> Completed </span>
+              </td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

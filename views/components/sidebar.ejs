@@ -1,13 +1,7 @@
 <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
   <div class="sidebar-header">
-    <a class="brand-mark" href="/dashboard" aria-label="adminHMD dashboard">
-      <span class="brand-icon d-flex align-items-center justify-content-center">
-        <img
-          src="assets/images/brand/logo/logo.png"
-          alt="Logo"
-          style="width: 50px; height: 50px; object-fit: cover"
-        />
-      </span>
+    <a class="brand-mark" href="/dashboard" aria-label="LMS dashboard">
+      <i class="bi bi-motherboard" style="font-size: 32px"></i>
       <span class="brand-copy">
         <span class="brand-title">LMS</span>
         <span class="brand-subtitle">5L Logistic Management System</span>
@@ -16,109 +10,387 @@
   </div>
 
   <nav class="sidebar-nav">
-    <!-- Dashboard -->
-    <a class="nav-link active" href="/dashboard" aria-current="page">
-      <span class="nav-icon">
-        <i class="bi bi-speedometer2" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Dashboard</span>
-    </a>
+    <ul class="sidebar-menu list-unstyled m-0">
+      <!-- Dashboard -->
+      <li>
+        <a class="nav-link active" href="/dashboard">
+          <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+      </li>
 
-    <!-- Master Users Dropdown -->
-    <a
-      class="nav-link"
-      data-bs-toggle="collapse"
-      href="#masterUsersMenu"
-      role="button"
-      aria-expanded="false"
-    >
-      <span class="nav-icon">
-        <i class="bi bi-people" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Master Users</span>
-      <span class="ms-auto">
-        <i class="bi bi-chevron-down"></i>
-      </span>
-    </a>
+      <!-- Master Users -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#masterUsersMenu"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-person-fill-gear"></i>
+            </span>
+            <span class="nav-text">Master Users</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-    <div class="collapse ps-1" id="masterUsersMenu">
-      <a class="nav-link" href="/vendor">
-        <i class="bi bi-shop"></i> <span>Vendor</span>
-      </a>
+        <ul class="collapse list-unstyled sidebar-submenu" id="masterUsersMenu">
+          <li>
+            <a class="nav-link sub-link" href="/vendor"
+              ><i class="bi bi-shop"></i> Vendor</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/branch"
+              ><i class="bi bi-diagram-3"></i> Branch</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/access"
+              ><i class="bi bi-shield-lock"></i> Access</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/prefix"
+              ><i class="bi bi-tag"></i> Prefix</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/client"
+              ><i class="bi bi-people"></i> Client</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/employees"
+              ><i class="bi bi-person-badge"></i> Employees</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/users"
+              ><i class="bi bi-person-circle"></i> Users</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/salesman"
+              ><i class="bi bi-briefcase"></i> Salesman</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/currency"
+              ><i class="bi bi-cash-coin"></i> Currency</a
+            >
+          </li>
+        </ul>
+      </li>
 
-      <a class="nav-link" href="/branch">
-        <i class="bi bi-diagram-3"></i> <span>Branch</span>
-      </a>
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#productsMenu"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-box-seam"></i>
+            </span>
+            <span class="nav-text">Products</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-      <a class="nav-link" href="/access">
-        <i class="bi bi-shield-lock"></i> <span>Access</span>
-      </a>
+        <ul class="collapse list-unstyled sidebar-submenu" id="productsMenu">
+          <li>
+            <a class="nav-link sub-link" href="/products"
+              ><i class="bi bi-box"></i> Product List</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/inventoryProduct"
+              ><i class="bi bi-stack"></i> Inventory</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/inventoryHistory"
+              ><i class="bi bi-clock-history"></i>Inventory History</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/stockAdjustment"
+              ><i class="bi bi-archive"></i> Stock Adjustment</a
+            >
+          </li>
+        </ul>
+      </li>
 
-      <a class="nav-link" href="/prefix">
-        <i class="bi bi-tag"></i> <span>Prefix</span>
-      </a>
+      <!-- CLIENT ORDER -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#clientOrderMenu"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-cart-check"></i>
+            </span>
+            <span class="nav-text">Client Order</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-      <a class="nav-link" href="/client">
-        <i class="bi bi-people"></i> <span>Client</span>
-      </a>
+        <ul class="collapse list-unstyled sidebar-submenu" id="clientOrderMenu">
+          <li>
+            <a class="nav-link sub-link" href="/clientOrder"
+              ><i class="bi bi-box"></i> Client Order</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/clientOrderActivity"
+              ><i class="bi bi-stack"></i> Client Order Activity</a
+            >
+          </li>
+        </ul>
+      </li>
 
-      <a class="nav-link" href="/employees">
-        <i class="bi bi-person-badge"></i> <span>Employees</span>
-      </a>
+      <!-- SALES ORDER -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#salesOrder"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-cart-check"></i>
+            </span>
+            <span class="nav-text">Sales Order</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-      <a class="nav-link" href="/users">
-        <i class="bi bi-person-circle"></i> <span>Users</span>
-      </a>
+        <ul class="collapse list-unstyled sidebar-submenu" id="salesOrder">
+          <li>
+            <a class="nav-link sub-link" href="/salesReceiving"
+              ><i class="bi bi-box"></i> Receiving</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/salesOrder"
+              ><i class="bi bi-stack"></i> Sales Order</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/salesReceivingActivity"
+              ><i class="bi bi-box"></i> Receiving Activity</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/salesOrderActivity"
+              ><i class="bi bi-box"></i> Sales Order Activity</a
+            >
+          </li>
+        </ul>
+      </li>
 
-      <a class="nav-link" href="/salesman">
-        <i class="bi bi-briefcase"></i> <span>Salesman</span>
-      </a>
+      <!-- PURCHASE REQUEST -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#purchaseRequest"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-clipboard-plus"></i>
+            </span>
+            <span class="nav-text">Purchase Request</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-      <a class="nav-link" href="/currency">
-        <i class="bi bi-cash-coin"></i> <span>Currency</span>
-      </a>
-    </div>
+        <ul class="collapse list-unstyled sidebar-submenu" id="purchaseRequest">
+          <li>
+            <a class="nav-link sub-link" href="/purchaseRequest"
+              ><i class="bi bi-box"></i> Purchase Request</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/purchaseRequestActivity"
+              ><i class="bi bi-stack"></i> Purchase Request Activity</a
+            >
+          </li>
+        </ul>
+      </li>
 
-    <!-- Inventory -->
-    <a class="nav-link" href="/inventory">
-      <span class="nav-icon">
-        <i class="bi bi-box-seam" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Inventory</span>
-    </a>
+      <!-- PURCHASE ORDER -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#purchaseOrderActivity"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-bag-check"></i>
+            </span>
+            <span class="nav-text">Purchase Order</span>
+          </span>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-    <!-- Shipments -->
-    <a class="nav-link" href="/shipments">
-      <span class="nav-icon">
-        <i class="bi bi-truck" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Shipments</span>
-    </a>
+        <ul
+          class="collapse list-unstyled sidebar-submenu"
+          id="purchaseOrderActivity"
+        >
+          <li>
+            <a class="nav-link sub-link" href="/purchaseOrderRequest"
+              ><i class="bi bi-box"></i> Purchase Order</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/purchaseOrderActivity"
+              ><i class="bi bi-stack"></i> Purchase Request Activity</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/purchaseReceivingReport"
+              ><i class="bi bi-box"></i> Receiving Report</a
+            >
+          </li>
+          <li>
+            <a class="nav-link sub-link" href="/purchaseOrderActivity"
+              ><i class="bi bi-stack"></i> Purchase Report Activity</a
+            >
+          </li>
+        </ul>
+      </li>
 
-    <!-- Warehouse -->
-    <a class="nav-link" href="/warehouse">
-      <span class="nav-icon">
-        <i class="bi bi-building" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Warehouses</span>
-    </a>
+      <!-- Shipments -->
+      <li>
+        <a
+          class="nav-link d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse"
+          href="#shipmentMenu"
+          role="button"
+          aria-expanded="false"
+        >
+          <span>
+            <span class="nav-icon">
+              <i class="bi bi-truck"></i>
+            </span>
+            <span class="nav-text">Shipment</span>
+          </span>
 
-    <!-- Profile -->
-    <a class="nav-link" href="/profile">
-      <span class="nav-icon">
-        <i class="bi bi-person-badge" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Profile</span>
-    </a>
+          <i class="bi bi-chevron-down menu-arrow"></i>
+        </a>
 
-    <!-- Settings -->
-    <a class="nav-link" href="/settings">
-      <span class="nav-icon">
-        <i class="bi bi-gear" aria-hidden="true"></i>
-      </span>
-      <span class="nav-text">Settings</span>
-    </a>
+        <ul class="collapse list-unstyled sidebar-submenu" id="shipmentMenu">
+          <li>
+            <a class="nav-link sub-link" href="/shipmentRequest">
+              <i class="bi bi-plus-square"></i>
+              Shipment Request
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentPlanning">
+              <i class="bi bi-calendar-check"></i>
+              Shipment Planning
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentDispatch">
+              <i class="bi bi-send-check"></i>
+              Dispatch Shipment
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentTracking">
+              <i class="bi bi-crosshair"></i>
+              Shipment Tracking
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentProofOfDelivery">
+              <i class="bi bi-file-earmark-check"></i>
+              Proof of Delivery
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentReturn">
+              <i class="bi bi-arrow-return-left"></i>
+              Shipment Return
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link sub-link" href="/shipmentActivity">
+              <i class="bi bi-clock-history"></i>
+              Shipment Activity
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Warehouse -->
+      <li>
+        <a class="nav-link" href="/warehouse">
+          <span class="nav-icon"><i class="bi bi-building"></i></span>
+          <span class="nav-text">Warehouses</span>
+        </a>
+      </li>
+
+      <!-- PROCUREMENT -->
+      <li>
+        <a class="nav-link" href="/procurement">
+          <span class="nav-icon"><i class="bi bi-building"></i></span>
+          <span class="nav-text">Warehouses</span>
+        </a>
+      </li>
+
+      <!-- Profile -->
+      <li>
+        <a class="nav-link" href="/profile">
+          <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
+          <span class="nav-text">Profile</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" href="/tracking">
+          <span class="nav-icon">
+            <i class="bi bi-crosshair"></i>
+          </span>
+          <span class="nav-text">Tracking</span>
+        </a>
+      </li>
+
+      <!-- Settings -->
+      <li>
+        <a class="nav-link" href="/settings">
+          <span class="nav-icon"><i class="bi bi-gear"></i></span>
+          <span class="nav-text">Settings</span>
+        </a>
+      </li>
+    </ul>
   </nav>
+
   <div class="sidebar-footer">
     <span class="status-dot"></span>
     <span class="sidebar-footer-text">System running smoothly</span>

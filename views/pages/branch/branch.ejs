@@ -33,6 +33,58 @@
         </div>
       </div>
 
+      <!-- Add Branch Modal -->
+      <div class="modal fade" id="addBranchModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                <i class="bi bi-diagram-3"></i>
+                Add New Branch
+              </h5>
+
+              <button
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Branch Name *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter branch name"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Branch Code *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="e.g. BR-001"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-primary">
+                <i class="bi bi-check-circle"></i>
+                Save Branch
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Search -->
       <div class="px-3 pb-2">
         <input
@@ -43,6 +95,67 @@
         />
       </div>
 
+      <!-- Edit Branch Modal -->
+      <div class="modal fade" id="editBranchModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title">
+                <i class="bi bi-pencil-square"></i>
+                Edit Branch
+              </h5>
+
+              <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">ID</label>
+
+                <input type="text" class="form-control" value="1" disabled />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Branch Name</label>
+
+                <input type="text" class="form-control" value="Main Branch" />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Branch Code</label>
+
+                <input type="text" class="form-control" value="BR-001" />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+
+                <select class="form-select">
+                  <option selected>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-danger me-auto" type="button">
+                <i class="bi bi-trash"></i>
+                Delete
+              </button>
+
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-warning">
+                <i class="bi bi-save"></i>
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Table -->
       <div class="table-responsive">
         <table
@@ -50,7 +163,7 @@
           id="branchTable"
           data-searchable-table
         >
-          <thead class="table-dark">
+          <thead class="table-dark text-white">
             <tr>
               <th>ID</th>
               <th>Branch Name</th>
@@ -73,9 +186,14 @@
                 <span class="badge text-bg-success">Active</span>
               </td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editBranchModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
+
                 <button class="btn btn-danger btn-sm">
                   <i class="bi bi-trash"></i>
                 </button>
@@ -92,9 +210,14 @@
                 <span class="badge text-bg-success">Active</span>
               </td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editBranchModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
+
                 <button class="btn btn-danger btn-sm">
                   <i class="bi bi-trash"></i>
                 </button>
@@ -111,9 +234,14 @@
                 <span class="badge text-bg-warning">Inactive</span>
               </td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editBranchModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
+
                 <button class="btn btn-danger btn-sm">
                   <i class="bi bi-trash"></i>
                 </button>

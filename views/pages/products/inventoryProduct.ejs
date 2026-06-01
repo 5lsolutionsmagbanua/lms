@@ -1,0 +1,125 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- Panel -->
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-stack"></i>
+            <span style="font-weight: 700; color: #000">
+              Inventory Product
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Monitor and manage branch inventory products.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button class="btn btn-sm btn-success">
+            <i class="bi bi-upload"></i> Upload Excel
+          </button>
+
+          <button class="btn btn-sm btn-dark">
+            <i class="bi bi-download"></i> Download Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search inventory..."
+          data-table-search="inventoryTable"
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="inventoryTable"
+          data-searchable-table
+        >
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>UPS</th>
+              <th>Product Code</th>
+              <th>Description</th>
+              <th>Branch</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>UPS-001</td>
+              <td>PRD-1001</td>
+              <td>Wireless Barcode Scanner</td>
+              <td>Quezon City Branch</td>
+              <td>
+                <span class="badge text-bg-success">150 PCS</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">2</td>
+              <td>UPS-002</td>
+              <td>PRD-1002</td>
+              <td>Shipping Box Large</td>
+              <td>Manila Branch</td>
+              <td>
+                <span class="badge text-bg-primary">500 BOX</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">3</td>
+              <td>UPS-003</td>
+              <td>PRD-1003</td>
+              <td>Pallet Jack</td>
+              <td>Pasig Branch</td>
+              <td>
+                <span class="badge text-bg-warning">12 UNIT</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">4</td>
+              <td>UPS-004</td>
+              <td>PRD-1004</td>
+              <td>Bubble Wrap Roll</td>
+              <td>Taguig Branch</td>
+              <td>
+                <span class="badge text-bg-info">230 ROLL</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">5</td>
+              <td>UPS-005</td>
+              <td>PRD-1005</td>
+              <td>Label Printer</td>
+              <td>Makati Branch</td>
+              <td>
+                <span class="badge text-bg-danger">8 PCS</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

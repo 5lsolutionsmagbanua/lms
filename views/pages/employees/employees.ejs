@@ -1,0 +1,141 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- Panel -->
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-person-badge"></i>
+            <span style="font-weight: 700; color: #000">
+              Employee Management
+            </span>
+          </h2>
+          <p class="text-muted mb-0">
+            Manage employee records and department assignments.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addEmployeeModal"
+          >
+            <i class="bi bi-plus-circle"></i> Add Employee
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search employee..."
+          data-table-search="employeeTable"
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="employeeTable"
+          data-searchable-table
+        >
+          <thead class="table-dark">
+            <tr>
+              <th>Employee ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Middle Name</th>
+              <th>Email</th>
+              <th>Phone Number</th>
+              <th>Job Title</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Created By</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td class="fw-semibold">EMP-0001</td>
+              <td>Juan</td>
+              <td>Dela Cruz</td>
+              <td>Santos</td>
+              <td>juan@email.com</td>
+              <td>+63 917 111 2222</td>
+              <td>Warehouse Manager</td>
+              <td>Operations</td>
+              <td><span class="badge text-bg-success">Active</span></td>
+              <td>May 25, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">EMP-0002</td>
+              <td>Maria</td>
+              <td>Santos</td>
+              <td>Lopez</td>
+              <td>maria@email.com</td>
+              <td>+63 918 333 4444</td>
+              <td>HR Officer</td>
+              <td>Human Resources</td>
+              <td><span class="badge text-bg-success">Active</span></td>
+              <td>May 24, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="fw-semibold">EMP-0003</td>
+              <td>Mark</td>
+              <td>Cruz</td>
+              <td>Reyes</td>
+              <td>mark@email.com</td>
+              <td>+63 919 555 6666</td>
+              <td>Driver</td>
+              <td>Logistics</td>
+              <td><span class="badge text-bg-warning">Inactive</span></td>
+              <td>May 23, 2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button class="btn btn-light btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

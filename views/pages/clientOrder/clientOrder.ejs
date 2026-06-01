@@ -1,0 +1,406 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- PANEL -->
+    <section class="panel">
+      <!-- HEADER -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-cart-check"></i>
+            <span style="font-weight: 700; color: #000"> Client Orders </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage client orders and export requisition documents.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button class="btn btn-sm btn-success">
+            <i class="bi bi-upload"></i> Upload Excel
+          </button>
+
+          <button class="btn btn-sm btn-dark">
+            <i class="bi bi-download"></i> Download Excel
+          </button>
+
+          <!-- DATE RANGE -->
+          <button
+            class="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#dateRangeModal"
+          >
+            <i class="bi bi-calendar-range"></i>
+            Select Date Range
+          </button>
+
+          <!-- ADD ORDER -->
+          <button
+            class="btn btn-sm btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addOrderModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Order
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="px-3 pb-2">
+        <input
+          class="form-control form-control-sm table-search"
+          type="search"
+          placeholder="Search order..."
+          data-table-search="clientOrderTable"
+        />
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive">
+        <table
+          class="table align-middle mb-0"
+          id="clientOrderTable"
+          data-searchable-table
+        >
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Reference No.</th>
+              <th>Client</th>
+              <th>Salesman</th>
+              <th>Remarks</th>
+              <th>Prepared By</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td class="fw-semibold">1</td>
+              <td>May 28, 2026</td>
+              <td>SO-2026-05-0001</td>
+              <td>ABC Trading Corp</td>
+              <td>John Reyes</td>
+              <td>Urgent delivery</td>
+              <td>Admin</td>
+
+              <td>
+                <span class="badge text-bg-success"> Approved </span>
+              </td>
+
+              <td class="text-end">
+                <!-- VIEW -->
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewOrderModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <!-- EDIT -->
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editOrderModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- EXPORT -->
+                <button
+                  class="btn btn-success btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#exportOrderModal"
+                >
+                  <i class="bi bi-box-arrow-up"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================================================== -->
+<!-- DATE RANGE MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade" id="dateRangeModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-calendar-range"></i>
+          Select Date Range
+        </h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label"> From Start Date </label>
+
+          <input type="date" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label"> To End Date </label>
+
+          <input type="date" class="form-control" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary">
+          <i class="bi bi-search"></i>
+          Fetch
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- VIEW ORDER DETAILS MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade" id="viewOrderModal">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-eye"></i>
+          Order Details
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>Product Code</th>
+                <th>Product Description</th>
+                <th>Branch Name</th>
+                <th>Discount</th>
+                <th>Order Qty</th>
+                <th>Request Qty</th>
+                <th>Delivered Qty</th>
+                <th>Unit Cost</th>
+                <th>Total VAT Ex</th>
+                <th>Dollar Note</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>PRD-1001</td>
+                <td>Wireless Barcode Scanner</td>
+                <td>Quezon City</td>
+                <td>5%</td>
+                <td>10</td>
+                <td>10</td>
+                <td>8</td>
+                <td>₱5,500</td>
+                <td>₱52,250</td>
+                <td>$950</td>
+
+                <td>
+                  <span class="badge text-bg-success"> Delivered </span>
+                </td>
+
+                <td>
+                  <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- EDIT ORDER MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade" id="editOrderModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil"></i>
+          Edit Client Order
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">ID</label>
+            <input type="text" class="form-control" value="1" readonly />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control" readonly />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"> Reference Number </label>
+
+            <input
+              type="text"
+              class="form-control"
+              value="SO-2026-05-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Client</label>
+            <select class="form-select">
+              <option>ABC Trading Corp</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Salesman</label>
+            <select class="form-select">
+              <option>John Reyes</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">VAT Type</label>
+            <select class="form-select">
+              <option>VAT Inclusive</option>
+              <option>VAT Exclusive</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Discount</label>
+            <input type="text" class="form-control" value="5%" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Prepared By</label>
+            <input type="text" class="form-control" value="Admin" />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control" rows="3">Urgent delivery</textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option>Pending</option>
+              <option selected>Approved</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Update Order
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- EXPORT MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade" id="exportOrderModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-box-arrow-up"></i>
+          Ready to Export
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label"> Requisitioned By </label>
+
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Enter requisitioned by"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label"> Checked By </label>
+
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Enter checked by"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label"> Order ID </label>
+
+          <input type="text" class="form-control" value="SO-2026-05-0001" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-success">
+          <i class="bi bi-file-earmark-excel"></i>
+          Export Excel
+        </button>
+
+        <button class="btn btn-danger">
+          <i class="bi bi-file-earmark-pdf"></i>
+          Export PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

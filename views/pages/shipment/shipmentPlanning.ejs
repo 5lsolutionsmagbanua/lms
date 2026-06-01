@@ -1,0 +1,450 @@
+<div class="modal fade" id="addShipmentPlanModal">
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-map"></i>
+          Shipment Planning Form
+        </h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- Planning Information -->
+          <div class="col-12">
+            <h6 class="fw-bold border-bottom pb-2">Planning Information</h6>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Planning No.</label>
+            <input
+              type="text"
+              class="form-control"
+              value="PLN-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Shipment ID</label>
+            <select class="form-select">
+              <option>Select Shipment</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Planning Date</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option>Draft</option>
+              <option>Planned</option>
+              <option>In Transit</option>
+              <option>Delivered</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+
+          <!-- Vehicle Assignment -->
+          <div class="col-12 mt-4">
+            <h6 class="fw-bold border-bottom pb-2">Vehicle Assignment</h6>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Vehicle</label>
+            <select class="form-select">
+              <option>Select Vehicle</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Driver</label>
+            <select class="form-select">
+              <option>Select Driver</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Helper</label>
+            <select class="form-select">
+              <option>Select Helper</option>
+            </select>
+          </div>
+
+          <!-- Route Information -->
+          <div class="col-12 mt-4">
+            <h6 class="fw-bold border-bottom pb-2">Route Information</h6>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Origin Warehouse</label>
+            <select class="form-select">
+              <option>Main Warehouse</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Destination Branch</label>
+            <select class="form-select">
+              <option>Select Branch</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Route Code</label>
+            <input type="text" class="form-control" placeholder="RTE-001" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Departure Date & Time</label>
+            <input type="datetime-local" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Expected Arrival</label>
+            <input type="datetime-local" class="form-control" />
+          </div>
+
+          <!-- Shipment Products -->
+          <div class="col-12 mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="fw-bold mb-0">Shipment Products</h6>
+
+              <button type="button" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-circle"></i>
+                Add Product
+              </button>
+            </div>
+            <hr />
+          </div>
+
+          <div class="col-12">
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Product Code</th>
+                    <th>Description</th>
+                    <th>Branch</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Weight</th>
+                    <th>Volume</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td><input class="form-control" /></td>
+                    <td><input class="form-control" /></td>
+                    <td>
+                      <select class="form-select">
+                        <option>Main Branch</option>
+                      </select>
+                    </td>
+                    <td><input type="number" class="form-control" /></td>
+                    <td><input class="form-control" /></td>
+                    <td><input class="form-control" /></td>
+                    <td><input class="form-control" /></td>
+                    <td>
+                      <button class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Costing -->
+          <div class="col-12 mt-4">
+            <h6 class="fw-bold border-bottom pb-2">Costing Information</h6>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Fuel Cost</label>
+            <input type="number" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Toll Fee</label>
+            <input type="number" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Labor Cost</label>
+            <input type="number" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Estimated Total Cost</label>
+            <input type="number" class="form-control" />
+          </div>
+
+          <!-- Remarks -->
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea rows="3" class="form-control"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Save Shipment Plan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-map"></i>
+            <span style="font-weight: 700; color: #000">
+              Shipment Planning
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage shipment schedules, route planning, and vehicle assignments.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button
+            class="btn btn-primary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#addShipmentPlanModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Shipment Plan
+          </button>
+
+          <button class="btn btn-success btn-sm">
+            <i class="bi bi-upload"></i>
+            Upload Excel
+          </button>
+
+          <button class="btn btn-dark btn-sm">
+            <i class="bi bi-download"></i>
+            Download Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search shipment plan..."
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark text-white">
+            <tr>
+              <th>ID</th>
+              <th>Planning No.</th>
+              <th>Shipment Date</th>
+              <th>Client</th>
+              <th>Route</th>
+              <th>Vehicle</th>
+              <th>Driver</th>
+              <th>Total Orders</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Created At</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>SP-26-06-0001</td>
+              <td>2026-06-05</td>
+              <td>ABC Trading Corp</td>
+              <td>QC → Manila</td>
+              <td>TRK-001</td>
+              <td>Juan Dela Cruz</td>
+              <td>15</td>
+              <td>
+                <span class="badge bg-warning">Planned</span>
+              </td>
+              <td>Admin</td>
+              <td>Jun 01, 2026</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewShipmentPlanModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editShipmentPlanModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>2</td>
+              <td>SP-26-06-0002</td>
+              <td>2026-06-06</td>
+              <td>Metro Logistics</td>
+              <td>Pasig → Taguig</td>
+              <td>TRK-002</td>
+              <td>Pedro Santos</td>
+              <td>8</td>
+              <td>
+                <span class="badge bg-success">Dispatched</span>
+              </td>
+              <td>Admin</td>
+              <td>Jun 01, 2026</td>
+              <td class="text-end">
+                <button class="btn btn-info btn-sm">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-primary btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>3</td>
+              <td>SP-26-06-0003</td>
+              <td>2026-06-07</td>
+              <td>Prime Distribution</td>
+              <td>Makati → Cavite</td>
+              <td>TRK-003</td>
+              <td>Mark Reyes</td>
+              <td>12</td>
+              <td>
+                <span class="badge bg-primary">In Transit</span>
+              </td>
+              <td>Admin</td>
+              <td>Jun 01, 2026</td>
+              <td class="text-end">
+                <button class="btn btn-info btn-sm">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-primary btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>4</td>
+              <td>SP-26-06-0004</td>
+              <td>2026-06-08</td>
+              <td>Global Supply Co.</td>
+              <td>QC → Bulacan</td>
+              <td>TRK-004</td>
+              <td>Leo Cruz</td>
+              <td>10</td>
+              <td>
+                <span class="badge bg-success">Completed</span>
+              </td>
+              <td>Admin</td>
+              <td>Jun 01, 2026</td>
+              <td class="text-end">
+                <button class="btn btn-info btn-sm">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-primary btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>5</td>
+              <td>SP-26-06-0005</td>
+              <td>2026-06-09</td>
+              <td>Skyline Traders</td>
+              <td>Manila → Laguna</td>
+              <td>TRK-005</td>
+              <td>Carlo Mendoza</td>
+              <td>20</td>
+              <td>
+                <span class="badge bg-secondary">Draft</span>
+              </td>
+              <td>Admin</td>
+              <td>Jun 01, 2026</td>
+              <td class="text-end">
+                <button class="btn btn-info btn-sm">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button class="btn btn-primary btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

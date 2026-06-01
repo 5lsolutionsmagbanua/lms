@@ -1,0 +1,427 @@
+<!-- Edit Details Modal -->
+<div class="modal fade" id="editDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i> Edit Details
+        </h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form>
+          <div class="row g-3">
+            <!-- ID (Disabled) -->
+            <div class="col-md-4">
+              <label class="form-label">ID</label>
+              <input type="text" class="form-control" value="1" disabled />
+            </div>
+
+            <!-- Reference -->
+            <div class="col-md-8">
+              <label class="form-label">Reference No.</label>
+              <input type="text" class="form-control" value="SH-26-06-0001" />
+            </div>
+
+            <!-- Name -->
+            <div class="col-md-6">
+              <label class="form-label">Name / Business / Client</label>
+              <input
+                type="text"
+                class="form-control"
+                value="ABC Trading Corp"
+              />
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-6">
+              <label class="form-label">Status</label>
+              <select class="form-select">
+                <option selected>Active</option>
+                <option>Inactive</option>
+                <option>Pending</option>
+              </select>
+            </div>
+
+            <!-- Contact -->
+            <div class="col-md-6">
+              <label class="form-label">Contact Person</label>
+              <input type="text" class="form-control" value="Juan Dela Cruz" />
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" value="abc@email.com" />
+            </div>
+
+            <!-- Phone -->
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" value="02xxxx yyyy" />
+            </div>
+
+            <!-- Mobile -->
+            <div class="col-md-6">
+              <label class="form-label">Mobile</label>
+              <input type="text" class="form-control" value="+639XXXXXXXXX" />
+            </div>
+
+            <!-- Address -->
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" rows="3">Quezon City</textarea>
+            </div>
+
+            <!-- Remarks -->
+            <div class="col-12">
+              <label class="form-label">Remarks</label>
+              <textarea class="form-control" rows="3">
+Optional notes...</textarea
+              >
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title"><i class="bi bi-eye"></i> View Details</h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label text-muted">ID</label>
+            <input type="text" class="form-control" value="1" readonly />
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label text-muted">Reference No.</label>
+            <input
+              type="text"
+              class="form-control"
+              value="SH-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted">Name / Client / Vendor</label>
+            <input
+              type="text"
+              class="form-control"
+              value="ABC Trading Corp"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted">Status</label>
+            <input type="text" class="form-control" value="Active" readonly />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted">Created At</label>
+            <input
+              type="text"
+              class="form-control"
+              value="2026-06-01"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted">Created By</label>
+            <input type="text" class="form-control" value="Admin" readonly />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-muted">Remarks</label>
+            <textarea class="form-control" rows="3" readonly>
+Sample remarks or notes go here...
+            </textarea>
+          </div>
+        </div>
+
+        <!-- OPTIONAL: Nested Table (for items like shipment/order details) -->
+        <div class="mt-4">
+          <h6 class="fw-bold">Item Details</h6>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th>Code</th>
+                  <th>Description</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>PRD-001</td>
+                  <td>Sample Product</td>
+                  <td>10</td>
+                  <td>PCS</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-printer"></i> Print
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addPodModal">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-check2-circle"></i>
+          Add Proof of Delivery
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">POD No.</label>
+            <input
+              type="text"
+              class="form-control"
+              value="POD-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Tracking No.</label>
+            <select class="form-select">
+              <option>Select Tracking</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Dispatch No.</label>
+            <select class="form-select">
+              <option>Select Dispatch</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Delivery Date</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Receiver Name</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Juan Dela Cruz"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Received By (Driver/Staff)</label>
+            <input type="text" class="form-control" placeholder="Driver Name" />
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Delivery Address</label>
+            <textarea class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Signature Upload</label>
+            <input type="file" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Photo Evidence</label>
+            <input type="file" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option>Delivered</option>
+              <option>Partially Delivered</option>
+              <option>Failed Delivery</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-success">
+          <i class="bi bi-save"></i>
+          Save POD
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-check2-circle"></i>
+            <span style="font-weight: 700; color: #000">
+              Proof of Delivery (POD)
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Confirm delivery completion with receiver confirmation and evidence.
+          </p>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+
+          <button class="btn btn-success btn-sm">
+            <i class="bi bi-upload"></i> Upload Excel
+          </button>
+
+          <button class="btn btn-dark btn-sm">
+            <i class="bi bi-download"></i> Download Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search POD records..."
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-dark text-white">
+            <tr>
+              <th>ID</th>
+              <th>POD No.</th>
+              <th>Tracking No.</th>
+              <th>Dispatch No.</th>
+              <th>Client</th>
+              <th>Receiver Name</th>
+              <th>Received By</th>
+              <th>Delivery Date</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Created At</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>POD-26-06-0001</td>
+              <td>TRK-26-06-0001</td>
+              <td>DSP-26-06-0001</td>
+              <td>ABC Trading Corp</td>
+              <td>Maria Santos</td>
+              <td>Juan Dela Cruz</td>
+              <td>06/01/2026</td>
+              <td>
+                <span class="badge bg-success">Delivered</span>
+              </td>
+              <td>Admin</td>
+              <td>06/01/2026</td>
+
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDetailsModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDetailsModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

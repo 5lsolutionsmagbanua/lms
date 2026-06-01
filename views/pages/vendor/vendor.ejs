@@ -31,6 +31,135 @@
             <i class="bi bi-plus-circle"></i> Add Vendor
           </button>
 
+          <div class="modal fade" id="addVendorModal">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title">
+                    <i class="bi bi-shop"></i>
+                    Add Vendor
+                  </h5>
+
+                  <button
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                  ></button>
+                </div>
+
+                <div class="modal-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Business Name *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter business name"
+                      />
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label">SO Prefix *</label>
+
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="soPrefix"
+                          data-bs-toggle="modal"
+                          data-bs-target="#soPrefixModal"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label">PR Prefix *</label>
+
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="prPrefix"
+                          data-bs-toggle="modal"
+                          data-bs-target="#prPrefixModal"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Business Type *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Distributor"
+                      />
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Contact Person</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Juan Dela Cruz"
+                      />
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Email</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        placeholder="vendor@email.com"
+                      />
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label">Phone</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g., 02xxxx yyyy"
+                      />
+                    </div>
+
+                    <div class="col-md-3">
+                      <label class="form-label">Mobile</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="+639XXXXXXXXX"
+                      />
+                    </div>
+
+                    <div class="col-md-12">
+                      <label class="form-label">Address</label>
+                      <textarea class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">TIN</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="123-456-789-000"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                  </button>
+
+                  <button class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i>
+                    Save Vendor
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button class="btn btn-sm btn-success">
             <i class="bi bi-upload"></i> Upload Excel
           </button>
@@ -38,6 +167,171 @@
           <button class="btn btn-sm btn-dark">
             <i class="bi bi-download"></i> Download Excel
           </button>
+        </div>
+      </div>
+
+      <div class="modal fade" id="soPrefixModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                <i class="bi bi-sliders"></i>
+
+                Customize SO Sequence Format
+              </h5>
+
+              <button
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Prefix</label>
+
+                <input type="text" class="form-control" value="SO" />
+              </div>
+
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  checked
+                  id="soYear"
+                />
+
+                <label class="form-check-label" for="soYear">
+                  Include Year
+                </label>
+              </div>
+
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  checked
+                  id="soMonth"
+                />
+
+                <label class="form-check-label" for="soMonth">
+                  Include Month
+                </label>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Number Padding</label>
+
+                <select class="form-select">
+                  <option>0001 (4 Digits)</option>
+
+                  <option>00001 (5 Digits)</option>
+
+                  <option>000001 (6 Digits)</option>
+                </select>
+              </div>
+
+              <div class="alert alert-info mb-0">
+                <strong>Preview:</strong>
+
+                SO-2026-06-0001
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-primary">
+                <i class="bi bi-check-circle"></i>
+
+                Save Format
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="prPrefixModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title">
+                <i class="bi bi-sliders"></i>
+
+                Customize PR Sequence Format
+              </h5>
+
+              <button
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Prefix</label>
+
+                <input type="text" class="form-control" value="PR" />
+              </div>
+
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  checked
+                  id="prYear"
+                />
+
+                <label class="form-check-label" for="prYear">
+                  Include Year
+                </label>
+              </div>
+
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  checked
+                  id="prMonth"
+                />
+
+                <label class="form-check-label" for="prMonth">
+                  Include Month
+                </label>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Number Padding</label>
+
+                <select class="form-select">
+                  <option>0001 (4 Digits)</option>
+
+                  <option>00001 (5 Digits)</option>
+
+                  <option>000001 (6 Digits)</option>
+                </select>
+              </div>
+
+              <div class="alert alert-success mb-0">
+                <strong>Preview:</strong>
+
+                PR-2026-06-0001
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-success">
+                <i class="bi bi-check-circle"></i>
+                Save Format
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -51,9 +345,113 @@
           aria-label="Search vendors"
         />
       </div>
+      <!-- EDIT MODAL -->
+      <div class="modal fade" id="editVendorModal">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title">
+                <i class="bi bi-pencil-square"></i>
+                Edit Vendor
+              </h5>
 
+              <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-2">
+                  <label class="form-label">ID</label>
+
+                  <input type="text" class="form-control" disabled />
+                </div>
+
+                <div class="col-md-10">
+                  <label class="form-label">Business Name</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Business Type</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Contact Person</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Email</label>
+
+                  <input type="email" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Phone</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Mobile</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-12">
+                  <label class="form-label">Address</label>
+
+                  <textarea class="form-control" rows="2">Quezon City</textarea>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">TIN</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">SO Prefix</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">PR Prefix</label>
+
+                  <input type="text" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Status</label>
+
+                  <select class="form-select">
+                    <option selected>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-warning">
+                <i class="bi bi-save"></i>
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Table -->
-      <!-- Table -->
+
       <div class="table-responsive">
         <table
           class="table align-middle mb-0"
@@ -61,7 +459,7 @@
           data-searchable-table
         >
           <!-- BLACK THEAD -->
-          <thead>
+          <thead class="table-dark text-white">
             <tr>
               <th>ID</th>
               <th>Business Name</th>
@@ -74,6 +472,7 @@
               <th>Mobile</th>
               <th>Address</th>
               <th>TIN</th>
+              <th>Status</th>
               <th>Created At</th>
               <th>Created By</th>
               <th class="text-end">Actions</th>
@@ -93,10 +492,17 @@
               <td>+63 917 123 4567</td>
               <td>Quezon City</td>
               <td>123-456-789-000</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
               <td>May 25, 2026</td>
               <td>Admin</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editVendorModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-danger btn-sm">
@@ -117,10 +523,17 @@
               <td>+63 918 222 3344</td>
               <td>Manila</td>
               <td>111-222-333-000</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
               <td>May 24, 2026</td>
               <td>Admin</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editVendorModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-danger btn-sm">
@@ -141,10 +554,17 @@
               <td>+63 919 555 7788</td>
               <td>Quezon City</td>
               <td>222-333-444-000</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
               <td>May 23, 2026</td>
               <td>Admin</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editVendorModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-danger btn-sm">
@@ -165,10 +585,17 @@
               <td>+63 920 111 2233</td>
               <td>Pasig City</td>
               <td>333-444-555-000</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
               <td>May 22, 2026</td>
               <td>Admin</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editVendorModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-danger btn-sm">
@@ -189,10 +616,17 @@
               <td>+63 921 888 9999</td>
               <td>Taguig</td>
               <td>444-555-666-000</td>
+              <td>
+                <span class="badge text-bg-success">Active</span>
+              </td>
               <td>May 21, 2026</td>
               <td>Admin</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editVendorModal"
+                >
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-danger btn-sm">

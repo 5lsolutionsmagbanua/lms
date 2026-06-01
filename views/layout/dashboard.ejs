@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
-    <%- include('../components/header.ejs') %>
+    <%- include('../components/header.ejs') %>s
   </head>
   <body>
     <div class="admin-shell">
-      <div class="sidebar-backdrop" data-sidebar-close></div>
+      <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
       <!-- sidebard content -->
       <%- include('../components/sidebar.ejs') %>
       <!-- sidebard content -->
+       </aside>
       <div class="admin-main">
         <nav class="navbar admin-navbar navbar-expand bg-white">
           <!-- topbar content -->
