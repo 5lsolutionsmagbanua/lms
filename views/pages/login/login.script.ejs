@@ -1,0 +1,84 @@
+<script>
+  $(document).ready(function () {
+    $("#loginForm").on("submit", function (e) {
+      e.preventDefault();
+      loginUser();
+    });
+  });
+
+  function loginUser() {
+    const data = {
+      username: $("input[name='username']").val().trim(),
+      password: $("input[name='password']").val().trim(),
+      remember: $("#remember").is(":checked"),
+    };
+
+    if (!data.username || !data.password) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: "Please enter username and password",
+      });
+      return;
+    }
+
+    $.ajax({
+      url: "/login",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+
+      success: function (res) {
+        Swal.fire({
+          icon: "success",
+          title: "Login Successful",
+          text: "Redirecting to dashboard...",
+          timer: 2000, // 2 seconds
+          showConfirmButton: false,
+          allowOutsideClick: false,
+        });
+
+        // 🔥 ROLE BASED REDIRECT
+        setTimeout(() => {
+          if (res.role === "admin") {
+            window.location.href = "/dashboard";
+          } else if (res.role === "manager") {
+            window.location.href = "/dashboard";
+          } else if (res.role === "staff") {
+            window.location.href = "/dashboard";
+          } else if (res.role === "driver") {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/dashboard";
+          }
+        }, 1000);
+      },
+
+      error: function (err) {
+        let title = "Login Failed";
+        let message = "Something went wrong";
+
+        if (err.status === 401) {
+          title = "Invalid Credentials";
+          message = err.responseJSON?.message;
+        }
+
+        if (err.status === 403) {
+          title = "Access Denied";
+          message = err.responseJSON?.message;
+        } 
+
+        if (err.status === 500) {
+          title = "Server Error";
+          message = "Please try again later";
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: title,
+          text: message,
+        });
+      },
+    });
+  }
+</script>

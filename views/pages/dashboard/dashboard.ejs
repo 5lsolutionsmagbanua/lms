@@ -177,16 +177,94 @@
       </div>
     </section>
 
-    <!-- Recent Shipments -->
+    <div class="modal fade" id="trackingModalView">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-geo-alt"></i>
+              Shipment Tracking Details
+            </h5>
+            <button
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- HEADER INFO -->
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Tracking ID</label>
+                <input id="trackId" class="form-control" readonly />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Customer</label>
+                <input id="trackCustomer" class="form-control" readonly />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <input id="trackStatus" class="form-control" readonly />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Current Location</label>
+                <input id="trackLocation" class="form-control" readonly />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Last Update</label>
+                <input id="trackUpdate" class="form-control" readonly />
+              </div>
+            </div>
+
+            <hr />
+
+            <!-- PROGRESS TRACKING -->
+            <h6 class="fw-bold">Shipment Progress</h6>
+
+            <div class="progress">
+              <div
+                id="trackProgress"
+                class="progress-bar bg-success"
+                style="width: 0%"
+              >
+                0%
+              </div>
+            </div>
+
+            <hr />
+
+            <!-- ACTIVITY LOG -->
+            <h6 class="fw-bold">Activity Log</h6>
+
+            <ul class="list-group">
+              <li class="list-group-item">📦 Order created</li>
+              <li class="list-group-item">🚚 Dispatched from warehouse</li>
+              <li class="list-group-item">📍 In transit</li>
+            </ul>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <section class="panel mt-3">
       <div class="panel-header">
         <div>
           <h2 class="h5 mb-1 section-title">
-            <i class="bi bi-table"></i>
-            <span>Recent Shipments</span>
+            <i class="bi bi-geo-alt-fill"></i>
+            <span>Shipment Monitoring</span>
           </h2>
           <p class="text-muted mb-0">
-            Latest shipment records across all branches.
+            Real-time tracking of shipments across branches.
           </p>
         </div>
 
@@ -199,9 +277,10 @@
             <tr>
               <th>Tracking ID</th>
               <th>Customer</th>
-              <th>Status</th>
               <th>Branch</th>
-              <th>Date</th>
+              <th>Status</th>
+              <th>Current Location</th>
+              <th>Last Update</th>
               <th class="text-end">Action</th>
             </tr>
           </thead>
@@ -210,33 +289,51 @@
             <tr>
               <td>#TRK001</td>
               <td>John Doe</td>
-              <td><span class="badge text-bg-success">Delivered</span></td>
               <td>Manila</td>
-              <td>May 22</td>
+              <td><span class="badge bg-success">Delivered</span></td>
+              <td>Customer Address</td>
+              <td>10 mins ago</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">View</button>
+                <button
+                  class="btn btn-info btn-sm"
+                  onclick="viewTracking('TRK001')"
+                >
+                  <i class="bi bi-eye"></i> View
+                </button>
               </td>
             </tr>
 
             <tr>
               <td>#TRK002</td>
               <td>Anna Cruz</td>
-              <td><span class="badge text-bg-warning">Pending</span></td>
               <td>Cebu</td>
-              <td>May 22</td>
+              <td><span class="badge bg-warning">Pending</span></td>
+              <td>Warehouse</td>
+              <td>1 hour ago</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">View</button>
+                <button
+                  class="btn btn-info btn-sm"
+                  onclick="viewTracking('TRK002')"
+                >
+                  <i class="bi bi-eye"></i> View
+                </button>
               </td>
             </tr>
 
             <tr>
               <td>#TRK003</td>
               <td>Mike Santos</td>
-              <td><span class="badge text-bg-primary">In Transit</span></td>
               <td>Davao</td>
-              <td>May 21</td>
+              <td><span class="badge bg-primary">In Transit</span></td>
+              <td>Highway Route A</td>
+              <td>5 mins ago</td>
               <td class="text-end">
-                <button class="btn btn-light btn-sm">View</button>
+                <button
+                  class="btn btn-info btn-sm"
+                  onclick="viewTracking('TRK003')"
+                >
+                  <i class="bi bi-eye"></i> View
+                </button>
               </td>
             </tr>
           </tbody>

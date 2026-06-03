@@ -1,6 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+<style>
+@media print {
 
+  body * {
+    visibility: hidden;
+  }
+
+  #waybillPrintArea,
+  #waybillPrintArea * {
+    visibility: visible;
+  }
+
+  #waybillPrintArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  input, textarea {
+    border: none !important;
+    background: transparent !important;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th {
+    background: black !important;
+    color: white !important;
+  }
+}
+</style>
   <head>
     <%- include('../components/header.ejs') %>s
   </head>

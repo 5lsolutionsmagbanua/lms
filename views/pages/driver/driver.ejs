@@ -1,0 +1,700 @@
+<div class="modal fade" id="viewDriverModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-person-vcard"></i>
+          Driver Details
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3 text-center">
+            <img
+              src="https://via.placeholder.com/150"
+              class="img-fluid rounded border"
+              alt="Driver Photo"
+            />
+          </div>
+
+          <div class="col-md-9">
+            <table class="table table-bordered">
+              <tbody>
+                <tr>
+                  <th width="35%">Driver ID</th>
+                  <td>DRV-26-0001</td>
+                </tr>
+
+                <tr>
+                  <th>Full Name</th>
+                  <td>Juan Dela Cruz</td>
+                </tr>
+
+                <tr>
+                  <th>License Number</th>
+                  <td>N01-12-123456</td>
+                </tr>
+
+                <tr>
+                  <th>License Type</th>
+                  <td>Professional</td>
+                </tr>
+
+                <tr>
+                  <th>License Expiry</th>
+                  <td>December 31, 2027</td>
+                </tr>
+
+                <tr>
+                  <th>Mobile Number</th>
+                  <td>+639171234567</td>
+                </tr>
+
+                <tr>
+                  <th>Email</th>
+                  <td>juan@email.com</td>
+                </tr>
+
+                <tr>
+                  <th>Address</th>
+                  <td>Quezon City, Metro Manila</td>
+                </tr>
+
+                <tr>
+                  <th>Status</th>
+                  <td>
+                    <span class="badge bg-success"> Active </span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Created At</th>
+                  <td>June 01, 2026</td>
+                </tr>
+
+                <tr>
+                  <th>Created By</th>
+                  <td>Admin</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editDriverModal">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i>
+          Edit Driver
+        </h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Driver ID</label>
+            <input
+              type="text"
+              class="form-control"
+              value="DRV-26-0001"
+              disabled
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-control" value="Juan" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-control" value="Dela Cruz" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Middle Name</label>
+            <input type="text" class="form-control" value="Santos" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Number</label>
+            <input type="text" class="form-control" value="N01-12-123456" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Type</label>
+            <select class="form-select">
+              <option selected>Professional</option>
+              <option>Non Professional</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Expiry</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Mobile Number</label>
+            <input type="text" class="form-control" value="+639171234567" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" value="juan@email.com" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option selected>Active</option>
+              <option>Inactive</option>
+              <option>Suspended</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" rows="3">
+Quezon City, Metro Manila</textarea
+            >
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Driver Photo</label>
+            <input type="file" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Remarks</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Optional remarks"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-warning">
+          <i class="bi bi-check-circle"></i>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addDriverModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-person-vcard"></i>
+          Add Driver
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- Driver Photo -->
+          <div class="col-12 text-center">
+            <label class="form-label fw-bold">Driver Photo</label>
+
+            <div class="mb-2">
+              <img
+                id="driverPreview"
+                src="https://via.placeholder.com/150x150?text=Driver"
+                class="rounded-circle border"
+                width="150"
+                height="150"
+                style="object-fit: cover"
+              />
+            </div>
+
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              onchange="previewDriverPhoto(event)"
+            />
+          </div>
+
+          <!-- Driver Information -->
+          <div class="col-md-4">
+            <label class="form-label">First Name *</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Last Name *</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Middle Name</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Mobile Number *</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="+639XXXXXXXXX"
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Number *</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Expiry *</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-save"></i>
+          Save Driver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="viewDriverModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-eye"></i>
+          Driver Details
+        </h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <strong>Driver ID</strong>
+            <p>DRV-26-06-0001</p>
+          </div>
+
+          <div class="col-md-4">
+            <strong>Full Name</strong>
+            <p>Juan Dela Cruz</p>
+          </div>
+
+          <div class="col-md-4">
+            <strong>Status</strong>
+            <p>
+              <span class="badge bg-success"> Active </span>
+            </p>
+          </div>
+
+          <div class="col-md-6">
+            <strong>Mobile Number</strong>
+            <p>+639171234567</p>
+          </div>
+
+          <div class="col-md-6">
+            <strong>License Number</strong>
+            <p>N01-12-123456</p>
+          </div>
+
+          <div class="col-md-6">
+            <strong>License Expiry</strong>
+            <p>06/30/2028</p>
+          </div>
+
+          <div class="col-md-6">
+            <strong>Address</strong>
+            <p>Quezon City</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editDriverModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i>
+          Edit Driver
+        </h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Driver ID</label>
+            <input
+              type="text"
+              class="form-control"
+              value="DRV-26-06-0001"
+              readonly
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-control" value="Juan" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-control" value="Dela Cruz" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Middle Name</label>
+            <input type="text" class="form-control" value="Santos" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Mobile Number</label>
+            <input type="text" class="form-control" value="+639171234567" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Number</label>
+            <input type="text" class="form-control" value="N01-12-123456" />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">License Expiry</label>
+            <input type="date" class="form-control" />
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" rows="2">Quezon City</textarea>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option selected>Active</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-warning">
+          <i class="bi bi-save"></i>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Driver Management -->
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-person-vcard"></i>
+            <span style="font-weight: 700; color: #000">
+              Driver Management
+            </span>
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage driver records, licenses, assignments, and status.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i>
+            Sync
+          </button>
+
+          <button
+            class="btn btn-primary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#addDriverModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Driver
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-3 pb-2">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search driver..."
+        />
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-dark text-white">
+            <tr>
+              <th>ID</th>
+              <th>Driver ID</th>
+              <th>Full Name</th>
+              <th>Mobile Number</th>
+              <th>License Number</th>
+              <th>License Expiry</th>
+              <th>Assigned Vehicle</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Created By</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>DRV-26-06-0001</td>
+              <td>Juan Dela Cruz</td>
+              <td>+639171234567</td>
+              <td>N01-12-123456</td>
+              <td>06/30/2028</td>
+              <td>TRK-001</td>
+              <td>
+                <span class="badge bg-success"> Active </span>
+              </td>
+              <td>06/01/2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDriverModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDriverModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>2</td>
+              <td>DRV-26-06-0002</td>
+              <td>Pedro Santos</td>
+              <td>+639189876543</td>
+              <td>N01-12-654321</td>
+              <td>08/15/2027</td>
+              <td>TRK-002</td>
+              <td>
+                <span class="badge bg-success"> Active </span>
+              </td>
+              <td>06/01/2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDriverModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDriverModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>3</td>
+              <td>DRV-26-06-0003</td>
+              <td>Carlos Reyes</td>
+              <td>+639201112233</td>
+              <td>N01-12-789456</td>
+              <td>03/20/2027</td>
+              <td>VAN-001</td>
+              <td>
+                <span class="badge bg-warning"> Inactive </span>
+              </td>
+              <td>06/02/2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDriverModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDriverModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>4</td>
+              <td>DRV-26-06-0004</td>
+              <td>Mark Bautista</td>
+              <td>+639178889999</td>
+              <td>N01-12-456123</td>
+              <td>12/31/2028</td>
+              <td>TRK-003</td>
+              <td>
+                <span class="badge bg-success"> Active </span>
+              </td>
+              <td>06/02/2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDriverModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDriverModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr>
+              <td>5</td>
+              <td>DRV-26-06-0005</td>
+              <td>Robert Cruz</td>
+              <td>+639151234567</td>
+              <td>N01-12-951357</td>
+              <td>11/10/2029</td>
+              <td>TRK-004</td>
+              <td>
+                <span class="badge bg-success"> Active </span>
+              </td>
+              <td>06/02/2026</td>
+              <td>Admin</td>
+              <td class="text-end">
+                <button
+                  class="btn btn-info btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewDriverModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-warning btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDriverModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>

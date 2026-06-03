@@ -1,2 +1,97 @@
 <script src="../assets/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  function previewDriverPhoto(event) {
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      document.getElementById("driverPreview").src = reader.result;
+    };
+
+    reader.readAsDataURL(event.target.files[0]);
+  }
+</script>
+
+<script>
+  function printWaybill() {
+    const content = document.getElementById("waybillPrintArea").innerHTML;
+    const original = document.body.innerHTML;
+
+    document.body.innerHTML = `
+    <div style="padding:20px;font-family:Arial;">
+      ${content}
+    </div>
+  `;
+
+    window.print();
+
+    document.body.innerHTML = original;
+    location.reload();
+  }
+</script>
+
+<script>
+  function viewTracking(id) {
+    // Example mock data (replace with API later)
+    const data = {
+      TRK001: {
+        customer: "John Doe",
+        status: "Delivered",
+        location: "Customer Address",
+        update: "10 mins ago",
+        progress: 100,
+      },
+      TRK002: {
+        customer: "Anna Cruz",
+        status: "Pending",
+        location: "Warehouse",
+        update: "1 hour ago",
+        progress: 20,
+      },
+      TRK003: {
+        customer: "Mike Santos",
+        status: "In Transit",
+        location: "Highway Route A",
+        update: "5 mins ago",
+        progress: 60,
+      },
+    };
+
+    const d = data[id];
+
+    document.getElementById("trackId").value = id;
+    document.getElementById("trackCustomer").value = d.customer;
+    document.getElementById("trackStatus").value = d.status;
+    document.getElementById("trackLocation").value = d.location;
+    document.getElementById("trackUpdate").value = d.update;
+
+    const progress = document.getElementById("trackProgress");
+    progress.style.width = d.progress + "%";
+    progress.innerText = d.progress + "%";
+
+    new bootstrap.Modal(document.getElementById("trackingModalView")).show();
+  }
+</script>
+<script>
+  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((item) => {
+    item.addEventListener("click", function () {
+      localStorage.setItem("openMenu", this.getAttribute("href"));
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    const openMenu = localStorage.getItem("openMenu");
+
+    if (openMenu) {
+      const menu = document.querySelector(openMenu);
+
+      if (menu) {
+        menu.classList.add("show");
+      }
+    }
+  });
+</script>

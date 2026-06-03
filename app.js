@@ -1,11 +1,21 @@
+require("dotenv").config();
+
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+
+var session = require("express-session");
+var MongoDBStore = require("connect-mongodb-session")(session);
+
 var { CheckConnection } = require("./repository/dbconnection");
 
+// =========================
+// ROUTES
+// =========================
 var indexRouter = require("./routes/index");
+var loginRouter = require("./routes/login");
 var dashboardRouter = require("./routes/dashboard");
 var vendorRouter = require("./routes/vendor");
 var branchRouter = require("./routes/branch");
@@ -34,23 +44,63 @@ var shipmentTrackingRouter = require("./routes/shipmentTracking");
 var shipmentProofOfDeliveryRouter = require("./routes/shipmentProofOfDelivery");
 var shipmentReturnRouter = require("./routes/shipmentReturn");
 var shipmentActivityRouter = require("./routes/shipmentActivity");
+var adminRouter = require("./routes/admin");
+var staffRouter = require("./routes/staff");
+var driverRouter = require("./routes/driver");
+var vehicleRouter = require("./routes/vehicle");
 var salesmanRouter = require("./routes/salesman");
 var productsRouter = require("./routes/products");
 var warehouseRouter = require("./routes/warehouse");
+var userRolesRouter = require("./routes/userRoles");
 
+// =========================
+// APP INIT (ONLY ONCE)
+// =========================
 var app = express();
-// console.log("working", CheckConnection())
-// view engine setup
+
+// =========================
+// VIEW ENGINE
+// =========================
 app.set("views", path.join(__dirname, "views/layout"));
 app.set("view engine", "ejs");
 
+// =========================
+// BASIC MIDDLEWARE
+// =========================
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
+// =========================
+// MONGO CONNECTION
+// =========================
+const connectMongo = require("./repository/mongo");
+connectMongo();
+
+// =========================
+// SESSION STORE (MongoDB)
+// =========================
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URL,
+  collection: "sessions",
+});
+
+app.use(
+  session({
+    secret: "lms_secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  }),
+);
+
+// =========================
+// ROUTES MOUNT
+// =========================
+app.use("/", dashboardRouter);
+app.use("/login", loginRouter);
 app.use("/dashboard", dashboardRouter);
 app.use("/vendor", vendorRouter);
 app.use("/branch", branchRouter);
@@ -80,23 +130,41 @@ app.use("/shipmentTracking", shipmentTrackingRouter);
 app.use("/shipmentProofOfDelivery", shipmentProofOfDeliveryRouter);
 app.use("/shipmentReturn", shipmentReturnRouter);
 app.use("/shipmentActivity", shipmentActivityRouter);
+app.use("/staff", staffRouter);
+app.use("/admin", adminRouter);
+app.use("/driver", driverRouter);
+app.use("/vehicle", vehicleRouter);
 app.use("/products", productsRouter);
 app.use("/warehouse", warehouseRouter);
+app.use("/userRoles", userRolesRouter);
 
-// catch 404 and forward to error handler
+// =========================
+// TEST SESSION
+// =========================
+app.get("/test-session", (req, res) => {
+  req.session.user = { test: "ok" };
+  res.json(req.session);
+});
+
+// =========================
+// 404 HANDLER
+// =========================
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
+// =========================
+// ERROR HANDLER
+// =========================
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.render("error");
 });
 
+// =========================
+// EXPORT APP
+// =========================
 module.exports = app;

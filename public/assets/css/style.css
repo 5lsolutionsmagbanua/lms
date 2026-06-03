@@ -1661,3 +1661,27 @@ html[data-theme="dark"] {
   border-top-color: var(--admin-sidebar-border);
   color: var(--admin-sidebar-text);
 }
+
+.sidebar-nav,
+.sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav li {
+  margin: 0;
+  padding: 0;
+}
+
+body.sidebar-mini .nav-text {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.sidebar-collapsed .nav-text,
+.sidebar-collapsed .menu-arrow,
+.sidebar-collapsed .brand-copy,
+.sidebar-collapsed .sidebar-footer {
+  display: none;
+}

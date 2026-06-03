@@ -1,3 +1,186 @@
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i> Edit User
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form id="editUserForm">
+          <input
+            type="hidden"
+            id="edit_user_id"
+            name="user_id"
+            autocomplete="off"
+          />
+
+          <div class="mb-3">
+            <label for="edit_full_name" class="form-label">Full Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="edit_full_name"
+              name="full_name"
+              autocomplete="name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_username" class="form-label">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="edit_username"
+              name="username"
+              autocomplete="username"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_role" class="form-label">User Role</label>
+            <select
+              class="form-select"
+              id="edit_role"
+              name="role"
+              autocomplete="organization-title"
+            >
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="staff">Staff</option>
+              <option value="driver">Driver</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_status" class="form-label">Status</label>
+            <select class="form-select" id="edit_status" name="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-warning" id="updateUserBtn">
+          <i class="bi bi-save"></i> Update User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-person-plus"></i> Add User</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form id="addUserForm">
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label for="full_name" class="form-label">Full Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="full_name"
+              name="full_name"
+              autocomplete="name"
+              required
+            />
+          </div>
+
+          <!-- Username -->
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              name="username"
+              autocomplete="username"
+              required
+            />
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <!-- Role -->
+          <div class="mb-3">
+            <label for="role" class="form-label">User Role</label>
+            <select
+              class="form-select"
+              id="role"
+              name="role"
+              autocomplete="organization-title"
+              required
+            >
+              <option value="">Select Role</option>
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="staff">Staff</option>
+              <option value="driver">Driver</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" id="addUserBtn">
+          <i class="bi bi-check-circle"></i> Save User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <main class="dashboard-content">
   <div class="container-fluid px-3 px-lg-4 py-4">
     <!-- Panel -->
@@ -53,67 +236,15 @@
               <th>ID</th>
               <th>Full Name</th>
               <th>User Name</th>
-              <th>Access ID</th>
+              <th>Password</th>
+              <th>Role</th>
               <th>Status</th>
+              <th>Created At</th>
+              <th>Updated At</th>
               <th class="text-end">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
-            <tr>
-              <td class="fw-semibold">1</td>
-              <td>Juan Dela Cruz</td>
-              <td>juan.dc</td>
-              <td>ACC-001</td>
-              <td>
-                <span class="badge text-bg-success">Active</span>
-              </td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="fw-semibold">2</td>
-              <td>Maria Santos</td>
-              <td>maria.s</td>
-              <td>ACC-002</td>
-              <td>
-                <span class="badge text-bg-success">Active</span>
-              </td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="fw-semibold">3</td>
-              <td>Mark Reyes</td>
-              <td>mark.r</td>
-              <td>ACC-003</td>
-              <td>
-                <span class="badge text-bg-warning">Inactive</span>
-              </td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="userTableBody"></tbody>
         </table>
       </div>
     </section>

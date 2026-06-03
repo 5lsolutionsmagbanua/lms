@@ -2,7 +2,7 @@
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <!-- HEADER -->
-      <div class="modal-header bg-dark text-white">
+      <div class="modal-header bg-dark text-white no-print">
         <h5 class="modal-title">
           <i class="bi bi-receipt-cutoff"></i>
           Waybill / Dispatch Details
@@ -14,8 +14,9 @@
         ></button>
       </div>
 
-      <div class="modal-body">
-        <!-- WAYBILL HEADER INFO -->
+      <!-- PRINT AREA START -->
+      <div class="modal-body" id="waybillPrintArea">
+        <!-- HEADER INFO -->
         <div class="row g-3">
           <div class="col-md-3">
             <label class="form-label">Waybill No.</label>
@@ -60,7 +61,7 @@
 
         <hr />
 
-        <!-- CONSIGNEE / CLIENT INFO -->
+        <!-- CONSIGNEE -->
         <h6 class="fw-bold">Consignee Information</h6>
 
         <div class="row g-3">
@@ -89,7 +90,7 @@ Quezon City, Metro Manila
 
         <hr />
 
-        <!-- WAYBILL ITEMS -->
+        <!-- ITEMS -->
         <h6 class="fw-bold">Waybill Items</h6>
 
         <div class="table-responsive">
@@ -130,25 +131,18 @@ Handle with care. Deliver before 10 AM.
           </div>
         </div>
       </div>
+      <!-- PRINT AREA END -->
 
-      <!-- FOOTER ACTIONS (WAYBILL EXPORT) -->
-      <div class="modal-footer">
+      <!-- FOOTER -->
+      <div class="modal-footer no-print">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 
-        <button class="btn btn-outline-primary">
-          <i class="bi bi-printer"></i>
-          Print Waybill
+        <button class="btn btn-primary" onclick="printWaybill()">
+          <i class="bi bi-printer"></i> Print Waybill
         </button>
 
-        <button class="btn btn-success">
-          <i class="bi bi-file-earmark-excel"></i>
-          Export Excel
-        </button>
-
-        <button class="btn btn-danger">
-          <i class="bi bi-file-pdf"></i>
-          Export PDF
-        </button>
+        <button class="btn btn-success">Export Excel</button>
+        <button class="btn btn-danger">Export PDF</button>
       </div>
     </div>
   </div>
