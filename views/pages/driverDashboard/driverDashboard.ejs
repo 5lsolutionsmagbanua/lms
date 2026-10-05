@@ -1,0 +1,379 @@
+<main class="dashboard-content min-vh-100">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-3"
+      >
+        <div>
+          <div class="eyebrow mb-1">Logistics · Driver</div>
+          <h2 class="h4 mb-1">
+            <i class="bi bi-box-seam me-2"></i>My Deliveries
+          </h2>
+          <p class="text-muted mb-0">Your assigned dispatches for today.</p>
+        </div>
+        <button
+          class="action-icon-btn"
+          id="refreshDeliveriesBtn"
+          title="Refresh"
+        >
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+
+      <div class="panel-body">
+        <!-- Summary strip -->
+        <div class="row g-3 mb-4" id="summaryRow">
+          <div class="col-6 col-xl-3">
+            <article class="metric-card metric-warning">
+              <div class="metric-top">
+                <span class="metric-label">Today</span>
+                <span class="metric-icon"
+                  ><i class="bi bi-calendar-day"></i
+                ></span>
+              </div>
+              <div class="metric-value" id="summaryToday">0</div>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric-card metric-primary">
+              <div class="metric-top">
+                <span class="metric-label">Pending</span>
+                <span class="metric-icon"
+                  ><i class="bi bi-clock-history"></i
+                ></span>
+              </div>
+              <div class="metric-value" id="summaryPending">0</div>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric-card metric-info">
+              <div class="metric-top">
+                <span class="metric-label">In Transit</span>
+                <span class="metric-icon"><i class="bi bi-truck"></i></span>
+              </div>
+              <div class="metric-value" id="summaryTransit">0</div>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric-card metric-success">
+              <div class="metric-top">
+                <span class="metric-label">Completed</span>
+                <span class="metric-icon"
+                  ><i class="bi bi-check2-circle"></i
+                ></span>
+              </div>
+              <div class="metric-value" id="summaryCompleted">0</div>
+            </article>
+          </div>
+        </div>
+
+        <!-- Delivery cards render here -->
+        <div id="deliveryCardsContainer">
+          <div class="empty-state">
+            <i class="bi bi-hourglass-split"></i>
+            <p>Loading your deliveries...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- =====================================================
+     TOAST CONTAINER (NEW)
+     A single fixed container that driverDashboard.client.js
+     appends Bootstrap toasts into. One reusable container for
+     every toast the page shows (status updates, cancels, load
+     errors) instead of separate ad-hoc alert areas.
+===================================================== -->
+<div
+  id="toastContainer"
+  class="toast-container position-fixed bottom-0 end-0 p-3"
+  style="z-index: 1080"
+></div>
+
+<!-- =====================================================
+     DELIVERY EXECUTION MODAL
+     Populated entirely via JS — every field below is filled
+     by fetch() in driverDashboard.client.js, never by data-*
+     attributes on the trigger button (those go stale on refresh).
+
+     STATUS RADIO NOTE: none of the four status options below carry
+     a hardcoded `checked` attribute anymore — which one is checked
+     (and which three are disabled) is now decided at runtime by
+     applyStatusGating() based on the ticket's CURRENT status, every
+     time the modal opens. See driverDashboard.client.js.
+===================================================== -->
+<div
+  class="modal fade"
+  id="deliveryExecutionModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-truck"></i>
+          <span id="modalDispatchTitle">Shipment Execution</span>
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="perf-edge"></div>
+
+      <div class="modal-body">
+        <!-- Top info strip -->
+        <div
+          class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom"
+        >
+          <div>
+            <div class="eyebrow mb-1">Dispatch</div>
+            <span class="waybill-tag"
+              ><i class="bi bi-upc-scan"></i
+              ><span id="modalDispatchNumber">—</span></span
+            >
+          </div>
+          <div class="d-flex gap-2">
+            <span class="pill" id="modalPriorityPill">—</span>
+            <span class="pill" id="modalStatusPill">—</span>
+          </div>
+        </div>
+
+        <!-- Store / contact -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="field-group h-100">
+              <div class="eyebrow mb-1">Deliver To</div>
+              <div class="fw-bold fs-6" id="modalStoreName">—</div>
+              <div class="text-muted small">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i
+                ><span id="modalStoreAddress">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-group h-100">
+              <div class="eyebrow mb-1">Contact</div>
+              <div class="fw-bold fs-6">
+                <i class="bi bi-telephone-fill me-1"></i
+                ><span id="modalContactNumber">—</span>
+              </div>
+              <div class="text-muted small">
+                Ref: <span id="modalTicketRef">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <h6 class="eyebrow mb-2">Requested Items</h6>
+        <div class="table-responsive mb-3">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="text-center" width="100">Qty</th>
+              </tr>
+            </thead>
+            <tbody id="modalItemsBody">
+              <tr>
+                <td colspan="2" class="p-0">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>Loading items...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Delivery note -->
+        <div
+          class="alert d-none"
+          id="modalDeliveryNoteWrap"
+          style="
+            background: var(--amber-tint);
+            border: 1px solid var(--amber);
+            color: var(--amber-deep);
+          "
+        >
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <strong>Delivery Note:</strong> <span id="modalDeliveryNote"></span>
+        </div>
+
+        <!-- Action form — a short guided flow: status first, notes
+             second, proof last (and only when it's actually needed). -->
+        <form id="deliveryForm">
+          <input type="hidden" id="formDispatchId" name="dispatch_id" />
+
+          <div class="border-top pt-3">
+            <div class="form-step-title mb-2">
+              <span class="form-step-num">1</span>
+              <h6 class="eyebrow mb-0">Update Status</h6>
+              <span class="text-muted small" style="text-transform: none"
+                >— follow the delivery in order</span
+              >
+            </div>
+
+            <div
+              class="status-grid mb-4"
+              role="radiogroup"
+              aria-label="Delivery status"
+            >
+              <label
+                class="status-option"
+                for="statusPicked"
+                data-status-option
+              >
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="status"
+                  id="statusPicked"
+                  value="Picked"
+                />
+                <span class="status-option-icon"
+                  ><i class="bi bi-box-seam"></i
+                ></span>
+                <span class="status-option-label">Picked</span>
+              </label>
+              <label
+                class="status-option"
+                for="statusTransit"
+                data-status-option
+              >
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="status"
+                  id="statusTransit"
+                  value="In Transit"
+                />
+                <span class="status-option-icon"
+                  ><i class="bi bi-truck"></i
+                ></span>
+                <span class="status-option-label">In Transit</span>
+              </label>
+              <label
+                class="status-option"
+                for="statusArrived"
+                data-status-option
+              >
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="status"
+                  id="statusArrived"
+                  value="Arrived"
+                />
+                <span class="status-option-icon"
+                  ><i class="bi bi-geo-alt"></i
+                ></span>
+                <span class="status-option-label">Arrived</span>
+              </label>
+              <label class="status-option" for="statusDone" data-status-option>
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="status"
+                  id="statusDone"
+                  value="Delivered"
+                />
+                <span class="status-option-icon"
+                  ><i class="bi bi-check2-circle"></i
+                ></span>
+                <span class="status-option-label">Delivered</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-step-title mb-2">
+            <span class="form-step-num">2</span>
+            <h6 class="eyebrow mb-0">Notes</h6>
+            <span class="text-muted small" style="text-transform: none"
+              >— optional</span
+            >
+          </div>
+          <div class="mb-4">
+            <textarea
+              class="form-control"
+              id="deliveryRemarks"
+              rows="2"
+              placeholder="Gate code, delay reason, who received it..."
+            ></textarea>
+          </div>
+
+          <!-- Proof only appears once "Delivered" is selected, so the
+               form for an in-transit update is two taps, not six fields. -->
+          <div id="proofSection" class="d-none">
+            <div class="form-step-title mb-2">
+              <span class="form-step-num">3</span>
+              <h6 class="eyebrow mb-0">Proof of Delivery</h6>
+              <span class="pill pill-urgent" style="font-size: 0.65rem"
+                >Required</span
+              >
+            </div>
+
+            <div class="field-group">
+              <label
+                class="form-label d-flex justify-content-between align-items-center"
+              >
+                <span>Photos</span>
+                <span id="photoCount" class="text-muted small">0/5</span>
+              </label>
+
+              <div id="photoGrid" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+              <input
+                class="form-control d-none"
+                type="file"
+                id="deliveryPhoto"
+                accept="image/*"
+                capture="environment"
+                multiple
+              />
+
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm w-100"
+                id="addPhotoBtn"
+              >
+                <i class="bi bi-camera me-1"></i>Add Photo
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer — three buttons now:
+           Cancel Delivery (new, left-aligned, danger) / Close
+           (dismiss only) / Complete Delivery (primary submit). -->
+      <div class="modal-footer d-flex justify-content-between">
+        <button
+          type="button"
+          class="btn btn-outline-danger"
+          id="cancelDispatchBtn"
+        >
+          <i class="bi bi-x-circle me-1"></i>Cancel Delivery
+        </button>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+          <button class="btn btn-success" id="completeDeliveryBtn">
+            <i class="bi bi-check-circle me-2"></i>
+            <span id="completeDeliveryBtnLabel">Complete Delivery</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

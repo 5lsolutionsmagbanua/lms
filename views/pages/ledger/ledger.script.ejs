@@ -1,0 +1,377 @@
+<script>
+  $(document).ready(function () {
+    let editId = null;
+
+    init();
+
+    // =========================
+    // INIT
+    // =========================
+    function init() {
+      bindEvents();
+      loadTransactionTypes();
+    }
+
+    // =========================
+    // EVENTS
+    // =========================
+    function bindEvents() {
+      // ADD / UPDATE
+      $("#transactionTypeForm").on("submit", function (e) {
+        e.preventDefault();
+
+        if (editId) {
+          updateTransactionType();
+        } else {
+          addTransactionType();
+        }
+      });
+
+      // EDIT
+      $(document).on("click", ".btn-edit", function () {
+        const id = $(this).data("id");
+        getTransactionTypeById(id);
+      });
+
+      // DELETE
+      $(document).on("click", ".btn-delete", function () {
+        const id = $(this).data("id");
+        deleteTransactionType(id);
+      });
+
+      // RESET MODAL
+      $("#addTransactionTypeModal").on("hidden.bs.modal", function () {
+        resetForm();
+      });
+    }
+
+    // =========================
+    // LOAD ALL
+    // =========================
+    function loadTransactionTypes() {
+      $.ajax({
+        url: "/ledger/get-transaction-types",
+        method: "GET",
+
+        success: function (response) {
+          console.log("Transaction Types:", response);
+
+          if (response.success) {
+            renderTable(response.data);
+          } else {
+            renderTable([]);
+          }
+        },
+
+        error: function (xhr, status, error) {
+          console.error("LOAD ERROR:", error);
+
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to load transaction types.",
+          });
+        },
+      });
+    }
+
+    // =========================
+    // GET BY ID
+    // =========================
+    function getTransactionTypeById(id) {
+      $.ajax({
+        url: `/ledger/get-transaction-type/${id}`,
+        method: "GET",
+
+        success: function (response) {
+          console.log(response);
+
+          if (!response.success) {
+            return Swal.fire("Error", response.message, "error");
+          }
+
+          const row = response.data;
+
+          editId = row.id;
+
+          $("#transaction_type_name").val(row.transaction_type_name);
+          $("#code").val(row.code);
+          $("#description").val(row.description);
+          $("#direction").val(row.direction);
+
+          $(".modal-title").text("Edit Transaction Type");
+
+          const modal = new bootstrap.Modal(
+            document.getElementById("addTransactionTypeModal"),
+          );
+
+          modal.show();
+        },
+
+        error: function (xhr) {
+          console.error(xhr);
+
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to fetch transaction type.",
+          });
+        },
+      });
+    }
+
+    // =========================
+    // ADD
+    // =========================
+    function addTransactionType() {
+      const data = getFormData();
+
+      if (!validate(data)) return;
+
+      $.ajax({
+        url: "/ledger/add-transaction-type",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+
+        success: function (response) {
+          if (!response.success) {
+            return Swal.fire("Error", response.message, "error");
+          }
+
+          $("#addTransactionTypeModal").modal("hide");
+
+          loadTransactionTypes();
+
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: response.message,
+          });
+        },
+
+        error: function (xhr) {
+          console.error(xhr);
+
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text:
+              xhr.responseJSON?.message || "Failed to add transaction type.",
+          });
+        },
+      });
+    }
+
+    // =========================
+    // UPDATE
+    // =========================
+    function updateTransactionType() {
+      const data = getFormData();
+      data.id = editId;
+
+      if (!validate(data)) return;
+
+      Swal.fire({
+        title: "Update Transaction Type?",
+        text: "Save the changes made to this transaction type?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Update",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+          url: "/ledger/update-transaction-type",
+          method: "PUT",
+          contentType: "application/json",
+          data: JSON.stringify(data),
+
+          success: function (response) {
+            if (!response.success) {
+              return Swal.fire("Error", response.message, "error");
+            }
+
+            $("#addTransactionTypeModal").modal("hide");
+
+            loadTransactionTypes();
+
+            Swal.fire({
+              icon: "success",
+              title: "Updated!",
+              text: "Transaction Type updated successfully.",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+
+            resetForm();
+          },
+
+          error: function (xhr) {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text:
+                xhr.responseJSON?.message ||
+                "Failed to update transaction type.",
+            });
+          },
+        });
+      });
+    }
+    // =========================
+    // DELETE
+    // =========================
+    function deleteTransactionType(id) {
+      Swal.fire({
+        title: "Delete Transaction Type?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Delete",
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+          url: `/ledger/delete-transaction-type/${id}`,
+          method: "DELETE",
+
+          success: function (response) {
+            if (!response.success) {
+              return Swal.fire("Error", response.message, "error");
+            }
+
+            loadTransactionTypes();
+
+            Swal.fire({
+              icon: "success",
+              title: "Deleted",
+              text: response.message,
+            });
+          },
+
+          error: function (xhr) {
+            console.error(xhr);
+
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text:
+                xhr.responseJSON?.message ||
+                "Failed to delete transaction type.",
+            });
+          },
+        });
+      });
+    }
+
+    // =========================
+    // TABLE RENDER
+    // =========================
+    function renderTable(data) {
+      let rows = "";
+
+      if (!data || data.length === 0) {
+        rows = `
+          <tr>
+            <td colspan="6" class="text-center">
+              No transaction types found
+            </td>
+          </tr>
+        `;
+
+        $("#transactionTypeTable").html(rows);
+        return;
+      }
+
+      data.forEach((item) => {
+        const badgeClass =
+          item.direction === "in"
+            ? "success"
+            : item.direction === "out"
+              ? "danger"
+              : "secondary";
+
+        rows += `
+          <tr>
+            <td>${item.id}</td>
+            <td>${item.transaction_type_name || ""}</td>
+            <td>${item.code || ""}</td>
+            <td>${item.description || ""}</td>
+            <td>
+              <span class="badge bg-${badgeClass}">
+                ${item.direction || "none"}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-warning btn-sm btn-edit"
+                data-id="${item.id}">
+                <i class="bi bi-pencil"></i>
+              </button>
+
+              <button
+                class="btn btn-danger btn-sm btn-delete"
+                data-id="${item.id}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      $("#transactionTypeTable").html(rows);
+    }
+
+    // =========================
+    // FORM DATA
+    // =========================
+    function getFormData() {
+      return {
+        transaction_type_name: $("#transaction_type_name").val().trim(),
+
+        code: $("#code").val().trim().toUpperCase(),
+
+        description: $("#description").val().trim(),
+
+        direction: $("#direction").val(),
+
+        created_by: $("#created_by").val() || 1,
+      };
+    }
+
+    // =========================
+    // VALIDATION
+    // =========================
+    function validate(data) {
+      if (!data.transaction_type_name) {
+        Swal.fire(
+          "Validation",
+          "Transaction Type Name is required.",
+          "warning",
+        );
+        return false;
+      }
+
+      if (!data.code) {
+        Swal.fire("Validation", "Code is required.", "warning");
+        return false;
+      }
+
+      return true;
+    }
+
+    // =========================
+    // RESET
+    // =========================
+    function resetForm() {
+      editId = null;
+
+      $("#transactionTypeForm")[0].reset();
+
+      $(".modal-title").text("Add Transaction Type");
+    }
+  });
+</script>

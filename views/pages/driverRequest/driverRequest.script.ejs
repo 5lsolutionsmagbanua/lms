@@ -1,0 +1,578 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tbody = document.getElementById("driverRequestTbody");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const refreshSpinner = document.getElementById("refreshSpinner");
+    const refreshIcon = document.getElementById("refreshIcon");
+    const searchInput = document.getElementById("searchDriverRequest");
+    const selectAllCheckbox = document.getElementById(
+      "selectAllDriverRequests",
+    );
+    const approveSelectedBtn = document.getElementById("approveSelectedBtn");
+    const approveSelectedCount = document.getElementById(
+      "approveSelectedCount",
+    );
+
+    let driverRequests = [];
+    let filteredDriverRequests = [];
+    let currentPage = 1;
+    const rowsPerPage = 4;
+
+    // Set of dr_id values currently checked. Cleared on every reload/search
+    // change since a selection referring to a now-hidden or stale row
+    // would be confusing to carry forward silently.
+    let selectedIds = new Set();
+
+    const STATUS_BADGES = {
+      PENDING: "bg-warning text-dark",
+      APPROVED: "bg-info text-dark",
+      IN_PROGRESS: "bg-primary",
+      COMPLETED: "bg-success",
+      REJECTED: "bg-danger",
+      CANCELLED: "bg-secondary",
+      SYNCED: "bg-success",
+      FAILED: "bg-danger",
+    };
+
+    const STATUS_LABELS = {
+      PENDING: "Pending",
+      APPROVED: "Approved",
+      IN_PROGRESS: "In Progress",
+      COMPLETED: "Completed",
+      REJECTED: "Rejected",
+      CANCELLED: "Cancelled",
+      SYNCED: "Synced",
+      FAILED: "Failed",
+    };
+
+    function statusBadge(status) {
+      const cls = STATUS_BADGES[status] || "bg-secondary";
+      const label = STATUS_LABELS[status] || status;
+      return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    // ==============================
+    // LOAD + SEARCH + PAGINATE
+    // ==============================
+    async function loadDriverRequests() {
+      refreshBtn.disabled = true;
+      refreshSpinner.classList.remove("d-none");
+      refreshIcon.classList.add("d-none");
+
+      try {
+        const res = await fetch("/driverRequest/api/driver-requests");
+        const json = await res.json();
+        if (json.success) {
+          driverRequests = json.data || [];
+          selectedIds.clear();
+          applySearch();
+        } else {
+          tbody.innerHTML =
+            '<tr><td colspan="11" class="text-center text-danger py-4">Failed to load data</td></tr>';
+        }
+      } catch (err) {
+        tbody.innerHTML =
+          '<tr><td colspan="11" class="text-center text-danger py-4">Error loading data</td></tr>';
+      } finally {
+        refreshBtn.disabled = false;
+        refreshSpinner.classList.add("d-none");
+        refreshIcon.classList.remove("d-none");
+      }
+    }
+
+    function applySearch() {
+      const term = (searchInput.value || "").toLowerCase().trim();
+
+      filteredDriverRequests = !term
+        ? [...driverRequests]
+        : driverRequests.filter((r) => {
+            const item = (r.dr_itemName || "").toLowerCase();
+            const asset = (r.dr_asset || "").toLowerCase();
+            const serial = (r.dr_serial || "").toLowerCase();
+            return (
+              item.includes(term) ||
+              asset.includes(term) ||
+              serial.includes(term)
+            );
+          });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    searchInput.addEventListener("keyup", function () {
+      selectedIds.clear();
+      applySearch();
+    });
+
+    // ==============================
+    // SELECTION STATE (checkboxes → Approve Selected button)
+    // ==============================
+    function updateSelectionUI() {
+      const count = selectedIds.size;
+      approveSelectedBtn.disabled = count === 0;
+      if (count > 0) {
+        approveSelectedCount.textContent = count;
+        approveSelectedCount.classList.remove("d-none");
+      } else {
+        approveSelectedCount.classList.add("d-none");
+      }
+
+      // "Select all" reflects only the PENDING rows on the CURRENT page,
+      // since those are the only ones with a checkbox at all.
+      const pageCheckboxes = Array.from(
+        document.querySelectorAll(".driverRequestCheckbox"),
+      );
+      selectAllCheckbox.checked =
+        pageCheckboxes.length > 0 && pageCheckboxes.every((cb) => cb.checked);
+    }
+
+    document.addEventListener("change", function (e) {
+      if (e.target.classList.contains("driverRequestCheckbox")) {
+        const id = e.target.value;
+        if (e.target.checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+        updateSelectionUI();
+      }
+    });
+
+    selectAllCheckbox.addEventListener("change", function () {
+      const pageCheckboxes = document.querySelectorAll(
+        ".driverRequestCheckbox",
+      );
+      pageCheckboxes.forEach((cb) => {
+        cb.checked = selectAllCheckbox.checked;
+        if (selectAllCheckbox.checked) {
+          selectedIds.add(cb.value);
+        } else {
+          selectedIds.delete(cb.value);
+        }
+      });
+      updateSelectionUI();
+    });
+
+    function renderTable() {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pageRows = filteredDriverRequests.slice(start, end);
+
+      if (pageRows.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="11" class="text-center text-muted py-4">No driver requests found</td></tr>';
+        renderPagination();
+        updateSelectionUI();
+        return;
+      }
+
+      tbody.innerHTML = pageRows
+        .map((r) => {
+          const isPending = r.dr_status === "PENDING";
+          return `
+        <tr>
+          <td class="text-center">
+            ${
+              isPending
+                ? `<input type="checkbox" class="driverRequestCheckbox" value="${r.dr_id}" ${selectedIds.has(r.dr_id) ? "checked" : ""}>`
+                : `<input type="checkbox" disabled title="Only pending requests can be approved">`
+            }
+          </td>
+          <td>${r.dr_ticketNumber ?? "-"}</td>
+          <td>${r.dr_storeName ?? "-"}</td>
+          <td>${r.dr_itemName ?? "-"}</td>
+          <td>${r.dr_asset ?? "-"}</td>
+          <td>${r.dr_serial ?? "-"}</td>
+          <td class="text-center">${r.dr_requestQty ?? "-"}</td>
+          <td>${r.dr_requestType ?? "-"}</td>
+          <td>${statusBadge(r.dr_status)}</td>
+          <td>${r.dr_createdDate ? new Date(r.dr_createdDate).toLocaleString() : "-"}</td>
+          <td class="text-center">
+            <button class="btn btn-primary btn-sm viewDriverRequestBtn" data-id="${r.dr_id}">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-warning btn-sm editStatusBtn" data-id="${r.dr_id}">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            ${
+              isPending
+                ? `<button class="btn btn-success btn-sm approveChecklistBtn" data-id="${r.dr_id}">
+                     <i class="bi bi-clipboard-check"></i>
+                   </button>`
+                : ""
+            }
+          </td>
+        </tr>`;
+        })
+        .join("");
+
+      renderPagination();
+      updateSelectionUI();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredDriverRequests.length / rowsPerPage),
+      );
+      const start =
+        filteredDriverRequests.length === 0
+          ? 0
+          : (currentPage - 1) * rowsPerPage + 1;
+      const end = Math.min(
+        currentPage * rowsPerPage,
+        filteredDriverRequests.length,
+      );
+
+      document.getElementById("driverRequestPaginationInfo").textContent =
+        `Showing ${start} to ${end} of ${filteredDriverRequests.length} entries`;
+
+      let html = `
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+          <a class="page-link" href="#" id="drPrevPage"><i class="bi bi-chevron-left"></i> Previous</a>
+        </li>
+      `;
+
+      for (let i = 1; i <= totalPages; i++) {
+        html += `
+          <li class="page-item ${currentPage === i ? "active" : ""}">
+            <a href="#" class="page-link drPageNumber" data-page="${i}">${i}</a>
+          </li>
+        `;
+      }
+
+      html += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+          <a class="page-link" href="#" id="drNextPage">Next <i class="bi bi-chevron-right"></i></a>
+        </li>
+      `;
+
+      document.getElementById("driverRequestPagination").innerHTML = html;
+    }
+
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("#drPrevPage")) {
+        e.preventDefault();
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      }
+      if (e.target.closest("#drNextPage")) {
+        e.preventDefault();
+        const totalPages = Math.ceil(
+          filteredDriverRequests.length / rowsPerPage,
+        );
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      }
+      const pageBtn = e.target.closest(".drPageNumber");
+      if (pageBtn) {
+        e.preventDefault();
+        currentPage = Number(pageBtn.dataset.page);
+        renderTable();
+      }
+    });
+
+    refreshBtn.addEventListener("click", loadDriverRequests);
+    loadDriverRequests();
+
+    // ==============================
+    // VIEW MODAL
+    // ==============================
+    function openViewModal(id) {
+      const r = driverRequests.find((x) => x.dr_id === id);
+      if (!r) return;
+
+      document.getElementById("viewRequestId").textContent =
+        r.dr_requestId || "-";
+      document.getElementById("viewTicketNumber").textContent =
+        r.dr_ticketNumber || "-";
+      document.getElementById("viewStatus").innerHTML = statusBadge(
+        r.dr_status,
+      );
+
+      document.getElementById("viewStoreName").textContent =
+        r.dr_storeName || "-";
+      document.getElementById("viewStoreCode").textContent =
+        r.dr_storeCode || "-";
+      document.getElementById("viewRequestType").textContent =
+        r.dr_requestType || "-";
+
+      document.getElementById("viewItemName").textContent =
+        r.dr_itemName || "-";
+      document.getElementById("viewAsset").textContent = r.dr_asset || "-";
+      document.getElementById("viewSerial").textContent = r.dr_serial || "-";
+      document.getElementById("viewRequestQty").textContent =
+        r.dr_requestQty ?? "-";
+
+      document.getElementById("viewCreatedDate").textContent = r.dr_createdDate
+        ? new Date(r.dr_createdDate).toLocaleString()
+        : "-";
+      document.getElementById("viewCreatedBy").textContent =
+        r.dr_createdBy || "-";
+
+      document.getElementById("viewNotes").textContent = r.dr_notes || "\u2014";
+
+      new bootstrap.Modal(
+        document.getElementById("viewDriverRequestModal"),
+      ).show();
+    }
+
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".viewDriverRequestBtn");
+      if (btn) openViewModal(btn.dataset.id);
+    });
+
+    // ==============================
+    // EDIT STATUS MODAL
+    // ==============================
+    function openEditStatusModal(id) {
+      const r = driverRequests.find((x) => x.dr_id === id);
+      if (!r) return;
+
+      document.getElementById("editStatusId").value = r.dr_id;
+      document.getElementById("editStatusTicket").textContent =
+        r.dr_ticketNumber || "-";
+      document.getElementById("editStatusSelect").value =
+        r.dr_status || "PENDING";
+
+      new bootstrap.Modal(document.getElementById("editStatusModal")).show();
+    }
+
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".editStatusBtn");
+      if (btn) openEditStatusModal(btn.dataset.id);
+    });
+
+    document
+      .getElementById("saveStatusBtn")
+      .addEventListener("click", async function () {
+        const id = document.getElementById("editStatusId").value;
+        const status = document.getElementById("editStatusSelect").value;
+        const saveBtn = this;
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
+
+        try {
+          const res = await fetch(
+            `/driverRequest/api/driver-requests/${id}/status`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            },
+          );
+          const json = await res.json();
+
+          if (json.success) {
+            bootstrap.Modal.getInstance(
+              document.getElementById("editStatusModal"),
+            ).hide();
+            await loadDriverRequests();
+          } else {
+            alert(json.message || "Failed to update status.");
+          }
+        } catch (err) {
+          alert("Failed to update status: " + err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<i class="bi bi-check-circle me-1"></i> Save Status`;
+        }
+      });
+
+    // ==============================
+    // APPROVE CHECKLIST MODAL
+    // Shared by both the single-row Approve button and "Approve Selected".
+    // pendingApproveIds holds whichever id(s) the currently-open modal
+    // is about to approve.
+    // ==============================
+    const checklistBoxes = document.querySelectorAll(
+      ".approveChecklistItemCheck",
+    );
+    const saveApproveBtn = document.getElementById("saveApproveBtn");
+    let pendingApproveIds = [];
+
+    function updateApproveButtonState() {
+      const allChecked = Array.from(checklistBoxes).every((cb) => cb.checked);
+      saveApproveBtn.disabled = !allChecked;
+    }
+
+    checklistBoxes.forEach((cb) =>
+      cb.addEventListener("change", updateApproveButtonState),
+    );
+
+    function openApproveChecklistModal(ids) {
+      const targets = driverRequests.filter((r) => ids.includes(r.dr_id));
+      if (targets.length === 0) return;
+
+      pendingApproveIds = ids;
+
+      const isBulk = targets.length > 1;
+      document.getElementById("approveChecklistPlural").textContent = isBulk
+        ? "s"
+        : "";
+      document.getElementById("saveApproveBtnLabel").textContent = isBulk
+        ? `Approve ${targets.length} Requests`
+        : "Approve Request";
+
+      document.getElementById("approveChecklistTargets").innerHTML = targets
+        .map(
+          (r) =>
+            `<div>&bull; <strong>${r.dr_ticketNumber || "-"}</strong> &mdash; ${r.dr_itemName || "-"}</div>`,
+        )
+        .join("");
+
+      checklistBoxes.forEach((cb) => (cb.checked = false));
+      updateApproveButtonState();
+
+      new bootstrap.Modal(
+        document.getElementById("approveChecklistModal"),
+      ).show();
+    }
+
+    // Single-row Approve button
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".approveChecklistBtn");
+      if (btn) openApproveChecklistModal([btn.dataset.id]);
+    });
+
+    // "Approve Selected" button — approves every currently-checked row
+    approveSelectedBtn.addEventListener("click", function () {
+      if (selectedIds.size === 0) return;
+      openApproveChecklistModal(Array.from(selectedIds));
+    });
+
+    saveApproveBtn.addEventListener("click", async function () {
+      const ids = pendingApproveIds;
+      const btn = this;
+      const label = document.getElementById("saveApproveBtnLabel");
+      const originalLabel = label.textContent;
+
+      btn.disabled = true;
+      label.textContent = "Approving...";
+
+      try {
+        // Fire all approvals in parallel; each is an independent PUT so
+        // one failure doesn't block the others from going through.
+        const results = await Promise.allSettled(
+          ids.map((id) =>
+            fetch(`/driverRequest/api/driver-requests/${id}/status`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "APPROVED" }),
+            }).then((r) => r.json()),
+          ),
+        );
+
+        const failed = results.filter(
+          (r) => r.status === "rejected" || !r.value?.success,
+        );
+
+        bootstrap.Modal.getInstance(
+          document.getElementById("approveChecklistModal"),
+        ).hide();
+
+        selectedIds.clear();
+        await loadDriverRequests();
+
+        if (failed.length > 0) {
+          alert(
+            `${ids.length - failed.length} of ${ids.length} request(s) approved. ${failed.length} failed — please retry those.`,
+          );
+        }
+      } catch (err) {
+        alert("Failed to approve: " + err.message);
+      } finally {
+        btn.innerHTML = `<i class="bi bi-check-circle me-1"></i> <span id="saveApproveBtnLabel">${originalLabel}</span>`;
+      }
+    });
+
+    // ==============================
+    // PRINT SUMMARY
+    // ==============================
+    function buildSummaryPrintHtml(rows) {
+      const today = new Date().toLocaleString();
+
+      const tableRows = rows
+        .map(
+          (r) => `
+        <tr>
+          <td>${r.dr_ticketNumber ?? "-"}</td>
+          <td>${r.dr_storeName ?? "-"} (${r.dr_storeCode ?? "-"})</td>
+          <td>${r.dr_itemName ?? "-"}</td>
+          <td>${r.dr_asset ?? "-"}</td>
+          <td>${r.dr_serial ?? "-"}</td>
+          <td class="text-center">${r.dr_requestQty ?? "-"}</td>
+          <td>${r.dr_requestType ?? "-"}</td>
+          <td>${STATUS_LABELS[r.dr_status] || r.dr_status}</td>
+          <td>${r.dr_createdDate ? new Date(r.dr_createdDate).toLocaleDateString() : "-"}</td>
+        </tr>`,
+        )
+        .join("");
+
+      return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Driver Requests Summary</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 24px; color: #333; font-size: 12px; }
+          h1 { font-size: 18px; margin-bottom: 4px; color: #198754; }
+          .meta { font-size: 11px; color: #666; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+          th { background: #f2f2f2; }
+          .summary-count { margin-top: 12px; font-size: 11px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <h1>Driver Requests Summary</h1>
+        <div class="meta">Generated: ${today}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket #</th>
+              <th>Store</th>
+              <th>Item</th>
+              <th>Asset</th>
+              <th>Serial</th>
+              <th>Qty</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        <div class="summary-count">Total records: ${rows.length}</div>
+      </body>
+      </html>`;
+    }
+
+    document
+      .getElementById("printSummaryBtn")
+      .addEventListener("click", function () {
+        if (filteredDriverRequests.length === 0) {
+          alert("No driver requests to print.");
+          return;
+        }
+
+        const printWindow = window.open("", "_blank", "width=1000,height=700");
+        printWindow.document.open();
+        printWindow.document.write(
+          buildSummaryPrintHtml(filteredDriverRequests),
+        );
+        printWindow.document.close();
+        printWindow.onload = function () {
+          printWindow.focus();
+          printWindow.print();
+        };
+      });
+  });
+</script>

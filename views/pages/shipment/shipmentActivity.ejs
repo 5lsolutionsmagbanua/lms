@@ -135,89 +135,107 @@ Shipment dispatched to warehouse.
     </div>
   </div>
 </div>
-<div class="panel">
-  <div
-    class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2"
-  >
-    <div>
-      <h2 class="h5 mb-1 section-title">
-        <i class="bi bi-activity"></i>
-        <span style="font-weight: 700; color: #000">Shipment Activity</span>
-      </h2>
-      <p class="text-muted mb-0">
-        Track all shipment actions and history logs.
-      </p>
-    </div>
-
-    <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-outline-primary">
-        <i class="bi bi-arrow-repeat"></i> Sync
-      </button>
-
-      <button
-        class="btn btn-sm btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#addActivityModal"
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- PANEL -->
+    <section class="panel">
+      <!-- HEADER -->
+     <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
       >
-        <i class="bi bi-plus-circle"></i> Add Activity
-      </button>
-    </div>
+        <!-- TITLE -->
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-activity"></i>
+            Shipment Activity
+          </h2>
+
+          <p class="text-muted mb-0">
+            Track all shipment actions and history logs.
+          </p>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i>
+            Sync
+          </button>
+
+          <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addActivityModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Activity
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="px-3 pt-3">
+        <input
+          type="search"
+          class="form-control form-control-sm"
+          placeholder="Search activity..."
+          data-table-search="activityTable"
+        />
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive px-3 pb-3">
+        <table
+          class="table align-middle"
+          id="activityTable"
+          data-searchable-table
+        >
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Shipment ID</th>
+              <th>Action</th>
+              <th>Description</th>
+              <th>User</th>
+              <th>Date Time</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>SH-2026-001</td>
+              <td>Created</td>
+              <td>Shipment request created</td>
+              <td>Admin</td>
+              <td>2026-06-01 10:30</td>
+
+              <td class="text-end">
+                <button
+                  class="btn btn-light btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#viewActivityModal"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editActivityModal"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
-
-  <!-- Search -->
-  <div class="px-3 pb-2">
-    <input
-      class="form-control form-control-sm"
-      placeholder="Search activity..."
-    />
-  </div>
-
-  <!-- Table -->
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead class="table-dark text-white">
-        <tr>
-          <th>ID</th>
-          <th>Shipment ID</th>
-          <th>Action</th>
-          <th>Description</th>
-          <th>User</th>
-          <th>Date Time</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>1</td>
-          <td>SH-2026-001</td>
-          <td>Created</td>
-          <td>Shipment request created</td>
-          <td>Admin</td>
-          <td>2026-06-01 10:30</td>
-          <td class="text-end">
-            <button
-              class="btn btn-light btn-sm"
-              data-bs-toggle="modal"
-              data-bs-target="#viewActivityModal"
-            >
-              <i class="bi bi-eye"></i>
-            </button>
-
-            <button
-              class="btn btn-primary btn-sm"
-              data-bs-toggle="modal"
-              data-bs-target="#editActivityModal"
-            >
-              <i class="bi bi-pencil"></i>
-            </button>
-
-            <button class="btn btn-danger btn-sm">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+</main>

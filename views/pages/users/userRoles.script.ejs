@@ -1,0 +1,546 @@
+<script>
+  $(document).ready(function () {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+    });
+
+    // =========================
+    // STATE
+    // =========================
+    const state = (window.__rolesState = { page: 1, limit: 4, search: "" });
+
+    loadRoles();
+    loadRoleDropdown(); // 🔥 for USER module sync (if present on the page)
+
+    // =========================
+    // ADD ROLE
+    // =========================
+    $("#saveRoleBtn").click(function () {
+      addRole();
+    });
+
+    // =========================
+    // UPDATE ROLE
+    // =========================
+    $("#updateRoleBtn").click(function () {
+      updateRole();
+    });
+
+    // =========================
+    // SEARCH / PAGE SIZE
+    // =========================
+    let searchTimer = null;
+    $("#roleSearch").on("input", function () {
+      const val = $(this).val();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.search = val.trim();
+        state.page = 1;
+        loadRoles();
+      }, 400);
+    });
+
+    $("#entriesPerPage").on("change", function () {
+      state.limit = parseInt($(this).val(), 10);
+      state.page = 1;
+      loadRoles();
+    });
+
+    $(document).on("click", "#rolePagination .page-link", function () {
+      const p = parseInt($(this).data("page"), 10);
+      if (!p || p < 1) return;
+      state.page = p;
+      loadRoles();
+    });
+
+    // =========================
+    // PRINT
+    // =========================
+    $("#printRoleBtn").click(function () {
+      printRoles();
+    });
+
+    // =========================
+    // EXPORT EXCEL
+    // =========================
+    $("#exportRoleExcelBtn").click(function () {
+      window.location.href = "/userRoles/export-excel";
+    });
+
+    // =========================
+    // BULK UPLOAD
+    // =========================
+    $("#bulkUploadRoleSubmitBtn").click(function () {
+      submitBulkUpload();
+    });
+
+    $("#bulkUploadRoleModal").on("hidden.bs.modal", function () {
+      $("#bulkUploadRoleFile").val("");
+      $("#bulkUploadRoleReport").addClass("d-none");
+    });
+  });
+
+  // A single shared Toast instance so every alert in this file — success,
+  // error, warning — renders the same way: a small top-right toast with
+  // an icon, no confirm button, auto-dismissing.
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+
+  function notify(icon, title) {
+    Toast.fire({ icon, title });
+  }
+
+  function escapeHtml(str) {
+    return $("<div>")
+      .text(str == null ? "" : str)
+      .html();
+  }
+
+  // Blank, invisible row matching the live column count (6), used to pad
+  // the table so its height never shifts between 1 row and a full page.
+  function fillerRow() {
+    return `
+    <tr>
+      <td class="filler-row">&nbsp;</td>
+      <td class="filler-row">&nbsp;</td>
+      <td class="filler-row">&nbsp;</td>
+      <td class="filler-row">&nbsp;</td>
+      <td class="filler-row">&nbsp;</td>
+      <td class="filler-row">&nbsp;</td>
+    </tr>
+  `;
+  }
+
+  // ======================================================
+  // LOAD ROLES TABLE (paginated + searchable)
+  // ======================================================
+  function loadRoles() {
+    const state = window.__rolesState;
+
+    $.ajax({
+      url: "/userRoles/get-roles",
+      method: "GET",
+      data: { page: state.page, limit: state.limit, search: state.search },
+      success: function (res) {
+        renderRoleTable(res.data);
+        renderRolePagination(res.pagination);
+      },
+      error: function () {
+        notify("error", "Failed to load roles.");
+      },
+    });
+  }
+
+  function renderRoleTable(data) {
+    const state = window.__rolesState;
+    const target = state.limit;
+    let rows = "";
+
+    if (!data || data.length === 0) {
+      rows += `
+      <tr>
+        <td colspan="6" class="text-center text-muted py-4">
+          <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+          No roles found
+        </td>
+      </tr>
+    `;
+      for (let i = 1; i < target; i++) rows += fillerRow();
+      $("#roleTableBody").html(rows);
+      return;
+    }
+
+    data.forEach((item) => {
+      rows += `
+      <tr>
+        <td>${item.id}</td>
+        <td title="${escapeHtml(item.role_name)}">${escapeHtml(item.role_name)}</td>
+        <td title="${escapeHtml(item.description)}">${escapeHtml(item.description)}</td>
+        <td>
+          ${
+            item.is_active == 1
+              ? '<span class="badge bg-success">Active</span>'
+              : '<span class="badge bg-secondary">Inactive</span>'
+          }
+        </td>
+        <td>${formatDate(item.created_at)}</td>
+        <td class="text-end">
+          <button class="btn btn-warning btn-sm"
+            onclick="editRole(this)"
+            data-item='${JSON.stringify(item)}'>
+           <i class="bi bi-pencil"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+    });
+
+    for (let i = data.length; i < target; i++) rows += fillerRow();
+
+    $("#roleTableBody").html(rows);
+  }
+
+  function renderRolePagination(pagination) {
+    const state = window.__rolesState;
+    const { page, totalPages, total, limit } = pagination;
+
+    if (total === 0) {
+      $("#rolePaginationInfo").text("No entries");
+      $("#rolePagination").html("");
+      return;
+    }
+
+    const start = (page - 1) * limit + 1;
+    const end = Math.min(page * limit, total);
+    $("#rolePaginationInfo").text(
+      `Showing ${start}-${end} of ${total} entries`,
+    );
+
+    let html = "";
+    html += `<li class="page-item ${page <= 1 ? "disabled" : ""}">
+            <button class="page-link" data-page="${page - 1}">Prev</button>
+          </li>`;
+
+    const windowSize = 5;
+    let startPage = Math.max(1, page - Math.floor(windowSize / 2));
+    let endPage = Math.min(totalPages, startPage + windowSize - 1);
+    startPage = Math.max(1, endPage - windowSize + 1);
+
+    if (startPage > 1) {
+      html += `<li class="page-item"><button class="page-link" data-page="1">1</button></li>`;
+      if (startPage > 2)
+        html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+
+    for (let p = startPage; p <= endPage; p++) {
+      html += `<li class="page-item ${p === page ? "active" : ""}">
+              <button class="page-link" data-page="${p}">${p}</button>
+            </li>`;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1)
+        html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      html += `<li class="page-item"><button class="page-link" data-page="${totalPages}">${totalPages}</button></li>`;
+    }
+
+    html += `<li class="page-item ${page >= totalPages ? "disabled" : ""}">
+            <button class="page-link" data-page="${page + 1}">Next</button>
+          </li>`;
+
+    $("#rolePagination").html(html);
+  }
+
+  // ======================================================
+  // ADD ROLE
+  // ======================================================
+  function addRole() {
+    const data = {
+      role_name: $("#role_name").val().trim(),
+      description: $("#role_description").val().trim(),
+    };
+
+    if (!data.role_name || !data.description) {
+      notify("warning", "Please complete all fields");
+      return;
+    }
+
+    $.ajax({
+      url: "/userRoles/add-role",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+
+      success: function () {
+        notify("success", "Role added successfully");
+
+        $("#role_name").val("");
+        $("#role_description").val("");
+
+        bootstrap.Modal.getInstance(
+          document.getElementById("addRoleModal"),
+        ).hide();
+
+        window.__rolesState.page = 1;
+        loadRoles();
+        loadRoleDropdown();
+      },
+
+      error: function (err) {
+        notify("error", err.responseJSON?.message || "Failed to add role");
+      },
+    });
+  }
+
+  // ======================================================
+  // EDIT ROLE
+  // ======================================================
+  function editRole(el) {
+    const item = JSON.parse(el.dataset.item);
+
+    $("#edit_role_id").val(item.id);
+    $("#edit_role_name").val(item.role_name);
+    $("#edit_role_description").val(item.description);
+
+    new bootstrap.Modal(document.getElementById("editRoleModal")).show();
+  }
+
+  function updateRole() {
+    const data = {
+      id: $("#edit_role_id").val(),
+      role_name: $("#edit_role_name").val().trim(),
+      description: $("#edit_role_description").val().trim(),
+    };
+
+    if (!data.role_name || !data.description) {
+      notify("warning", "Please complete all fields");
+      return;
+    }
+
+    $.ajax({
+      url: "/userRoles/update-role",
+      method: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+
+      success: function () {
+        notify("success", "Role updated successfully");
+
+        const modalEl = document.getElementById("editRoleModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        loadRoles();
+        loadRoleDropdown();
+      },
+
+      error: function (err) {
+        notify("error", err.responseJSON?.message || "Update failed");
+      },
+    });
+  }
+
+  // ======================================================
+  // EXPORT / PRINT
+  // ======================================================
+  function printRoles() {
+    $.ajax({
+      url: "/userRoles/get-roles",
+      method: "GET",
+      data: { page: 1, limit: 100000, search: window.__rolesState.search },
+
+      success: function (res) {
+        renderRolePrintReport(res.data, res.pagination.total);
+      },
+
+      error: function () {
+        notify("error", "Failed to prepare the report.");
+      },
+    });
+  }
+
+  function renderRolePrintReport(data, total) {
+    let rows = "";
+    data.forEach((r, i) => {
+      rows += `
+      <tr class="${i % 2 === 0 ? "even" : ""}">
+        <td>${r.id}</td>
+        <td>${escapeHtml(r.role_name)}</td>
+        <td>${escapeHtml(r.description)}</td>
+        <td>${r.is_active == 1 ? "Active" : "Inactive"}</td>
+        <td>${formatDate(r.created_at)}</td>
+      </tr>
+    `;
+    });
+
+    const printWindow = window.open("", "_blank", "width=1000,height=700");
+
+    printWindow.document.write(`
+    <html>
+    <head>
+      <title>User Roles Report</title>
+      <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 32px; color: #1f2937; }
+        .report-header {
+          display: flex; justify-content: space-between; align-items: center;
+          border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 4px;
+        }
+        .report-header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+        .report-header .badge {
+          background: #2563eb; color: #fff; padding: 6px 14px;
+          border-radius: 999px; font-size: 12px; font-weight: bold;
+        }
+        .meta { display: flex; justify-content: space-between; color: #6b7280; font-size: 12px; margin: 8px 0 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { background: #2563eb; color: #fff; text-align: left; padding: 10px 8px; }
+        tbody td { padding: 8px; border-bottom: 1px solid #e5e7eb; }
+        tbody tr.even { background: #f3f4f6; }
+        .report-footer { margin-top: 24px; text-align: right; font-size: 11px; color: #9ca3af; }
+        @media print { body { padding: 12px; } }
+      </style>
+    </head>
+    <body>
+      <div class="report-header">
+        <h1>User Roles Report</h1>
+        <span class="badge">${total} Total Role${total === 1 ? "" : "s"}</span>
+      </div>
+      <div class="meta">
+        <span>Generated on ${new Date().toLocaleString()}</span>
+        ${window.__rolesState.search ? `<span>Filtered by: "${escapeHtml(window.__rolesState.search)}"</span>` : ""}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Role Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="report-footer">LMS &mdash; User Roles Management</div>
+    </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+
+    printWindow.onload = function () {
+      printWindow.focus();
+      setTimeout(function () {
+        printWindow.print();
+        printWindow.onafterprint = function () {
+          printWindow.close();
+        };
+      }, 400);
+    };
+  }
+
+  // ======================================================
+  // BULK UPLOAD
+  // ======================================================
+  function submitBulkUpload() {
+    const fileInput = document.getElementById("bulkUploadRoleFile");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      notify("warning", "Please choose a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const $btn = $("#bulkUploadRoleSubmitBtn");
+    $btn
+      .prop("disabled", true)
+      .html(
+        '<span class="spinner-border spinner-border-sm"></span> Uploading...',
+      );
+
+    $.ajax({
+      url: "/userRoles/bulk-upload",
+      method: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+
+      success: function (res) {
+        showBulkReport(res.report, res.message);
+        window.__rolesState.page = 1;
+        loadRoles();
+        loadRoleDropdown();
+      },
+
+      error: function (err) {
+        const res = err.responseJSON;
+        if (res && res.report) {
+          showBulkReport(res.report, res.message);
+        } else {
+          notify("error", res?.message || "Bulk upload failed.");
+        }
+      },
+
+      complete: function () {
+        $btn
+          .prop("disabled", false)
+          .html('<i class="bi bi-cloud-upload"></i> Upload File');
+      },
+    });
+  }
+
+  function showBulkReport(report, message) {
+    $("#bulkUploadRoleReport").removeClass("d-none");
+
+    const summaryColor = report.failed > 0 ? "text-warning" : "text-success";
+    $("#bulkUploadRoleSummary")
+      .removeClass()
+      .addClass(`fw-bold mb-2 ${summaryColor}`)
+      .text(message || `${report.success} of ${report.total} imported.`);
+
+    if (report.errors && report.errors.length > 0) {
+      let list = "<ul class='ps-3 mb-0'>";
+      report.errors.forEach((e) => {
+        list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+      });
+      list += "</ul>";
+      $("#bulkUploadRoleErrors").html(list);
+    } else {
+      $("#bulkUploadRoleErrors").html("");
+    }
+
+    // Give a heads-up toast too, since the inline report panel can be
+    // easy to miss below the fold.
+    notify(
+      report.failed > 0 ? "warning" : "success",
+      message || `${report.success} of ${report.total} imported.`,
+    );
+  }
+
+  // ======================================================
+  // 🔥 CONNECT TO USER MODULE DROPDOWN (only does anything if those
+  // elements exist on the current page, e.g. when embedded alongside
+  // the Users module)
+  // ======================================================
+  function loadRoleDropdown() {
+    $.ajax({
+      url: "/userRoles/get-roles",
+      method: "GET",
+      data: { page: 1, limit: 100000 },
+      success: function (res) {
+        const data = res.data || res; // tolerate either paginated or raw array shape
+        let options = `<option value="">Select Role</option>`;
+
+        data.forEach((role) => {
+          options += `
+          <option value="${role.id}">
+            ${escapeHtml(role.role_name)}
+          </option>
+        `;
+        });
+
+        $("#role_id").html(options);
+        $("#edit_role_id_dropdown").html(options);
+      },
+    });
+  }
+
+  // ======================================================
+  // FORMAT DATE
+  // ======================================================
+  function formatDate(date) {
+    return date ? new Date(date).toLocaleString() : "";
+  }
+</script>

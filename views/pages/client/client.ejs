@@ -1,62 +1,78 @@
 <main class="dashboard-content">
   <div class="container-fluid px-3 px-lg-4 py-4">
-    <!-- Panel -->
     <section class="panel">
       <!-- Header -->
       <div
-        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+        class="panel-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 p-4 border-bottom"
       >
+        <!-- Title -->
         <div>
           <h2 class="h5 mb-1 section-title">
             <i class="bi bi-people"></i>
-            <span style="font-weight: 700; color: #000">
-              Client Management
-            </span>
+            Client Management
           </h2>
+
           <p class="text-muted mb-0">Manage client records and information.</p>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-arrow-repeat"></i> Sync
-          </button>
+        <!-- Buttons -->
+        <div class="row g-2 w-100 w-lg-auto">
+          <div class="col-12 col-sm-6 col-lg-auto">
+            <button class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-arrow-repeat"></i>
+              Sync
+            </button>
+          </div>
 
-          <button
-            class="btn btn-sm btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addClientModal"
-          >
-            <i class="bi bi-plus-circle"></i> Add Client
-          </button>
+          <div class="col-12 col-sm-6 col-lg-auto">
+            <button
+              class="btn btn-sm btn-primary w-100"
+              data-bs-toggle="modal"
+              data-bs-target="#addClientModal"
+            >
+              <i class="bi bi-plus-circle"></i>
+              Add Client
+            </button>
+          </div>
 
-          <button class="btn btn-sm btn-success">
-            <i class="bi bi-upload"></i> Upload Excel
-          </button>
+          <div class="col-12 col-sm-6 col-lg-auto">
+            <button class="btn btn-sm btn-success w-100">
+              <i class="bi bi-upload"></i>
+              Upload Excel
+            </button>
+          </div>
 
-          <button class="btn btn-sm btn-dark">
-            <i class="bi bi-download"></i> Download Excel
-          </button>
+          <div class="col-12 col-sm-6 col-lg-auto">
+            <button class="btn btn-sm btn-dark w-100">
+              <i class="bi bi-download"></i>
+              Download Excel
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Search -->
-      <div class="px-3 pb-2">
-        <input
-          class="form-control form-control-sm table-search"
-          type="search"
-          placeholder="Search client..."
-          data-table-search="clientTable"
-        />
+      <div class="px-3 pt-3 pb-2">
+        <div class="row g-2">
+          <div class="col-12 col-md-4">
+            <input
+              class="form-control form-control-sm table-search"
+              type="search"
+              placeholder="Search client..."
+              data-table-search="clientTable"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Table -->
-      <div class="table-responsive">
+      <div class="table-responsive px-3 pb-3">
         <table
-          class="table align-middle mb-0"
+          class="table table-hover align-middle mb-0"
           id="clientTable"
           data-searchable-table
         >
-          <thead class="table-dark">
+          <thead>
             <tr>
               <th>ID</th>
               <th>Client Name</th>
@@ -74,13 +90,21 @@
               <td>Quezon City</td>
               <td>May 25, 2026</td>
               <td>Admin</td>
+
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <div class="d-flex justify-content-end gap-1">
+                  <button class="btn btn-light btn-sm">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <button class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
 
@@ -90,13 +114,21 @@
               <td>Manila</td>
               <td>May 24, 2026</td>
               <td>Admin</td>
+
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <div class="d-flex justify-content-end gap-1">
+                  <button class="btn btn-light btn-sm">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <button class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
 
@@ -106,13 +138,21 @@
               <td>Taguig</td>
               <td>May 23, 2026</td>
               <td>Admin</td>
+
               <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <div class="d-flex justify-content-end gap-1">
+                  <button class="btn btn-light btn-sm">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <button class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

@@ -1,0 +1,577 @@
+<script>
+  /* =====================================================
+   driverDashboard.client.js
+   Vanilla JS only — no jQuery.
+
+   Each card = one ticket (shipment_dispatch_items.id), not one
+   dispatch batch. Selecting 2 shipments in a bulk assign now shows
+   2 independent cards here, each with its own "Process Delivery"
+   flow. The two tickets share a dispatch_number/driver/vehicle
+   behind the scenes, but completing one has no effect on the
+   other — the driver/vehicle only get released once every ticket
+   in that shared batch is Delivered/Cancelled (handled server-side).
+
+   NEW IN THIS PASS:
+   1. STATUS GATING — the four status radios (Picked / In Transit /
+      Arrived / Delivered) are no longer all clickable at once.
+      Exactly ONE is enabled at a time: whichever status comes
+      immediately after the ticket's CURRENT status in the fixed
+      flow Preparing -> Picked -> In Transit -> Arrived -> Delivered.
+      Submitting one step re-fetches the ticket, which re-runs the
+      gate against the new current status, unlocking the next one.
+      Once a ticket is Delivered or Cancelled, every option locks
+      and the submit button disables — nothing left to update.
+   2. CANCEL DELIVERY — a new button that cancels THIS ticket
+      (not the whole dispatch batch — each card is one ticket,
+      same granularity the rest of the flow already uses). Posts
+      status "Cancelled" to the same /complete endpoint the status
+      radios use; the server already treats Cancelled as a valid,
+      no-proof-required terminal status.
+   3. TOASTS — every success/error/warning that used to sit in the
+      silent #deliveryFormError banner (or nowhere at all, for
+      loadDeliveries()) now also surfaces as a Bootstrap toast via
+      showToast(), appended into the #toastContainer added to the
+      page markup.
+===================================================== */
+
+  (function () {
+    "use strict";
+
+    // ============================================
+    // TOAST HELPER
+    // Creates and shows one Bootstrap toast, then removes itself
+    // from the DOM once it's dismissed/hidden — so #toastContainer
+    // never accumulates stale nodes.
+    // ============================================
+    function showToast(type, message) {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+
+      const bgClass =
+        type === "success"
+          ? "text-bg-success"
+          : type === "error"
+            ? "text-bg-danger"
+            : type === "warning"
+              ? "text-bg-warning"
+              : "text-bg-primary";
+
+      const toastEl = document.createElement("div");
+      toastEl.className = `toast align-items-center ${bgClass} border-0`;
+      toastEl.setAttribute("role", "alert");
+      toastEl.setAttribute("aria-live", "assertive");
+      toastEl.setAttribute("aria-atomic", "true");
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+
+      container.appendChild(toastEl);
+      const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+      toast.show();
+
+      toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const deliveryModalEl = document.getElementById("deliveryExecutionModal");
+      const deliveryModal = new bootstrap.Modal(deliveryModalEl);
+      const cardsContainer = document.getElementById("deliveryCardsContainer");
+      const deliveryForm = document.getElementById("deliveryForm");
+      const completeBtn = document.getElementById("completeDeliveryBtn");
+      const cancelBtn = document.getElementById("cancelDispatchBtn");
+
+      let currentDispatchItemId = null;
+
+      // ============================================
+      // LOAD DELIVERY LIST
+      // ============================================
+      async function loadDeliveries() {
+        cardsContainer.innerHTML = `
+      <div class="empty-state">
+        <i class="bi bi-hourglass-split"></i>
+        <p>Loading your deliveries...</p>
+      </div>`;
+
+        try {
+          const res = await fetch("/driverDashboard/my-deliveries");
+          if (!res.ok) throw new Error("Request failed");
+          const data = await res.json();
+
+          renderSummary(data.summary);
+          renderCards(data.deliveries);
+        } catch (err) {
+          console.error(err);
+          cardsContainer.innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p>Couldn't load your deliveries. <a href="#" id="retryLoadBtn">Try again</a></p>
+        </div>`;
+          showToast("error", "Couldn't load your deliveries.");
+          const retry = document.getElementById("retryLoadBtn");
+          if (retry)
+            retry.addEventListener("click", (e) => {
+              e.preventDefault();
+              loadDeliveries();
+            });
+        }
+      }
+
+      function renderSummary(summary = {}) {
+        document.getElementById("summaryToday").textContent =
+          summary.today ?? 0;
+        document.getElementById("summaryPending").textContent =
+          summary.pending ?? 0;
+        document.getElementById("summaryTransit").textContent =
+          summary.in_transit ?? 0;
+        document.getElementById("summaryCompleted").textContent =
+          summary.completed ?? 0;
+      }
+
+      function priorityPillClass(priority) {
+        const p = (priority || "").toLowerCase();
+        if (p === "urgent") return "pill-urgent";
+        if (p === "low") return "pill-low";
+        return "pill-normal";
+      }
+
+      function statusPillClass(status) {
+        const s = (status || "").toLowerCase();
+        if (s === "pending") return "pill-pending";
+        if (s === "preparing") return "pill-assigned";
+        if (s === "picked") return "pill-picked";
+        if (s === "in transit" || s === "transit") return "pill-transit";
+        if (s === "arrived") return "pill-arrived";
+        if (s === "delivered" || s === "done") return "pill-delivered";
+        if (s === "cancelled") return "pill-cancelled";
+        return "pill-assigned";
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str ?? "";
+        return div.innerHTML;
+      }
+
+      function renderCards(deliveries) {
+        if (!deliveries || deliveries.length === 0) {
+          cardsContainer.innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-check2-circle"></i>
+          <p>No deliveries assigned right now. Check back later.</p>
+        </div>`;
+          return;
+        }
+
+        cardsContainer.innerHTML = deliveries
+          .map(
+            (d) => `
+      <div class="card shadow-sm border mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+            <span class="waybill-tag"><i class="bi bi-upc-scan"></i>${escapeHtml(d.dispatch_number)} <span class="text-muted small">(${escapeHtml(d.ticket_number)})</span></span>
+            <span class="pill ${statusPillClass(d.status)}">${escapeHtml(d.status)}</span>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary-subtle rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width:55px;height:55px;">
+              <i class="bi bi-shop text-primary fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-1 fw-bold">${escapeHtml(d.store_name)}</h6>
+              <div class="text-muted small">
+                <div class="mb-1"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(d.store_address || "No address on file")}</div>
+                <div><i class="bi bi-telephone me-1"></i>${escapeHtml(d.contact_number || "—")}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="pill ${priorityPillClass(d.priority)}">${escapeHtml(d.priority)}</span>
+            <button class="btn btn-primary px-4 rounded-pill open-dispatch-btn" data-dispatch-item-id="${d.dispatch_item_id}">
+              Process Delivery <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>`,
+          )
+          .join("");
+
+        cardsContainer.querySelectorAll(".open-dispatch-btn").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            openDelivery(btn.dataset.dispatchItemId),
+          );
+        });
+      }
+
+      // ============================================
+      // STATUS GATING
+      // Fixed linear flow. Only the status immediately after the
+      // ticket's CURRENT status is selectable; everything else is
+      // locked. Delivered/Cancelled are both terminal — nothing
+      // is selectable and the form locks entirely.
+      // ============================================
+      const STATUS_FLOW = [
+        "Preparing",
+        "Picked",
+        "In Transit",
+        "Arrived",
+        "Delivered",
+      ];
+
+      function getNextStatus(currentStatus) {
+        const idx = STATUS_FLOW.indexOf(currentStatus);
+        if (idx === -1 || idx === STATUS_FLOW.length - 1) return null;
+        return STATUS_FLOW[idx + 1];
+      }
+
+      function applyStatusGating(currentStatus) {
+        const isTerminal =
+          currentStatus === "Delivered" || currentStatus === "Cancelled";
+        const nextStatus = isTerminal ? null : getNextStatus(currentStatus);
+
+        statusOptions.forEach((opt) => {
+          const input = opt.querySelector('input[type="radio"]');
+          const isNext = !!nextStatus && input.value === nextStatus;
+
+          input.disabled = !isNext;
+          input.checked = isNext;
+
+          // No project-specific "disabled option" CSS class exists yet,
+          // so this dims/locks the option directly rather than assuming
+          // one — swap for a class toggle if the stylesheet later adds
+          // .status-option.is-locked or similar.
+          opt.style.opacity = isNext ? "1" : "0.45";
+          opt.style.pointerEvents = isNext ? "auto" : "none";
+        });
+
+        completeBtn.disabled = isTerminal || !nextStatus;
+        cancelBtn.disabled = isTerminal;
+
+        updateStatusUI();
+      }
+
+      // ============================================
+      // OPEN + POPULATE MODAL
+      // ============================================
+      async function openDelivery(dispatchItemId) {
+        currentDispatchItemId = dispatchItemId;
+        deliveryForm.reset();
+        resetPhotos();
+        document.getElementById("modalItemsBody").innerHTML = `
+      <tr><td colspan="2" class="p-0"><div class="empty-state"><i class="bi bi-inbox"></i><p>Loading items...</p></div></td></tr>`;
+
+        deliveryModal.show();
+
+        try {
+          const res = await fetch(
+            `/driverDashboard/delivery/${dispatchItemId}`,
+          );
+          if (!res.ok) throw new Error("Failed to load delivery");
+          const { header, items } = await res.json();
+
+          document.getElementById("formDispatchId").value =
+            header.dispatch_item_id;
+          document.getElementById("modalDispatchTitle").textContent =
+            `Dispatch #${header.dispatch_number} Execution`;
+          document.getElementById("modalDispatchNumber").textContent =
+            header.dispatch_number;
+          document.getElementById("modalPriorityPill").textContent =
+            header.priority;
+          document.getElementById("modalPriorityPill").className =
+            `pill ${priorityPillClass(header.priority)}`;
+          document.getElementById("modalStatusPill").textContent =
+            header.status;
+          document.getElementById("modalStatusPill").className =
+            `pill ${statusPillClass(header.status)}`;
+          document.getElementById("modalStoreName").textContent =
+            header.store_name;
+          document.getElementById("modalStoreAddress").textContent =
+            header.store_address || "No address on file";
+          document.getElementById("modalContactNumber").textContent =
+            header.contact_number || "—";
+          document.getElementById("modalTicketRef").textContent =
+            `${header.ticket_number} | ${header.request_type || "—"}`;
+
+          const noteWrap = document.getElementById("modalDeliveryNoteWrap");
+          if (header.remarks) {
+            document.getElementById("modalDeliveryNote").textContent =
+              header.remarks;
+            noteWrap.classList.remove("d-none");
+          } else {
+            noteWrap.classList.add("d-none");
+          }
+
+          document.getElementById("modalItemsBody").innerHTML = items.length
+            ? items
+                .map(
+                  (i) =>
+                    `<tr><td>${escapeHtml(i.product_name)}</td><td class="text-center fw-bold">${escapeHtml(String(i.quantity))} ${escapeHtml(i.unit_name || "")}</td></tr>`,
+                )
+                .join("")
+            : `<tr><td colspan="2" class="p-0"><div class="empty-state"><i class="bi bi-inbox"></i><p>No items found.</p></div></td></tr>`;
+
+          // Gate the status radios against THIS ticket's current status —
+          // this is what decides which single option is unlocked.
+          applyStatusGating(header.status);
+
+          if (header.status === "Delivered" || header.status === "Cancelled") {
+            showToast(
+              "warning",
+              `This delivery is already ${header.status.toLowerCase()} — nothing left to update.`,
+            );
+          }
+        } catch (err) {
+          console.error(err);
+          document.getElementById("modalItemsBody").innerHTML = `
+        <tr><td colspan="2" class="p-0"><div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Couldn't load delivery details.</p></div></td></tr>`;
+          showToast("error", "Couldn't load delivery details.");
+        }
+      }
+
+      // ============================================
+      // STATUS PICKER (visual selected state + proof toggle)
+      // ============================================
+      const statusOptions = Array.from(
+        document.querySelectorAll("[data-status-option]"),
+      );
+      const proofSection = document.getElementById("proofSection");
+      const completeBtnLabel = document.getElementById(
+        "completeDeliveryBtnLabel",
+      );
+
+      function updateStatusUI() {
+        const checked = deliveryForm.querySelector(
+          'input[name="status"]:checked',
+        );
+        const value = checked?.value;
+
+        statusOptions.forEach((opt) => {
+          const input = opt.querySelector('input[type="radio"]');
+          opt.classList.toggle("is-selected", input.checked);
+        });
+
+        const isDelivered = value === "Delivered";
+        proofSection.classList.toggle("d-none", !isDelivered);
+        completeBtnLabel.textContent = isDelivered
+          ? "Complete Delivery"
+          : "Save Update";
+      }
+
+      // Status options are now programmatically checked/disabled by
+      // applyStatusGating() rather than freely clickable, but the
+      // change listener stays in case a future UI relaxes the gate
+      // for some status combination — harmless either way.
+      statusOptions.forEach((opt) => {
+        const input = opt.querySelector('input[type="radio"]');
+        input.addEventListener("change", updateStatusUI);
+      });
+
+      // ============================================
+      // PHOTOS (multi-image)
+      // ============================================
+      const MAX_PHOTOS = 5;
+      let deliveryPhotos = []; // { file: File, url: string }[]
+
+      function renderPhotoGrid() {
+        const grid = document.getElementById("photoGrid");
+        const countEl = document.getElementById("photoCount");
+        const addBtn = document.getElementById("addPhotoBtn");
+
+        countEl.textContent = `${deliveryPhotos.length}/${MAX_PHOTOS}`;
+        addBtn.disabled = deliveryPhotos.length >= MAX_PHOTOS;
+
+        grid.innerHTML = deliveryPhotos
+          .map(
+            (p, idx) => `
+      <div class="position-relative" style="width:76px;height:76px;">
+        <img src="${p.url}" data-idx="${idx}"
+          class="photo-thumb-img rounded border"
+          style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;">
+        <button type="button" class="photo-thumb-remove"
+          data-idx="${idx}" aria-label="Remove photo"
+          style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+                 border-radius:50%;background:#dc3545;color:#fff;border:none;
+                 font-size:12px;line-height:1;padding:0;">&times;</button>
+      </div>`,
+          )
+          .join("");
+
+        grid
+          .querySelectorAll(".photo-thumb-remove")
+          .forEach((btn) =>
+            btn.addEventListener("click", () =>
+              removePhoto(Number(btn.dataset.idx)),
+            ),
+          );
+
+        grid.querySelectorAll(".photo-thumb-img").forEach((img) =>
+          img.addEventListener("click", () => {
+            window.open(img.src, "_blank");
+          }),
+        );
+      }
+
+      function addPhotos(fileList) {
+        const room = MAX_PHOTOS - deliveryPhotos.length;
+        if (room <= 0) return;
+
+        Array.from(fileList)
+          .slice(0, room)
+          .forEach((file) => {
+            if (!file.type.startsWith("image/")) return;
+            deliveryPhotos.push({ file, url: URL.createObjectURL(file) });
+          });
+
+        renderPhotoGrid();
+      }
+
+      function removePhoto(idx) {
+        const [removed] = deliveryPhotos.splice(idx, 1);
+        if (removed) URL.revokeObjectURL(removed.url);
+        renderPhotoGrid();
+      }
+
+      function resetPhotos() {
+        deliveryPhotos.forEach((p) => URL.revokeObjectURL(p.url));
+        deliveryPhotos = [];
+        renderPhotoGrid();
+      }
+
+      document.getElementById("addPhotoBtn").addEventListener("click", () => {
+        document.getElementById("deliveryPhoto").click();
+      });
+
+      document
+        .getElementById("deliveryPhoto")
+        .addEventListener("change", function () {
+          addPhotos(this.files);
+          this.value = ""; // allow re-selecting the same file(s) later
+        });
+
+      // ============================================
+      // SUBMIT (status update / delivery completion)
+      // ============================================
+      completeBtn.addEventListener("click", async () => {
+        const status = deliveryForm.querySelector(
+          'input[name="status"]:checked',
+        )?.value;
+        if (!status) {
+          showToast("warning", "Please select a delivery status.");
+          return;
+        }
+
+        const label = document.getElementById("completeDeliveryBtnLabel");
+        completeBtn.disabled = true;
+        cancelBtn.disabled = true;
+        label.textContent = "Saving...";
+
+        try {
+          const formData = new FormData();
+          formData.append("dispatch_item_id", currentDispatchItemId);
+          formData.append("status", status);
+          formData.append(
+            "remarks",
+            document.getElementById("deliveryRemarks").value || "",
+          );
+
+          deliveryPhotos.forEach((p) => formData.append("photos", p.file));
+
+          const res = await fetch("/driverDashboard/complete", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await res.json();
+          if (!res.ok || !result.success) {
+            throw new Error(
+              result.message || "Failed to save delivery update.",
+            );
+          }
+
+          showToast("success", result.message || "Delivery status updated.");
+          deliveryModal.hide();
+          loadDeliveries();
+        } catch (err) {
+          console.error(err);
+          showToast(
+            "error",
+            err.message || "Something went wrong. Please try again.",
+          );
+        } finally {
+          completeBtn.disabled = false;
+          cancelBtn.disabled = false;
+          label.textContent = "Complete Delivery";
+        }
+      });
+
+      // ============================================
+      // CANCEL DELIVERY (new)
+      // Cancels THIS ticket via the same /complete endpoint, using
+      // status "Cancelled" — already a valid, no-proof-required
+      // status server-side. Available any time the ticket isn't
+      // already Delivered/Cancelled (see applyStatusGating).
+      // ============================================
+      cancelBtn.addEventListener("click", async () => {
+        if (!currentDispatchItemId) return;
+
+        const confirmed = window.confirm(
+          "Cancel this delivery? This action cannot be undone.",
+        );
+        if (!confirmed) return;
+
+        const originalHtml = cancelBtn.innerHTML;
+        cancelBtn.disabled = true;
+        completeBtn.disabled = true;
+        cancelBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Cancelling...`;
+
+        try {
+          const formData = new FormData();
+          formData.append("dispatch_item_id", currentDispatchItemId);
+          formData.append("status", "Cancelled");
+          formData.append(
+            "remarks",
+            document.getElementById("deliveryRemarks").value || "",
+          );
+
+          const res = await fetch("/driverDashboard/complete", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await res.json();
+          if (!res.ok || !result.success) {
+            throw new Error(result.message || "Failed to cancel delivery.");
+          }
+
+          showToast("success", result.message || "Delivery cancelled.");
+          deliveryModal.hide();
+          loadDeliveries();
+        } catch (err) {
+          console.error(err);
+          showToast(
+            "error",
+            err.message || "Something went wrong. Please try again.",
+          );
+        } finally {
+          cancelBtn.disabled = false;
+          completeBtn.disabled = false;
+          cancelBtn.innerHTML = originalHtml;
+        }
+      });
+
+      deliveryModalEl.addEventListener("hidden.bs.modal", () => {
+        deliveryForm.reset();
+        currentDispatchItemId = null;
+        resetPhotos();
+      });
+
+      document
+        .getElementById("refreshDeliveriesBtn")
+        .addEventListener("click", loadDeliveries);
+
+      loadDeliveries();
+    });
+  })();
+</script>

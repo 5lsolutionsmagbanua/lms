@@ -1,32 +1,42 @@
 var express = require("express");
 var router = express.Router();
 
-const { Select } = require("../repository/dbconnection");
+const {
+  Select,
+  Update,
+  Insert,
+  Delete,
+} = require("../repository/dbconnection");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-/* GET home page. */
-router.get("/", function (req, res, next) {
+/**
+ * @swagger
+ * /login:
+ *   get:
+ *     summary: Render the login page
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Login page HTML
+ */
+router.get("/", function (req, res) {
+  console.log("[LOGIN] GET / — rendering login page");
   res.render("login", { title: "Login Page" });
 });
 
-module.exports = router;
-
-/* =========================
-LOGIN PROCESS
-========================= */
 function getDashboard(role) {
-  switch (role) {
+  if (!role) return "/dashboard";
+
+  switch (role.toLowerCase()) {
     case "admin":
-      return "/admin/dashboard";
-
+    case "administrator":
     case "manager":
-      return "/manager/dashboard";
-
-    case "staff":
-      return "/staff/dashboard";
-
+    case "warehouse":
+    case "dispatcher":
+      return "/dashboard";
     case "driver":
-      return "/driver/dashboard";
-
+      return "/driverDashboard";
     default:
       return "/dashboard";
   }
@@ -34,111 +44,123 @@ function getDashboard(role) {
 
 router.post("/", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, remember } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required.",
+      });
+    }
 
     const users = await Select(
-      "SELECT * FROM users WHERE username = ? LIMIT 1",
+      `
+      SELECT
+          u.id, u.username, u.password, u.is_active, u.role_id,
+          r.role_name,
+          CONCAT(u.first_name,' ',u.last_name) AS full_name
+      FROM users u
+      INNER JOIN roles r ON r.id = u.role_id
+      WHERE u.username = ?
+      LIMIT 1
+      `,
       [username],
     );
 
-    // Username check
     if (users.length === 0) {
       return res.status(401).json({
-        message: "Username does not exist",
+        success: false,
+        message: "Invalid username or password.",
       });
     }
 
     const user = users[0];
 
-    // Password check
-    if (user.password !== password) {
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
       return res.status(401).json({
-        message: "Incorrect password",
+        success: false,
+        message: "Invalid username or password.",
       });
     }
 
-    // Account status check
-    if (user.is_active !== 1) {
+    if (Number(user.is_active) !== 1) {
       return res.status(403).json({
-        message: "Account is inactive. Please contact the administrator.",
+        success: false,
+        message: "Your account is inactive.",
       });
     }
 
-    // ✅ SESSION FIRST
-    req.session.user = {
+    const sessionUser = {
       id: user.id,
       username: user.username,
-      role: user.role,
       full_name: user.full_name,
+      role: user.role_name,
+      role_id: user.role_id,
     };
 
-    // ✅ THEN RESPONSE (THIS IS WHERE YOUR CODE GOES)
-    req.session.save(() => {
-      return res.json({
-        success: true,
-        role: user.role,
-        redirect: getDashboard(user.role),
+    // Regenerate the session on login to prevent session fixation —
+    // issues a fresh session ID rather than reusing whatever ID the
+    // client had before authenticating.
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error("[LOGIN] session regenerate error:", err);
+        return res.status(500).json({
+          success: false,
+          message: "An unexpected error occurred.",
+        });
+      }
+
+      req.session.user = sessionUser;
+
+      if (remember) {
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+      }
+      // else: falls back to the default maxAge set in app.js (1 day)
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("[LOGIN] session save error:", saveErr);
+          return res.status(500).json({
+            success: false,
+            message: "An unexpected error occurred.",
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Login successful.",
+          redirect: getDashboard(sessionUser.role),
+          user: sessionUser,
+        });
       });
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Login error" });
+    console.error("[LOGIN] ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred.",
+    });
   }
 });
 
-/* =========================
-LOGOUT
-========================= */
 router.get("/logout", (req, res) => {
-  req.session.destroy(() => {
+  req.session.destroy((err) => {
+    if (err) console.error("[LOGIN] session destroy error:", err);
+
+    // Must match the same path/secure/sameSite the cookie was
+    // originally set with in app.js's session() config, or the
+    // browser won't recognize it as the same cookie and silently
+    // keeps it.
+    res.clearCookie("lms.sid", {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
     res.redirect("/login");
   });
 });
 
-const { requireLogin, requireRole } = require("../middleware/auth");
-
-router.get("/dashboard", requireRole("admin"), (req, res) => {
-  res.render("dashboard", {
-    user: req.session.user,
-  });
-});
-
-router.get("/staff/dashboard", requireRole("staff"), (req, res) => {
-  res.render("staff/dashboard");
-});
-
-router.post("/", async (req, res) => {
-  try {
-    const { username, password, remember } = req.body;
-
-    // login validation here...
-
-    req.session.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      full_name: user.full_name,
-    };
-
-    // Remember Me
-    if (remember) {
-      // 30 days
-      req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
-    } else {
-      // Session expires when browser closes
-      req.session.cookie.expires = false;
-    }
-
-    req.session.save(() => {
-      res.json({
-        success: true,
-        redirect: getDashboard(user.role),
-      });
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: "Login error",
-    });
-  }
-});
+module.exports = router;

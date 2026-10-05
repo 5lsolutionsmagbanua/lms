@@ -1,0 +1,63 @@
+<script>
+  const pages = document.querySelectorAll(".wizard-page");
+
+  const titles = [
+    "Vendor Master Data",
+    "Product Supplier Mapping",
+    "Purchase Requests",
+    "Purchase Orders",
+    "Receiving and Goods Receipt",
+    "Supplier Performance Monitoring",
+    "Vendor Price History",
+    "Returns to Supplier",
+  ];
+
+  let currentPage = 0;
+
+  function showPage(index) {
+    pages.forEach((page) => {
+      page.classList.add("d-none");
+    });
+
+    pages[index].classList.remove("d-none");
+
+    document.getElementById("sectionTitle").innerHTML = titles[index];
+
+    document.getElementById("prevBtn").disabled = index === 0;
+
+    document.getElementById("nextBtn").disabled = index === pages.length - 1;
+  }
+
+  document.getElementById("nextBtn").addEventListener("click", function () {
+    if (currentPage < pages.length - 1) {
+      currentPage++;
+
+      showPage(currentPage);
+    }
+  });
+
+  document.getElementById("prevBtn").addEventListener("click", function () {
+    if (currentPage > 0) {
+      currentPage--;
+
+      showPage(currentPage);
+    }
+  });
+
+  showPage(0);
+
+  javascript;
+  const navButtons = document.querySelectorAll(".nav-module");
+
+  navButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      currentPage = parseInt(this.dataset.page);
+
+      showPage(currentPage);
+
+      bootstrap.Modal.getInstance(
+        document.getElementById("navigationModal"),
+      ).hide();
+    });
+  });
+</script>

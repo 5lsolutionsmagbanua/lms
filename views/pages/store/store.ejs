@@ -1,0 +1,318 @@
+<div class="modal fade" id="bulkUploadStoreModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Bulk Upload Stores</h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="template-download-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="icon-box">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <div>
+              <div class="fw-semibold">Store Upload Template</div>
+              <small class="text-muted"
+                >.xlsx &middot; store_name, store_code, store_address,
+                contact_person, contact_number</small
+              >
+            </div>
+          </div>
+          <a
+            href="/store/download-template"
+            class="btn btn-success btn-sm"
+            id="downloadStoreTemplateBtn"
+          >
+            <i class="bi bi-download"></i> Download Template
+          </a>
+        </div>
+
+        <p class="text-muted small mb-2">
+          File must include columns: <code>store_name</code>,
+          <code>store_code</code>, <code>store_address</code>,
+          <code>contact_person</code>, <code>contact_number</code>. Max 1000
+          rows, 5MB.
+        </p>
+
+        <label>Select Excel or CSV File</label>
+        <input
+          type="file"
+          id="bulkUploadFile"
+          class="form-control"
+          accept=".xlsx,.xls,.csv"
+        />
+
+        <div id="bulkUploadReport" class="mt-3 d-none">
+          <div id="bulkUploadSummary" class="fw-bold mb-2"></div>
+          <div
+            id="bulkUploadErrors"
+            class="small text-danger"
+            style="max-height: 180px; overflow-y: auto"
+          ></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+
+        <button class="btn btn-success" id="bulkUploadSubmitBtn">
+          Upload File
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="editStoreModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">Edit Store</h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="edit_store_id" />
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Store Name</label>
+            <input type="text" id="edit_store_name" class="form-control" />
+            <div class="invalid-feedback" id="edit_store_name_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Store Code</label>
+            <input
+              type="text"
+              id="edit_store_code"
+              class="form-control text-uppercase"
+            />
+            <div class="invalid-feedback" id="edit_store_code_error"></div>
+          </div>
+
+          <div class="col-md-12 mb-3">
+            <label>Store Address</label>
+            <textarea
+              rows="3"
+              id="edit_store_address"
+              class="form-control"
+            ></textarea>
+            <div class="invalid-feedback" id="edit_store_address_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Contact Person</label>
+            <input type="text" id="edit_contact_person" class="form-control" />
+            <div class="invalid-feedback" id="edit_contact_person_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Contact Number</label>
+            <input
+              type="text"
+              id="edit_contact_number"
+              class="form-control"
+              placeholder="09XXXXXXXXX"
+              maxlength="11"
+            />
+            <div class="invalid-feedback" id="edit_contact_number_error"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+
+        <button class="btn btn-warning" id="updateStoreBtn">
+          Update Store
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="addStoreModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add Store</h5>
+
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Store Name</label>
+            <input type="text" id="store_name" class="form-control" />
+            <div class="invalid-feedback" id="store_name_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Store Code</label>
+            <input
+              type="text"
+              id="store_code"
+              class="form-control text-uppercase"
+              placeholder="e.g. STR-004"
+            />
+            <div class="invalid-feedback" id="store_code_error"></div>
+          </div>
+
+          <div class="col-md-12 mb-3">
+            <label>Store Address</label>
+            <textarea
+              id="store_address"
+              rows="3"
+              class="form-control"
+            ></textarea>
+            <div class="invalid-feedback" id="store_address_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Contact Person</label>
+            <input type="text" id="contact_person" class="form-control" />
+            <div class="invalid-feedback" id="contact_person_error"></div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label>Contact Number</label>
+            <input
+              type="text"
+              id="contact_number"
+              class="form-control"
+              placeholder="09XXXXXXXXX"
+              maxlength="11"
+            />
+            <div class="invalid-feedback" id="contact_number_error"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+
+        <button class="btn btn-primary" id="addStoreBtn">Save Store</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- HEADER -->
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
+      >
+        <div class="d-flex align-items-center gap-3">
+          <div class="header-icon-box">
+            <i class="bi bi-shop"></i>
+          </div>
+          <div>
+            <h2 class="h5 mb-1 section-title">Store Management</h2>
+            <p class="text-muted mb-0">Manage stores and branch locations.</p>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap store-toolbar">
+          <button
+            class="btn btn-outline-secondary rounded-pill fw-semibold"
+            id="printStoreBtn"
+            type="button"
+          >
+            <i class="bi bi-printer"></i> Print
+          </button>
+
+          <button
+            class="btn btn-outline-success rounded-pill fw-semibold"
+            id="exportStoreExcelBtn"
+            type="button"
+          >
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+          </button>
+
+          <button
+            class="btn btn-outline-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#bulkUploadStoreModal"
+            type="button"
+          >
+            <i class="bi bi-upload"></i> Bulk Upload
+          </button>
+
+          <button
+            class="btn btn-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#addStoreModal"
+            type="button"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Store
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="row g-2 px-3 pt-3">
+        <div class="col-12 col-md-2">
+          <select class="form-select form-select-sm" id="entriesPerPage">
+            <option value="4" selected>4 Entries</option>
+            <option value="10">10 Entries</option>
+            <option value="25">25 Entries</option>
+            <option value="50">50 Entries</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4 ms-md-auto">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            id="storeSearchInput"
+            placeholder="Search store..."
+          />
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive px-3 pb-3 mt-3">
+        <table class="table table-bordered text-center">
+          <thead>
+            <tr>
+              <th>Store ID</th>
+              <th>Store Name</th>
+              <th>Store Code</th>
+              <th>Store Address</th>
+              <th>Contact Person</th>
+              <th>Contact Number</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="storeTableBody">
+            <!-- rows injected by store.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 px-3 pb-3"
+      >
+        <div class="text-muted small" id="storePaginationInfo"></div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="storePagination"></ul>
+        </nav>
+      </div>
+    </section>
+  </div>
+</main>

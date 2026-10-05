@@ -3,183 +3,1283 @@
     <section class="panel">
       <!-- Header -->
       <div
-        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
       >
-        <div>
-          <h2 class="h5 mb-1 section-title">
+        <div class="d-flex align-items-center gap-3">
+          <div class="header-icon-box">
             <i class="bi bi-box-seam"></i>
-            <span style="font-weight: 700; color: #000">
-              Product Management
-            </span>
-          </h2>
-          <p class="text-muted mb-0">
-            Manage product inventory and product records.
-          </p>
+          </div>
+          <div>
+            <h2 class="h5 mb-1 section-title">Product Management</h2>
+            <p class="text-muted mb-0">
+              Manage products, types, units and categories.
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-arrow-repeat"></i> Sync
-          </button>
-
+      <!-- Navigation -->
+      <ul class="nav nav-tabs mt-3" id="productTab">
+        <li class="nav-item">
           <button
-            class="btn btn-sm btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addProductModal"
+            class="nav-link active"
+            data-bs-toggle="tab"
+            data-bs-target="#products"
           >
-            <i class="bi bi-plus-circle"></i> Add Product
+            <i class="bi bi-box-seam"></i>
+            Products
           </button>
+        </li>
 
-          <button class="btn btn-sm btn-success">
-            <i class="bi bi-upload"></i> Upload Excel
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#types">
+            <i class="bi bi-tags"></i>
+            Product Types
           </button>
+        </li>
 
-          <button class="btn btn-sm btn-dark">
-            <i class="bi bi-download"></i> Download Excel
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            data-bs-toggle="tab"
+            data-bs-target="#categories"
+          >
+            <i class="bi bi-grid"></i>
+            Categories
           </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#units">
+            <i class="bi bi-grid"></i>
+            Units
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content mt-3">
+        <!-- ================================= PRODUCTS ================================= -->
+        <div class="tab-pane fade show active" id="products">
+          <div
+            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"
+          >
+            <div class="d-flex flex-wrap gap-2">
+              <input
+                id="productSearchInput"
+                class="form-control"
+                style="width: 220px"
+                placeholder="Search product..."
+              />
+
+              <input
+                id="scanInput"
+                class="form-control"
+                style="width: 200px"
+                placeholder="Scan barcode..."
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 tab-toolbar">
+              <button
+                id="printProductsBtn"
+                class="btn btn-outline-secondary rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-printer"></i> Print
+              </button>
+
+              <button
+                id="exportExcelBtn"
+                class="btn btn-outline-success rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+              </button>
+
+              <button
+                class="btn btn-outline-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#importModal"
+                type="button"
+              >
+                <i class="bi bi-upload"></i> Bulk Upload
+              </button>
+
+              <button
+                class="btn btn-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#addProductModal"
+                type="button"
+              >
+                <i class="bi bi-plus-circle"></i> Add Product
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-hover align-middle fixed-table"
+              id="productTable"
+            >
+              <thead>
+                <tr>
+                  <th>Inventory ID</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Brand</th>
+                  <th>Description</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="productTableBody"></tbody>
+            </table>
+          </div>
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 pt-2"
+          >
+            <div class="text-muted small" id="productPaginationInfo"></div>
+            <nav>
+              <ul
+                class="pagination pagination-sm mb-0"
+                id="productPagination"
+              ></ul>
+            </nav>
+          </div>
         </div>
-      </div>
 
-      <!-- Search -->
-      <div class="px-3 pb-2">
-        <input
-          class="form-control form-control-sm table-search"
-          type="search"
-          placeholder="Search product..."
-          data-table-search="productTable"
-        />
-      </div>
+        <div class="modal fade" id="addProductModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="productModalTitle">Add Product</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
 
-      <!-- Table -->
-      <div class="table-responsive">
-        <table
-          class="table align-middle mb-0"
-          id="productTable"
-          data-searchable-table
-        >
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Vendor</th>
-              <th>UPS</th>
-              <th>Product Code</th>
-              <th>Product Description</th>
-              <th>Product Category</th>
-              <th>Product Subcategory</th>
-              <th>Price</th>
-              <th>Unit</th>
-              <th>Status</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
+              <div class="modal-body">
+                <form id="addProductForm">
+                  <div class="row g-3">
+                    <!-- TYPE -->
+                    <div class="col-md-6">
+                      <label class="form-label">Type</label>
+                      <select class="form-select" id="typeSelect">
+                        <option value="">Select Type</option>
+                      </select>
+                    </div>
 
-          <tbody>
-            <tr>
-              <td class="fw-semibold">1</td>
-              <td>ABC Trading Corp</td>
-              <td>UPS-001</td>
-              <td>PRD-1001</td>
-              <td>Wireless Barcode Scanner</td>
-              <td>Electronics</td>
-              <td>Scanner</td>
-              <td>₱5,500</td>
-              <td>PCS</td>
-              <td><span class="badge text-bg-success">Active</span></td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
+                    <!-- CATEGORY (FILTERED BY TYPE) -->
+                    <div class="col-md-6">
+                      <label class="form-label">Category</label>
+                      <select class="form-select" id="categorySelect">
+                        <option value="">Select Category</option>
+                      </select>
+                    </div>
 
-            <tr>
-              <td class="fw-semibold">2</td>
-              <td>Metro Supply</td>
-              <td>UPS-002</td>
-              <td>PRD-1002</td>
-              <td>Shipping Box Large</td>
-              <td>Packaging</td>
-              <td>Boxes</td>
-              <td>₱120</td>
-              <td>BOX</td>
-              <td><span class="badge text-bg-success">Active</span></td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
+                    <div class="col-md-6">
+                      <label class="form-label">Inventory Name</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="inventoryName"
+                      />
+                    </div>
 
-            <tr>
-              <td class="fw-semibold">3</td>
-              <td>Prime Logistics</td>
-              <td>UPS-003</td>
-              <td>PRD-1003</td>
-              <td>Pallet Jack</td>
-              <td>Equipment</td>
-              <td>Warehouse Tools</td>
-              <td>₱15,000</td>
-              <td>UNIT</td>
-              <td><span class="badge text-bg-warning">Inactive</span></td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
+                    <div class="col-md-6">
+                      <label class="form-label">Brand</label>
+                      <input type="text" class="form-control" id="brand" />
+                    </div>
 
-            <tr>
-              <td class="fw-semibold">4</td>
-              <td>Global Traders</td>
-              <td>UPS-004</td>
-              <td>PRD-1004</td>
-              <td>Bubble Wrap Roll</td>
-              <td>Packaging</td>
-              <td>Protective Wrap</td>
-              <td>₱350</td>
-              <td>ROLL</td>
-              <td><span class="badge text-bg-success">Active</span></td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
+                    <div class="col-md-6">
+                      <label class="form-label">Model</label>
+                      <input type="text" class="form-control" id="model" />
+                    </div>
 
-            <tr>
-              <td class="fw-semibold">5</td>
-              <td>Skyline Supply</td>
-              <td>UPS-005</td>
-              <td>PRD-1005</td>
-              <td>Label Printer</td>
-              <td>Electronics</td>
-              <td>Printer</td>
-              <td>₱8,700</td>
-              <td>PCS</td>
-              <td><span class="badge text-bg-success">Active</span></td>
-              <td class="text-end">
-                <button class="btn btn-light btn-sm">
-                  <i class="bi bi-pencil"></i>
+                    <div class="col-12">
+                      <label class="form-label">Description</label>
+                      <textarea
+                        class="form-control"
+                        id="description"
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
                 </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
+                <button class="btn btn-primary" id="saveProductBtn">
+                  Save Product
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="viewProductModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow">
+              <!-- HEADER -->
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-box-seam"></i> Product Details
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <!-- BODY -->
+              <div class="modal-body">
+                <div class="row g-3">
+                  <!-- LEFT SIDE -->
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                      <small class="text-muted">Product Name</small>
+                      <div class="fw-bold" id="view_name"></div>
+
+                      <hr />
+
+                      <small class="text-muted">Type</small>
+                      <div class="fw-semibold" id="view_type"></div>
+
+                      <hr />
+
+                      <small class="text-muted">Category</small>
+                      <div class="fw-semibold" id="view_category"></div>
+                    </div>
+                  </div>
+
+                  <!-- RIGHT SIDE -->
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                      <small class="text-muted">Brand</small>
+                      <div class="fw-semibold" id="view_brand"></div>
+
+                      <hr />
+
+                      <small class="text-muted">Model</small>
+                      <div class="fw-semibold" id="view_model"></div>
+                    </div>
+                  </div>
+
+                  <!-- FULL WIDTH DESCRIPTION -->
+                  <div class="col-12">
+                    <div class="border rounded p-3">
+                      <small class="text-muted">Description</small>
+                      <div class="mt-2" id="view_description"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FOOTER -->
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="barcodeModal" tabindex="-1">
+          <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Product Barcode</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body text-center">
+                <svg id="barcode"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMPORT / BULK UPLOAD MODAL -->
+        <div class="modal fade" id="importModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-upload"></i> Bulk Upload Products
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="template-download-card">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <div>
+                      <div class="fw-semibold">Product Upload Template</div>
+                      <small class="text-muted"
+                        >.xlsx &middot; Product Name, Type, Category, Brand,
+                        Model, Barcode, Description</small
+                      >
+                    </div>
+                  </div>
+                  <a
+                    href="/products/download-template"
+                    class="btn btn-success btn-sm"
+                  >
+                    <i class="bi bi-download"></i> Download Template
+                  </a>
+                </div>
+
+                <p class="text-muted small mb-2">
+                  <code>Type</code> and <code>Category</code> must exactly match
+                  an existing active name (see the template's reference sheet) —
+                  unmatched rows are skipped.
+                </p>
+
+                <label>Select Excel or CSV File</label>
+                <input
+                  type="file"
+                  id="importFile"
+                  class="form-control"
+                  accept=".xlsx,.xls,.csv"
+                />
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button class="btn btn-success" id="submitImportBtn">
+                  <i class="bi bi-cloud-upload"></i> Upload File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================= TYPES ================================= -->
+        <div class="tab-pane fade" id="types">
+          <div
+            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"
+          >
+            <input
+              class="form-control"
+              style="width: 240px"
+              id="typeSearchInput"
+              placeholder="Search type..."
+            />
+
+            <div class="d-flex flex-wrap gap-2 tab-toolbar">
+              <button
+                id="printTypesBtn"
+                class="btn btn-outline-secondary rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-printer"></i> Print
+              </button>
+
+              <button
+                id="exportTypesExcelBtn"
+                class="btn btn-outline-success rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+              </button>
+
+              <button
+                class="btn btn-outline-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#bulkUploadTypeModal"
+                type="button"
+              >
+                <i class="bi bi-upload"></i> Bulk Upload
+              </button>
+
+              <button
+                class="btn btn-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#addTypeModal"
+                type="button"
+              >
+                <i class="bi bi-plus-circle"></i> Add Type
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-hover align-middle fixed-table"
+              id="typeTable"
+            >
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type Name</th>
+                  <th>Description</th>
+                  <th>Serialized</th>
+                  <th>Return Required</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="typeTableBody"></tbody>
+            </table>
+          </div>
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 pt-2"
+          >
+            <div class="text-muted small" id="typePaginationInfo"></div>
+            <nav>
+              <ul
+                class="pagination pagination-sm mb-0"
+                id="typePagination"
+              ></ul>
+            </nav>
+          </div>
+        </div>
+
+        <div class="modal fade" id="addTypeModal" tabindex="-1">
+          <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Add Type</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <!-- Type Name -->
+                <div class="mb-3">
+                  <label class="form-label">Type Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="type_name"
+                    placeholder="Enter type name"
+                  />
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                  <label class="form-label">Description</label>
+                  <textarea
+                    class="form-control"
+                    id="type_description"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <!-- Serialized -->
+                <div class="mb-3">
+                  <label class="form-label">Is Serialized?</label>
+                  <select class="form-select" id="is_serialized">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+
+                <!-- Return Required -->
+                <div class="mb-3">
+                  <label class="form-label">Is Return Required?</label>
+                  <select class="form-select" id="is_return_required">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Close
+                </button>
+                <button class="btn btn-primary" id="saveTypeBtn">
+                  Save Type
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="viewTypeModal" tabindex="-1">
+          <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content shadow">
+              <!-- HEADER -->
+              <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-tag"></i> Type Details
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <!-- ================= BASIC INFORMATION ================= -->
+                <h6 class="fw-bold text-primary mb-3">
+                  <i class="bi bi-info-circle"></i> Basic Information
+                </h6>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                      <small class="text-muted">Type Name</small>
+                      <div class="fw-semibold" id="view_type_name"></div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                      <small class="text-muted">Status</small>
+                      <div id="view_status"></div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="border rounded p-3">
+                      <small class="text-muted">Description</small>
+                      <div class="fw-semibold" id="view_type_description"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ================= CONFIGURATION ================= -->
+                <h6 class="fw-bold text-success mt-5 mb-3">
+                  <i class="bi bi-gear"></i> Configuration
+                </h6>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 text-center">
+                      <small class="text-muted d-block mb-2">Serialized</small>
+                      <div id="view_is_serialized"></div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="border rounded p-3 text-center">
+                      <small class="text-muted d-block mb-2"
+                        >Return Required</small
+                      >
+                      <div id="view_is_return_required"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ================= SYSTEM INFO ================= -->
+                <h6 class="fw-bold text-secondary mt-5 mb-3">
+                  <i class="bi bi-database"></i> System Info
+                </h6>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="border rounded p-3">
+                      <small class="text-muted">Created At</small>
+                      <div class="fw-semibold" id="view_created_at"></div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="border rounded p-3">
+                      <small class="text-muted">Type ID</small>
+                      <div class="fw-semibold" id="view_type_id"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FOOTER -->
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="bi bi-x-circle"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="editTypeModal" tabindex="-1">
+          <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Type</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <!-- hidden ID -->
+                <input type="hidden" id="edit_type_id" />
+
+                <!-- Type Name -->
+                <div class="mb-3">
+                  <label class="form-label">Type Name</label>
+                  <input type="text" class="form-control" id="edit_type_name" />
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                  <label class="form-label">Description</label>
+                  <textarea
+                    class="form-control"
+                    id="edit_type_description"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <!-- Serialized -->
+                <div class="mb-3">
+                  <label class="form-label">Is Serialized?</label>
+                  <select class="form-select" id="edit_is_serialized">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+
+                <!-- Return Required -->
+                <div class="mb-3">
+                  <label class="form-label">Is Return Required?</label>
+                  <select class="form-select" id="edit_is_return_required">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                  <select class="form-select" id="edit_status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Close
+                </button>
+                <button class="btn btn-success" id="updateTypeBtn">
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BULK UPLOAD TYPES MODAL -->
+        <div class="modal fade" id="bulkUploadTypeModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-upload"></i> Bulk Upload Types
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="template-download-card">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <div>
+                      <div class="fw-semibold">Type Upload Template</div>
+                      <small class="text-muted"
+                        >.xlsx &middot; type_name, description, is_serialized,
+                        is_return_required</small
+                      >
+                    </div>
+                  </div>
+                  <a
+                    href="/types/download-template"
+                    class="btn btn-success btn-sm"
+                  >
+                    <i class="bi bi-download"></i> Download Template
+                  </a>
+                </div>
+
+                <p class="text-muted small mb-2">
+                  type_name must be unique. Max 1000 rows, 5MB.
+                </p>
+
+                <label>Select Excel or CSV File</label>
+                <input
+                  type="file"
+                  id="bulkUploadTypeFile"
+                  class="form-control"
+                  accept=".xlsx,.xls,.csv"
+                />
+
+                <div id="bulkUploadTypeReport" class="mt-3 d-none">
+                  <div id="bulkUploadTypeSummary" class="fw-bold mb-2"></div>
+                  <div
+                    id="bulkUploadTypeErrors"
+                    class="small text-danger"
+                    style="max-height: 180px; overflow-y: auto"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button class="btn btn-success" id="bulkUploadTypeSubmitBtn">
+                  <i class="bi bi-cloud-upload"></i> Upload File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================= CATEGORIES ================================= -->
+        <div class="tab-pane fade" id="categories">
+          <div
+            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"
+          >
+            <input
+              class="form-control"
+              style="width: 240px"
+              id="categorySearch"
+              placeholder="Search category..."
+            />
+
+            <div class="d-flex flex-wrap gap-2 tab-toolbar">
+              <button
+                id="printCategoriesBtn"
+                class="btn btn-outline-secondary rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-printer"></i> Print
+              </button>
+
+              <button
+                id="exportCategoriesExcelBtn"
+                class="btn btn-outline-success rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+              </button>
+
+              <button
+                class="btn btn-outline-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#bulkUploadCategoryModal"
+                type="button"
+              >
+                <i class="bi bi-upload"></i> Bulk Upload
+              </button>
+
+              <button
+                class="btn btn-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#addCategoryModal"
+                type="button"
+              >
+                <i class="bi bi-plus-circle"></i> Add Category
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-hover align-middle fixed-table"
+              id="categoryTable"
+            >
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Category Name</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="categoryTableBody"></tbody>
+            </table>
+          </div>
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 pt-2"
+          >
+            <div class="text-muted small" id="categoryPaginationInfo"></div>
+            <nav>
+              <ul
+                class="pagination pagination-sm mb-0"
+                id="categoryPagination"
+              ></ul>
+            </nav>
+          </div>
+        </div>
+        <div class="modal fade" id="addCategoryModal" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i class="bi bi-grid"></i> Add Category
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Category Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="category_name"
+                    placeholder="Enter category name"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Description</label>
+                  <textarea
+                    class="form-control"
+                    rows="3"
+                    id="category_description"
+                    placeholder="Category description"
+                  ></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                  <select class="form-control" id="category_status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-primary"
+                  id="saveCategoryBtn"
+                  type="button"
+                >
+                  Save Category
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="editCategoryModal">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Category</h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <input type="hidden" id="edit_category_id" />
+
+                <div class="mb-2">
+                  <label class="form-label">Category Name</label>
+                  <input class="form-control" id="edit_category_name" />
+                </div>
+
+                <div class="mb-2">
+                  <label class="form-label">Description</label>
+                  <textarea
+                    class="form-control"
+                    id="edit_category_description"
+                  ></textarea>
+                </div>
+
+                <div class="mb-2">
+                  <label class="form-label">Status</label>
+                  <select class="form-control" id="edit_category_status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  type="button"
+                >
+                  Close
+                </button>
+                <button
+                  class="btn btn-success"
+                  id="updateCategoryBtn"
+                  type="button"
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BULK UPLOAD CATEGORIES MODAL -->
+        <div class="modal fade" id="bulkUploadCategoryModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-upload"></i> Bulk Upload Categories
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="template-download-card">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <div>
+                      <div class="fw-semibold">Category Upload Template</div>
+                      <small class="text-muted"
+                        >.xlsx &middot; category_name, description,
+                        status</small
+                      >
+                    </div>
+                  </div>
+                  <a
+                    href="/categories/download-template"
+                    class="btn btn-success btn-sm"
+                  >
+                    <i class="bi bi-download"></i> Download Template
+                  </a>
+                </div>
+
+                <p class="text-muted small mb-2">
+                  category_name must be unique. Max 1000 rows, 5MB.
+                </p>
+
+                <label>Select Excel or CSV File</label>
+                <input
+                  type="file"
+                  id="bulkUploadCategoryFile"
+                  class="form-control"
+                  accept=".xlsx,.xls,.csv"
+                />
+
+                <div id="bulkUploadCategoryReport" class="mt-3 d-none">
+                  <div
+                    id="bulkUploadCategorySummary"
+                    class="fw-bold mb-2"
+                  ></div>
+                  <div
+                    id="bulkUploadCategoryErrors"
+                    class="small text-danger"
+                    style="max-height: 180px; overflow-y: auto"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-success"
+                  id="bulkUploadCategorySubmitBtn"
+                >
+                  <i class="bi bi-cloud-upload"></i> Upload File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================= Units ================================= -->
+        <div class="tab-pane fade" id="units">
+          <div
+            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"
+          >
+            <input
+              type="text"
+              class="form-control"
+              style="width: 240px"
+              id="unitSearch"
+              placeholder="Search units..."
+            />
+
+            <div class="d-flex flex-wrap gap-2 tab-toolbar">
+              <button
+                id="printUnitsBtn"
+                class="btn btn-outline-secondary rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-printer"></i> Print
+              </button>
+
+              <button
+                id="exportUnitsExcelBtn"
+                class="btn btn-outline-success rounded-pill fw-semibold"
+                type="button"
+              >
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+              </button>
+
+              <button
+                class="btn btn-outline-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#bulkUploadUnitModal"
+                type="button"
+              >
+                <i class="bi bi-upload"></i> Bulk Upload
+              </button>
+
+              <button
+                class="btn btn-primary rounded-pill fw-semibold"
+                data-bs-toggle="modal"
+                data-bs-target="#addUnitsModal"
+                type="button"
+              >
+                <i class="bi bi-plus-circle"></i> Add Unit
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-hover align-middle fixed-table"
+              id="unitsTable"
+            >
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Unit Name</th>
+                  <th>Abbreviation</th>
+                  <th>Compound Unit</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="unitsTableBody"></tbody>
+            </table>
+          </div>
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 pt-2"
+          >
+            <div class="text-muted small" id="unitPaginationInfo"></div>
+            <nav>
+              <ul
+                class="pagination pagination-sm mb-0"
+                id="unitPagination"
+              ></ul>
+            </nav>
+          </div>
+        </div>
+
+        <!-- ADD UNIT MODAL -->
+        <div class="modal fade" id="addUnitsModal" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i class="bi bi-plus-circle"></i> Add Unit
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Unit Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="unit_name"
+                    placeholder="Enter unit name"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Abbreviation</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="abbreviation"
+                    placeholder="PCS, BOX, KG..."
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Is Compound Unit?</label>
+                  <select class="form-select" id="compound_unit">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button class="btn btn-primary" id="saveUnitBtn" type="button">
+                  <i class="bi bi-save"></i> Save Unit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT UNIT MODAL -->
+        <div class="modal fade" id="editUnitsModal" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i class="bi bi-pencil-square"></i> Edit Unit
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <input type="hidden" id="edit_unit_id" />
+
+                <div class="mb-3">
+                  <label class="form-label">Unit Name</label>
+                  <input type="text" class="form-control" id="edit_unit_name" />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Abbreviation</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="edit_abbreviation"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Is Compound Unit?</label>
+                  <select class="form-select" id="edit_compound_unit">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  Close
+                </button>
+                <button
+                  class="btn btn-success"
+                  id="updateUnitBtn"
+                  type="button"
+                >
+                  <i class="bi bi-save"></i> Update Unit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BULK UPLOAD UNITS MODAL -->
+        <div class="modal fade" id="bulkUploadUnitModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                  <i class="bi bi-upload"></i> Bulk Upload Units
+                </h5>
+                <button
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="template-download-card">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <div>
+                      <div class="fw-semibold">Unit Upload Template</div>
+                      <small class="text-muted"
+                        >.xlsx &middot; unit_name, abbreviation,
+                        is_compound</small
+                      >
+                    </div>
+                  </div>
+                  <a
+                    href="/units/download-template"
+                    class="btn btn-success btn-sm"
+                  >
+                    <i class="bi bi-download"></i> Download Template
+                  </a>
+                </div>
+
+                <p class="text-muted small mb-2">
+                  unit_name and abbreviation must both be unique. Max 1000 rows,
+                  5MB.
+                </p>
+
+                <label>Select Excel or CSV File</label>
+                <input
+                  type="file"
+                  id="bulkUploadUnitFile"
+                  class="form-control"
+                  accept=".xlsx,.xls,.csv"
+                />
+
+                <div id="bulkUploadUnitReport" class="mt-3 d-none">
+                  <div id="bulkUploadUnitSummary" class="fw-bold mb-2"></div>
+                  <div
+                    id="bulkUploadUnitErrors"
+                    class="small text-danger"
+                    style="max-height: 180px; overflow-y: auto"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button class="btn btn-success" id="bulkUploadUnitSubmitBtn">
+                  <i class="bi bi-cloud-upload"></i> Upload File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </div>

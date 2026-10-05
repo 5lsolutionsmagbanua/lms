@@ -1,58 +1,339 @@
-<div class="modal fade" id="editVehicleModal">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
+<div class="modal fade" id="addVehicleModal" tabindex="-1">
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
     <div class="modal-content">
-      <div class="modal-header bg-warning">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">
-          <i class="bi bi-pencil"></i>
-          Edit Vehicle
+          <i class="bi bi-truck"></i>
+          Add Vehicle
         </h5>
 
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Vehicle Details -->
+        <h6 class="fw-bold border-bottom pb-2 mb-3">Vehicle Details</h6>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label"
+              >Plate Number <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              id="add_plate_number"
+              class="form-control"
+              placeholder="ABC-1234"
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label"
+              >Vehicle Type <span class="text-danger">*</span></label
+            >
+            <select id="add_vehicle_type" class="form-select">
+              <option value="">Select Type</option>
+              <option value="Truck">Truck</option>
+              <option value="Van">Van</option>
+              <option value="Motorcycle">Motorcycle</option>
+              <option value="Trailer">Trailer</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Weight Capacity (kg)</label>
+            <input
+              type="number"
+              id="add_capacity"
+              class="form-control"
+              placeholder="5000"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Brand</label>
+            <input
+              type="text"
+              id="add_brand"
+              class="form-control"
+              placeholder="Toyota"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Model</label>
+            <input
+              type="text"
+              id="add_model"
+              class="form-control"
+              placeholder="HiAce"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Year Model</label>
+            <input
+              type="number"
+              id="add_year_model"
+              class="form-control"
+              placeholder="2026"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Color</label>
+            <input
+              type="text"
+              id="add_color"
+              class="form-control"
+              placeholder="White"
+            />
+          </div>
+        </div>
+
+        <!-- Operations -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">
+          Operational Information
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Assigned Driver</label>
+            <select id="add_driver_id" class="form-select">
+              <option value="">Select Driver</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Fuel Type</label>
+            <select id="add_fuel_type" class="form-select">
+              <option value="Diesel">Diesel</option>
+              <option value="Gasoline">Gasoline</option>
+              <option value="Electric">Electric</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Current Mileage (km)</label>
+            <input
+              type="number"
+              id="add_odometer"
+              class="form-control"
+              placeholder="0"
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Vehicle Status</label>
+            <select id="add_status" class="form-select">
+              <option value="Available" selected>Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Unavailable">Unavailable</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">
+          Registration & Insurance
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Registration Expiry</label>
+            <input type="date" id="add_reg_expiry" class="form-control" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Insurance Expiry</label>
+            <input type="date" id="add_insurance_expiry" class="form-control" />
+          </div>
+        </div>
+
+        <!-- Remarks -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">Remarks</h6>
+
+        <textarea
+          id="add_remarks"
+          class="form-control"
+          rows="4"
+          placeholder="Enter remarks (optional)..."
+        >
+        </textarea>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i>
+          Cancel
+        </button>
+
+        <button type="button" class="btn btn-primary" id="saveVehicleBtn">
+          <i class="bi bi-save"></i>
+          Save Vehicle
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editVehicleModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i>
+          Edit Vehicle
+        </h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
+        <input type="hidden" id="edit_vehicle_id" />
+
+        <!-- Vehicle Information -->
+        <h6 class="fw-bold border-bottom pb-2 mb-3">Vehicle Information</h6>
+
         <div class="row g-3">
           <div class="col-md-3">
             <label class="form-label">Vehicle Code</label>
-            <input type="text" class="form-control" value="VH-001" disabled />
+            <input
+              type="text"
+              id="edit_vehicle_code"
+              class="form-control"
+              readonly
+            />
           </div>
 
           <div class="col-md-3">
             <label class="form-label">Plate Number</label>
-            <input type="text" class="form-control" value="NAA-1234" />
+            <input type="text" id="edit_plate_number" class="form-control" />
           </div>
 
           <div class="col-md-3">
             <label class="form-label">Vehicle Type</label>
-            <select class="form-select">
-              <option selected>Truck</option>
-              <option>Van</option>
-              <option>Motorcycle</option>
+            <select id="edit_vehicle_type" class="form-select">
+              <option value="Truck">Truck</option>
+              <option value="Van">Van</option>
+              <option value="Motorcycle">Motorcycle</option>
+              <option value="Trailer">Trailer</option>
             </select>
           </div>
 
           <div class="col-md-3">
-            <label class="form-label">Status</label>
-            <select class="form-select">
-              <option selected>Active</option>
-              <option>Inactive</option>
-              <option>Under Maintenance</option>
+            <label class="form-label">Weight Capacity (kg)</label>
+            <input type="number" id="edit_capacity" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Brand</label>
+            <input type="text" id="edit_brand" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Model</label>
+            <input type="text" id="edit_model" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Year Model</label>
+            <input type="number" id="edit_year_model" class="form-control" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Color</label>
+            <input type="text" id="edit_color" class="form-control" />
+          </div>
+        </div>
+
+        <!-- Operational Information -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">
+          Operational Information
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Assigned Driver</label>
+            <select id="edit_driver_id" class="form-select"></select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Fuel Type</label>
+            <select id="edit_fuel_type" class="form-select">
+              <option value="Diesel">Diesel</option>
+              <option value="Gasoline">Gasoline</option>
+              <option value="Electric">Electric</option>
+              <option value="Hybrid">Hybrid</option>
             </select>
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Brand</label>
-            <input type="text" class="form-control" value="Isuzu" />
+          <div class="col-md-3">
+            <label class="form-label">Current Mileage (km)</label>
+            <input type="number" id="edit_odometer" class="form-control" />
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Model</label>
-            <input type="text" class="form-control" value="NQR" />
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="bi bi-truck"></i> Vehicle Status
+            </label>
+
+            <select id="edit_status" class="form-select">
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Unavailable">Unavailable</option>
+            </select>
+
+            <small class="text-muted">
+              Select the vehicle's current operational status.
+            </small>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">Documents</h6>
+
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Registration Expiry</label>
+            <input type="date" id="edit_reg_expiry" class="form-control" />
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Capacity</label>
-            <input type="text" class="form-control" value="10 Tons" />
+          <div class="col-md-3">
+            <label class="form-label">Insurance Expiry</label>
+            <input
+              type="date"
+              id="edit_insurance_expiry"
+              class="form-control"
+            />
+          </div>
+        </div>
+
+        <!-- Additional Notes -->
+        <h6 class="fw-bold border-bottom pb-2 mt-4 mb-3">Additional Notes</h6>
+
+        <div class="row">
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea
+              id="edit_remarks"
+              class="form-control"
+              rows="3"
+            ></textarea>
           </div>
         </div>
       </div>
@@ -62,8 +343,8 @@
           Cancel
         </button>
 
-        <button class="btn btn-warning">
-          <i class="bi bi-check-circle"></i>
+        <button class="btn btn-warning" id="updateVehicleBtn">
+          <i class="bi bi-save"></i>
           Save Changes
         </button>
       </div>
@@ -71,12 +352,13 @@
   </div>
 </div>
 
-<div class="modal fade" id="viewVehicleModal">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
+<div class="modal fade" id="viewVehicleModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow">
+      <!-- HEADER -->
       <div class="modal-header bg-info text-white">
         <h5 class="modal-title">
-          <i class="bi bi-eye"></i>
+          <i class="bi bi-truck"></i>
           Vehicle Details
         </h5>
 
@@ -87,54 +369,162 @@
       </div>
 
       <div class="modal-body">
-        <table class="table table-bordered">
-          <tr>
-            <th>Vehicle Code</th>
-            <td>VH-001</td>
-          </tr>
-          <tr>
-            <th>Plate Number</th>
-            <td>NAA-1234</td>
-          </tr>
-          <tr>
-            <th>Vehicle Type</th>
-            <td>Truck</td>
-          </tr>
-          <tr>
-            <th>Brand</th>
-            <td>Isuzu</td>
-          </tr>
-          <tr>
-            <th>Model</th>
-            <td>NQR</td>
-          </tr>
-          <tr>
-            <th>Capacity</th>
-            <td>10 Tons</td>
-          </tr>
-          <tr>
-            <th>Assigned Driver</th>
-            <td>Juan Dela Cruz</td>
-          </tr>
-          <tr>
-            <th>Status</th>
-            <td>Active</td>
-          </tr>
-        </table>
+        <!-- ================= VEHICLE INFORMATION ================= -->
+        <h6 class="fw-bold text-primary mb-3">
+          <i class="bi bi-car-front"></i>
+          Vehicle Information
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Vehicle Code</small>
+              <div class="fw-semibold" id="view_code"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Plate Number</small>
+              <div class="fw-semibold" id="view_plate"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Vehicle Type</small>
+              <div class="fw-semibold" id="view_type"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Capacity</small>
+              <div class="fw-semibold" id="view_capacity"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Brand</small>
+              <div class="fw-semibold" id="view_brand"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Model</small>
+              <div class="fw-semibold" id="view_model"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Year Model</small>
+              <div class="fw-semibold" id="view_year_model"></div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Color</small>
+              <div class="fw-semibold" id="view_color"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= OPERATIONAL ================= -->
+        <h6 class="fw-bold text-success mt-5 mb-3">
+          <i class="bi bi-gear"></i>
+          Operational Information
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Assigned Driver</small>
+              <div class="fw-semibold" id="view_driver"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Fuel Type</small>
+              <div class="fw-semibold" id="view_fuel_type"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Current Mileage</small>
+              <div class="fw-semibold" id="view_odometer"></div>
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <div class="border rounded p-3 text-center">
+              <small class="text-muted d-block mb-2"> Status </small>
+
+              <div id="view_status"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= DOCUMENTS ================= -->
+        <h6 class="fw-bold text-warning mt-5 mb-3">
+          <i class="bi bi-file-earmark-text"></i>
+          Documents
+        </h6>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded p-3">
+              <small class="text-muted"> Registration Expiry </small>
+
+              <div class="fw-semibold" id="view_reg_expiry"></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3">
+              <small class="text-muted"> Insurance Expiry </small>
+
+              <div class="fw-semibold" id="view_insurance_expiry"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= REMARKS ================= -->
+        <h6 class="fw-bold text-secondary mt-5 mb-3">
+          <i class="bi bi-chat-left-text"></i>
+          Additional Notes
+        </h6>
+
+        <div class="border rounded p-3">
+          <small class="text-muted">Remarks</small>
+
+          <div id="view_remarks" class="mt-2" style="min-height: 100px"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i>
+          Close
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="addVehicleModal">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
+<!-- BULK UPLOAD MODAL -->
+<div class="modal fade" id="bulkUploadVehicleModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
+      <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
-          <i class="bi bi-truck"></i>
-          Add Vehicle
+          <i class="bi bi-upload"></i> Bulk Upload Vehicles
         </h5>
-
         <button
           class="btn-close btn-close-white"
           data-bs-dismiss="modal"
@@ -142,69 +532,57 @@
       </div>
 
       <div class="modal-body">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Plate Number *</label>
-            <input type="text" class="form-control" />
+        <div class="template-download-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="icon-box">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <div>
+              <div class="fw-semibold">Vehicle Upload Template</div>
+              <small class="text-muted"
+                >.xlsx &middot; plate_number, vehicle_type, brand, model,
+                capacity, and more</small
+              >
+            </div>
           </div>
+          <a
+            href="/vehicle/bulk/template"
+            class="btn btn-success btn-sm"
+            id="downloadVehicleTemplateBtn"
+          >
+            <i class="bi bi-download"></i> Download Template
+          </a>
+        </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Vehicle Type *</label>
-            <select class="form-select">
-              <option>Truck</option>
-              <option>Van</option>
-              <option>Motorcycle</option>
-              <option>Trailer</option>
-            </select>
-          </div>
+        <p class="text-muted small mb-2">
+          <code>plate_number</code> and <code>vehicle_type</code> are required;
+          <code>driver_code</code> is optional and must match an available
+          driver (see the template's reference sheet). Every uploaded vehicle
+          starts as "Available". Max 1000 rows, 5MB.
+        </p>
 
-          <div class="col-md-4">
-            <label class="form-label">Capacity *</label>
-            <input type="text" class="form-control" placeholder="5 Tons" />
-          </div>
+        <label>Select Excel or CSV File</label>
+        <input
+          type="file"
+          id="bulkUploadVehicleFile"
+          class="form-control"
+          accept=".xlsx,.xls,.csv"
+        />
 
-          <div class="col-md-4">
-            <label class="form-label">Brand</label>
-            <input type="text" class="form-control" />
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">Model</label>
-            <input type="text" class="form-control" />
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">Assigned Driver</label>
-            <select class="form-select">
-              <option>Select Driver</option>
-            </select>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Registration Expiry</label>
-            <input type="date" class="form-control" />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Insurance Expiry</label>
-            <input type="date" class="form-control" />
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Remarks</label>
-            <input type="text" class="form-control" />
-          </div>
+        <div id="bulkUploadVehicleReport" class="mt-3 d-none">
+          <div id="bulkUploadVehicleSummary" class="fw-bold mb-2"></div>
+          <div
+            id="bulkUploadVehicleErrors"
+            class="small text-danger"
+            style="max-height: 180px; overflow-y: auto"
+          ></div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-
-        <button class="btn btn-primary">
-          <i class="bi bi-save"></i>
-          Save Vehicle
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success" id="bulkUploadVehicleSubmitBtn">
+          <i class="bi bi-cloud-upload"></i> Upload File
         </button>
       </div>
     </div>
@@ -216,281 +594,128 @@
     <section class="panel">
       <!-- Header -->
       <div
-        class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
       >
-        <div>
-          <h2 class="h5 mb-1 section-title">
+        <div class="d-flex align-items-center gap-3">
+          <div class="header-icon-box">
             <i class="bi bi-truck"></i>
-            <span style="font-weight: 700; color: #000">
-              Vehicle Management
-            </span>
-          </h2>
-
-          <p class="text-muted mb-0">
-            Manage company vehicles used for deliveries and shipments.
-          </p>
+          </div>
+          <div>
+            <h2 class="h5 mb-1 section-title">Vehicle Management</h2>
+            <p class="text-muted mb-0">
+              Manage company vehicles used for deliveries and shipment
+              operations.
+            </p>
+          </div>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-repeat"></i> Sync
+        <div class="d-flex gap-2 flex-wrap vehicle-toolbar">
+          <button
+            class="btn btn-outline-secondary rounded-pill fw-semibold"
+            id="printVehicleBtn"
+            type="button"
+          >
+            <i class="bi bi-printer"></i> Print
           </button>
 
           <button
-            class="btn btn-primary btn-sm"
+            class="btn btn-outline-success rounded-pill fw-semibold"
+            id="exportVehicleExcelBtn"
+            type="button"
+          >
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+          </button>
+
+          <button
+            class="btn btn-outline-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#bulkUploadVehicleModal"
+            type="button"
+          >
+            <i class="bi bi-upload"></i> Bulk Upload
+          </button>
+
+          <button
+            class="btn btn-primary rounded-pill fw-semibold"
             data-bs-toggle="modal"
             data-bs-target="#addVehicleModal"
+            type="button"
           >
-            <i class="bi bi-plus-circle"></i> Add Vehicle
+            <i class="bi bi-plus-circle"></i>
+            Add Vehicle
           </button>
         </div>
       </div>
 
       <!-- Search -->
-      <div class="px-3 pb-2">
-        <input
-          type="search"
-          class="form-control form-control-sm"
-          placeholder="Search vehicle..."
-        />
+      <div class="p-3 border-bottom">
+        <div class="row g-2">
+          <div class="col-12 col-md-2">
+            <select class="form-select form-select-sm" id="entriesPerPage">
+              <option value="4" selected>4 Entries</option>
+              <option value="10">10 Entries</option>
+              <option value="25">25 Entries</option>
+              <option value="50">50 Entries</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <input
+              type="search"
+              id="vehicleSearchInput"
+              class="form-control form-control-sm"
+              placeholder="Search vehicle..."
+            />
+          </div>
+
+          <div class="col-12 col-md-3 ms-md-auto">
+            <select class="form-select form-select-sm" id="filterStatus">
+              <option value="">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Unavailable">Unavailable</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Table -->
       <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead class="table-dark">
+        <table class="table table-hover align-middle mb-0" id="vehicleTable">
+          <thead>
             <tr>
               <th>ID</th>
-              <th>Vehicle Code</th>
+              <th>Code</th>
               <th>Plate Number</th>
-              <th>Vehicle Type</th>
+              <th>Type</th>
               <th>Brand</th>
               <th>Model</th>
               <th>Capacity</th>
-              <th>Driver Assigned</th>
+              <th>Assigned Driver</th>
               <th>Registration Expiry</th>
               <th>Insurance Expiry</th>
               <th>Status</th>
+              <th>Remarks</th>
               <th>Created At</th>
               <th>Created By</th>
               <th class="text-end">Actions</th>
             </tr>
           </thead>
 
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>VH-001</td>
-              <td>NAA-1234</td>
-              <td>Truck</td>
-              <td>Isuzu</td>
-              <td>NQR</td>
-              <td>10 Tons</td>
-              <td>Juan Dela Cruz</td>
-              <td>12/31/2026</td>
-              <td>12/31/2026</td>
-              <td><span class="badge bg-success">Active</span></td>
-              <td>06/01/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td>2</td>
-              <td>VH-002</td>
-              <td>NBB-5678</td>
-              <td>Van</td>
-              <td>Toyota</td>
-              <td>Hiace</td>
-              <td>2 Tons</td>
-              <td>Pedro Santos</td>
-              <td>10/15/2026</td>
-              <td>10/15/2026</td>
-              <td><span class="badge bg-success">Active</span></td>
-              <td>06/01/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td>3</td>
-              <td>VH-003</td>
-              <td>NCC-9012</td>
-              <td>Truck</td>
-              <td>Mitsubishi</td>
-              <td>Fuso Canter</td>
-              <td>8 Tons</td>
-              <td>Mark Reyes</td>
-              <td>09/30/2026</td>
-              <td>09/30/2026</td>
-              <td>
-                <span class="badge bg-warning text-dark">Maintenance</span>
-              </td>
-              <td>05/28/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td>4</td>
-              <td>VH-004</td>
-              <td>NDD-3456</td>
-              <td>Pickup</td>
-              <td>Ford</td>
-              <td>Ranger</td>
-              <td>1 Ton</td>
-              <td>Carlos Mendoza</td>
-              <td>08/15/2026</td>
-              <td>08/15/2026</td>
-              <td><span class="badge bg-success">Active</span></td>
-              <td>05/25/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td>5</td>
-              <td>VH-005</td>
-              <td>NEE-7890</td>
-              <td>Trailer Truck</td>
-              <td>Hino</td>
-              <td>500 Series</td>
-              <td>20 Tons</td>
-              <td>Ramon Garcia</td>
-              <td>11/20/2026</td>
-              <td>11/20/2026</td>
-              <td><span class="badge bg-success">Active</span></td>
-              <td>05/22/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td>6</td>
-              <td>VH-006</td>
-              <td>NFF-2468</td>
-              <td>Motorcycle</td>
-              <td>Honda</td>
-              <td>XRM 125</td>
-              <td>100 KG</td>
-              <td>Leo Cruz</td>
-              <td>07/30/2026</td>
-              <td>07/30/2026</td>
-              <td><span class="badge bg-secondary">Inactive</span></td>
-              <td>05/20/2026</td>
-              <td>Admin</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewVehicleModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button
-                  class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editVehicleModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="vehicleTableBody"></tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 px-3 py-3"
+      >
+        <div class="text-muted small" id="vehiclePaginationInfo"></div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="vehiclePagination"></ul>
+        </nav>
       </div>
     </section>
   </div>

@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 
 router.get("/dashboard", (req, res) => {
-  res.render("dashboard", {
+  res.render("Dashboard", {
     title: "Dashboard",
     user: req.session.user,
   });

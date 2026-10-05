@@ -1,0 +1,244 @@
+<!-- =====================================================
+     WAREHOUSE MANAGEMENT CARD
+===================================================== -->
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-white">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-buildings text-primary"></i>
+        Warehouse Management
+      </h5>
+
+      <button
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#addWarehouseModal"
+      >
+        <i class="bi bi-plus-circle"></i>
+        Add Warehouse
+      </button>
+    </div>
+  </div>
+
+  <!-- Card Body -->
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Code</th>
+            <th>Warehouse Name</th>
+            <th>Type</th>
+            <th>Capacity</th>
+            <th>Address</th>
+            <th>Contact Person</th>
+            <th>Contact Number</th>
+            <th>Status</th>
+            <th width="150">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="warehouseTableBody">
+          <tr>
+            <td colspan="10" class="text-center text-muted">
+              No warehouses found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     ADD WAREHOUSE MODAL
+===================================================== -->
+<div class="modal fade" id="addWarehouseModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-building-add"></i>
+          Add Warehouse
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <!-- Form -->
+      <form id="addWarehouseForm">
+        <!-- Body -->
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- Warehouse Code -->
+            <div class="col-md-3">
+              <label class="form-label">
+                Warehouse Code <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="warehouse_code"
+                name="warehouse_code"
+                placeholder="WH-001"
+                required
+              />
+            </div>
+
+            <!-- Warehouse Name -->
+            <div class="col-md-5">
+              <label class="form-label">
+                Warehouse Name <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="warehouse_name"
+                name="warehouse_name"
+                placeholder="Main Warehouse"
+                required
+              />
+            </div>
+
+            <!-- Type -->
+            <div class="col-md-4">
+              <label class="form-label"> Warehouse Type </label>
+
+              <select
+                class="form-select"
+                id="warehouse_type"
+                name="warehouse_type"
+              >
+                <option value="">Select Type</option>
+
+                <option value="Main Warehouse">Main Warehouse</option>
+
+                <option value="Distribution Center">Distribution Center</option>
+
+                <option value="Transit Warehouse">Transit Warehouse</option>
+
+                <option value="Cold Storage">Cold Storage</option>
+              </select>
+            </div>
+
+            <!-- Capacity -->
+            <div class="col-md-3">
+              <label class="form-label"> Capacity </label>
+
+              <input
+                type="number"
+                class="form-control"
+                id="capacity"
+                name="capacity"
+                placeholder="5000"
+              />
+            </div>
+
+            <!-- Contact Person -->
+            <div class="col-md-3">
+              <label class="form-label"> Contact Person </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="contact_person"
+                name="contact_person"
+              />
+            </div>
+
+            <!-- Contact Number -->
+            <div class="col-md-3">
+              <label class="form-label"> Contact Number </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="contact_number"
+                name="contact_number"
+              />
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-3">
+              <label class="form-label"> Email Address </label>
+
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+              />
+            </div>
+
+            <!-- Address -->
+            <div class="col-md-8">
+              <label class="form-label"> Address </label>
+
+              <textarea
+                class="form-control"
+                rows="2"
+                id="address"
+                name="address"
+              ></textarea>
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-4">
+              <label class="form-label"> Status </label>
+
+              <select class="form-select" id="status" name="status">
+                <option value="Active">Active</option>
+
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label"> Description </label>
+
+              <textarea
+                class="form-control"
+                rows="3"
+                id="description"
+                name="description"
+                placeholder="Enter warehouse description..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            <i class="bi bi-x-circle"></i>
+            Cancel
+          </button>
+
+          <button type="reset" class="btn btn-warning">
+            <i class="bi bi-arrow-clockwise"></i>
+            Reset
+          </button>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i>
+            Save Warehouse
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

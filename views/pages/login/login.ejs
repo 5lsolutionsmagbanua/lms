@@ -17,145 +17,422 @@
       rel="stylesheet"
     />
 
+    <!-- SweetAlert2 -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+    />
+
     <style>
+      :root {
+        /* ===== LIGHT THEME (default) ===== */
+        --bg-body: #f0f4f8;
+        --bg-card: #ffffff;
+        --card-border: #e2e8f0;
+        --card-shadow: rgba(0, 0, 0, 0.05);
+
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #adb5bd;
+
+        --input-border: #e9ecef;
+        --input-text: #333333;
+
+        --accent: #2563eb;
+        --accent-dark: #1d4ed8;
+        --accent-shadow: rgba(37, 99, 235, 0.25);
+
+        --watermark-fill: rgba(0, 0, 0, 0.02);
+        --divider-line: #e9ecef;
+      }
+
+      [data-bs-theme="dark"] {
+        /* ===== DARK THEME ===== */
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --card-border: #334155;
+        --card-shadow: rgba(0, 0, 0, 0.35);
+
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+
+        --input-border: #334155;
+        --input-text: #e2e8f0;
+
+        --accent: #3b82f6;
+        --accent-dark: #60a5fa;
+        --accent-shadow: rgba(59, 130, 246, 0.35);
+
+        --watermark-fill: rgba(255, 255, 255, 0.03);
+        --divider-line: #334155;
+      }
+
       body {
         margin: 0;
-        height: 100vh;
-        background: linear-gradient(135deg, #0f172a, #1e293b);
+        min-height: 100vh;
+        background: var(--bg-body);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        position: relative;
+        overflow-x: hidden;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+
+      /* Subtle background arrows (mimicking the watermark) */
+      .bg-watermark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L40 50 L20 90 L35 90 L55 50 L35 10 Z' fill='rgba(0,0,0,0.02)'/%3E%3C/svg%3E");
+        background-size: 300px;
+        background-position: center;
+        opacity: 1;
+      }
+
+      [data-bs-theme="dark"] .bg-watermark {
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L40 50 L20 90 L35 90 L55 50 L35 10 Z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+      }
+
+      .login-container {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+      }
+
+      /* Theme toggle */
+      .theme-toggle-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 2;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--card-border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: Arial, sans-serif;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
       }
 
-      .login-wrapper {
+      .theme-toggle-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+
+      /* Left Branding Side */
+      .brand-title {
+        font-size: 4.5rem;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        margin-bottom: 0;
+        line-height: 1;
+        color: var(--text-primary);
+      }
+
+      .brand-tagline {
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        margin-top: 1.5rem;
+        line-height: 1.5;
+        font-weight: 500;
+        border-left: 4px solid var(--accent);
+        padding-left: 15px;
+      }
+
+      /* Right Card Side */
+      .login-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 45px 40px;
+        box-shadow: 0 10px 30px var(--card-shadow);
+        border: 1px solid var(--card-border);
         width: 100%;
         max-width: 420px;
+        margin: 0 auto;
+        transition:
+          background-color 0.3s ease,
+          border-color 0.3s ease;
       }
 
-      .login-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      /* Custom Input Fields */
+      .custom-input-group {
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid var(--input-border);
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+        transition: border-color 0.3s ease;
       }
 
-      .logo {
-        text-align: center;
-        margin-bottom: 20px;
+      .custom-input-group:focus-within {
+        border-bottom-color: var(--accent);
       }
 
-      .logo i {
-        font-size: 42px;
-        color: #0f172a;
+      .custom-input-group i:first-child {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-right: 15px;
       }
 
-      .logo h3 {
-        margin: 10px 0 0;
-        font-weight: 700;
-        color: #0f172a;
+      .custom-input-group input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 0;
+        font-size: 1rem;
+        background: transparent;
+        color: var(--input-text);
       }
 
-      .logo small {
-        color: #64748b;
+      .custom-input-group input::placeholder {
+        color: var(--text-muted);
       }
 
-      .form-control {
-        height: 45px;
-        border-radius: 10px;
+      /* Autofill fix for dark mode */
+      .custom-input-group input:-webkit-autofill {
+        -webkit-text-fill-color: var(--input-text);
+        -webkit-box-shadow: 0 0 0px 1000px var(--bg-card) inset;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+
+      .password-toggle {
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        transition: color 0.2s;
+      }
+
+      .password-toggle:hover {
+        color: var(--accent);
+      }
+
+      /* Card Elements */
+      .link-text {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .link-text:hover {
+        color: var(--accent-dark);
+        text-decoration: underline;
       }
 
       .btn-login {
-        background: #0f172a;
-        color: #fff;
+        background: var(--accent);
+        color: white;
+        border: none;
+        height: 50px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-login:hover,
+      .btn-login:focus {
+        background: var(--accent-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px var(--accent-shadow);
+      }
+
+      .btn-login:disabled {
+        opacity: 0.7;
+        transform: none;
+        cursor: not-allowed;
+      }
+
+      /* OR Divider */
+      .divider-or {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 25px;
+      }
+      .divider-or::before,
+      .divider-or::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid var(--divider-line);
+      }
+      .divider-or::before {
+        margin-right: 15px;
+      }
+      .divider-or::after {
+        margin-left: 15px;
+      }
+
+      /* Social Buttons */
+      .social-btn {
+        width: 45px;
         height: 45px;
-        border-radius: 10px;
-        transition: 0.2s;
+        border: 1px solid var(--card-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
       }
 
-      .btn-login:hover {
-        background: #1e293b;
+      .legal-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-top: 20px;
       }
 
-      .form-text {
-        font-size: 13px;
-        color: #64748b;
+      .text-dark {
+        color: var(--text-primary) !important;
       }
 
-      .input-group-text {
-        border-radius: 10px 0 0 10px;
+      .text-muted {
+        color: var(--text-secondary) !important;
       }
     </style>
   </head>
 
   <body>
-    <div class="login-wrapper">
-      <div class="login-card">
-        <!-- Logo -->
-        <div class="logo">
-          <i class="bi bi-motherboard"></i>
-          <h3>LMS</h3>
-          <small>Logistic Management System</small>
+    <div class="bg-watermark"></div>
+
+    <!-- Theme Toggle -->
+    <button
+      class="theme-toggle-btn"
+      type="button"
+      id="themeToggle"
+      aria-label="Switch color theme"
+      title="Switch color theme"
+    >
+      <i class="bi bi-moon-stars" id="themeIcon"></i>
+    </button>
+
+    <div class="container-fluid login-container d-flex align-items-center">
+      <div class="container py-5">
+        <div class="row align-items-center justify-content-center">
+          <!-- Left Column: Branding -->
+          <div
+            class="col-lg-6 d-none d-lg-flex flex-column justify-content-center pe-5"
+          >
+            <div class="d-flex align-items-baseline">
+              <h1 class="brand-title">5L - LMS</h1>
+            </div>
+            <p class="brand-tagline">Manage. Track. Deliver.</p>
+          </div>
+
+          <!-- Right Column: Login Card -->
+          <div class="col-12 col-md-8 col-lg-5">
+            <div class="login-card">
+              <!-- Card Header -->
+              <div
+                class="d-flex justify-content-between align-items-center mb-4 pb-2"
+              >
+                <div>
+                  <h4 class="mb-1 fw-bold text-dark">Log In</h4>
+                  <p class="mb-0 text-muted" style="font-size: 0.85rem">
+                    Access your dashboard
+                  </p>
+                </div>
+                <a href="#" class="link-text">Need Help?</a>
+              </div>
+
+              <!-- Form -->
+              <form id="loginForm" action="/login" method="POST">
+                <!-- Username / Phone / Email -->
+                <div class="custom-input-group">
+                  <i class="bi bi-person"></i>
+                  <input
+                    type="text"
+                    name="username"
+                    placeholder="Phone Number/Email"
+                    required
+                  />
+                </div>
+
+                <!-- Password -->
+                <div class="custom-input-group mb-2">
+                  <i class="bi bi-lock"></i>
+                  <input
+                    type="password"
+                    id="passwordInput"
+                    name="password"
+                    placeholder="Password"
+                    required
+                  />
+                  <!-- Eye Icon Toggle -->
+                  <i
+                    class="bi bi-eye-slash password-toggle ms-2"
+                    id="togglePassword"
+                  ></i>
+                </div>
+
+                <!-- Remember + Forgot Password -->
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="remember"
+                      name="remember"
+                    />
+                    <label
+                      class="form-check-label text-muted"
+                      for="remember"
+                      style="font-size: 0.85rem"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                  <a href="#" class="link-text">Forgot Password?</a>
+                </div>
+
+                <!-- Login Button -->
+                <button
+                  type="submit"
+                  class="btn btn-login w-100 shadow-sm"
+                  id="loginBtn"
+                >
+                  Log In
+                </button>
+
+                <!-- Divider -->
+                <div class="divider-or">OR</div>
+
+                <!-- Footer Links -->
+                <div class="text-center legal-text">
+                  By continuing, you understand and accept our
+                  <a href="#" class="link-text">Terms of Service</a> and
+                  <a href="#" class="link-text">Privacy Policy</a>.
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        <!-- Form -->
-        <form id="loginForm" action="/login" method="POST">
-          <!-- Username -->
-          <div class="mb-3">
-            <label class="form-label">Username</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-person"></i></span>
-              <input
-                type="text"
-                class="form-control"
-                name="username"
-                placeholder="Enter username"
-                required
-              />
-            </div>
-          </div>
-
-          <!-- Password -->
-          <div class="mb-3">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-lock"></i></span>
-              <input
-                type="password"
-                class="form-control"
-                name="password"
-                placeholder="Enter password"
-                required
-              />
-            </div>
-          </div>
-
-          <!-- Remember -->
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="remember"
-                name="remember"
-              />
-              <label class="form-check-label" for="remember">
-                Remember me
-              </label>
-            </div>
-
-            <a href="#" class="text-decoration-none small">Forgot password?</a>
-          </div>
-
-          <!-- Button -->
-          <button type="submit" class="btn btn-login w-100">
-            <i class="bi bi-box-arrow-in-right"></i> Login
-          </button>
-
-          <p class="text-center mt-3 form-text">
-            Secure access for authorized personnel only
-          </p>
-        </form>
       </div>
     </div>
   </body>

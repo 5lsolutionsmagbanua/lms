@@ -10,14 +10,19 @@ var session = require("express-session");
 var MongoDBStore = require("connect-mongodb-session")(session);
 
 var { CheckConnection } = require("./repository/dbconnection");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
+
+const externalDriverRequestRoutes = require("./routes/externalDriverRequest");
 
 // =========================
 // ROUTES
 // =========================
+
 var indexRouter = require("./routes/index");
 var loginRouter = require("./routes/login");
 var dashboardRouter = require("./routes/dashboard");
-var vendorRouter = require("./routes/vendor");
+var storeRouter = require("./routes/store");
 var branchRouter = require("./routes/branch");
 var clientRouter = require("./routes/client");
 var employeesRouter = require("./routes/employees");
@@ -45,13 +50,24 @@ var shipmentProofOfDeliveryRouter = require("./routes/shipmentProofOfDelivery");
 var shipmentReturnRouter = require("./routes/shipmentReturn");
 var shipmentActivityRouter = require("./routes/shipmentActivity");
 var adminRouter = require("./routes/admin");
+var vendorRouter = require("./routes/vendor");
 var staffRouter = require("./routes/staff");
 var driverRouter = require("./routes/driver");
+var driverRegistrationRouter = require("./routes/driverRegistration");
 var vehicleRouter = require("./routes/vehicle");
 var salesmanRouter = require("./routes/salesman");
 var productsRouter = require("./routes/products");
+var typesRouter = require("./routes/types");
+var unitsRouter = require("./routes/units");
+var ledgerRouter = require("./routes/ledger");
+var categoriesRouter = require("./routes/categories");
+var procurementRouter = require("./routes/procurement");
 var warehouseRouter = require("./routes/warehouse");
 var userRolesRouter = require("./routes/userRoles");
+var syncIndexRouter = require("./routes/syncIndex");
+var driverDashboardRouter = require("./routes/driverDashboard");
+var driverRequestRouter = require("./routes/driverRequest");
+var topbarRouter = require("./routes/topbar");
 
 // =========================
 // APP INIT (ONLY ONCE)
@@ -74,77 +90,148 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
+// EXTERNAL API
+// =========================
+// No LMS session/login required.
+// Authentication is handled by x-api-key
+// inside externalDriverRequestRoutes.
+
+app.use("/api/external", externalDriverRequestRoutes);
+
+// =========================
 // MONGO CONNECTION
 // =========================
 const connectMongo = require("./repository/mongo");
 connectMongo();
 
-// =========================
-// SESSION STORE (MongoDB)
-// =========================
 const store = new MongoDBStore({
   uri: process.env.MONGO_URL,
-  collection: "sessions",
+  collection: "lms_sessions",
 });
+store.on("error", (err) => console.error("[SESSION STORE] error:", err));
+
+app.set("trust proxy", 1); // needed if behind a reverse proxy/load balancer serving HTTPS
 
 app.use(
   session({
-    secret: "lms_secret",
+    name: "lms.sid",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // refresh expiry on activity
     store: store,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24, // 1 day default
+    },
   }),
 );
 
-// =========================
-// ROUTES MOUNT
-// =========================
-app.use("/", dashboardRouter);
-app.use("/login", loginRouter);
-app.use("/dashboard", dashboardRouter);
-app.use("/vendor", vendorRouter);
-app.use("/branch", branchRouter);
-app.use("/client", clientRouter);
-app.use("/employees", employeesRouter);
-app.use("/users", usersRouter);
-app.use("/currency", currencyRouter);
-app.use("/inventoryProduct", inventoryProductRouter);
-app.use("/inventoryHistory", inventoryHistoryRouter);
-app.use("/stockAdjustment", stockAdjustmentRouter);
-app.use("/clientOrder", clientOrderRouter);
-app.use("/clientOrderActivity", clientOrderActivityRouter);
-app.use("/purchaseRequest", purchaseRequestRouter);
-app.use("/purchaseRequestActivity", purchaseRequestActivityRouter);
-app.use("/salesReceiving", salesReceivingRouter);
-app.use("/salesOrder", salesOrderRouter);
-app.use("/salesman", salesmanRouter);
-app.use("/salesReceivingActivity", salesReceivingActivityRouter);
-app.use("/salesOrderActivity", salesOrderActivityRouter);
-app.use("/purchaseOrderRequest", purchaseOrderRequestRouter);
-app.use("/purchaseOrderActivity", purchaseOrderActivityRouter);
-app.use("/purchaseReceivingReport", purchaseReceivingReportRouter);
-app.use("/shipmentRequest", shipmentRequestRouter);
-app.use("/shipmentPlanning", shipmentPlanningRouter);
-app.use("/shipmentDispatch", shipmentDispatchRouter);
-app.use("/shipmentTracking", shipmentTrackingRouter);
-app.use("/shipmentProofOfDelivery", shipmentProofOfDeliveryRouter);
-app.use("/shipmentReturn", shipmentReturnRouter);
-app.use("/shipmentActivity", shipmentActivityRouter);
-app.use("/staff", staffRouter);
-app.use("/admin", adminRouter);
-app.use("/driver", driverRouter);
-app.use("/vehicle", vehicleRouter);
-app.use("/products", productsRouter);
-app.use("/warehouse", warehouseRouter);
-app.use("/userRoles", userRolesRouter);
+const {
+  attachUser,
+  requireLogin,
+  requireRole,
+  noCache,
+} = require("./middleware/auth");
+app.use(attachUser);
+app.use(noCache);
+// =========================================================
+// SWAGGER DOCS WIRING
+// NOTE: app.set("views", ...) above points at "views/layout",
+// so res.render("docs") normally resolves to views/layout/docs.ejs.
+// docs.ejs lives at views/docs.ejs instead, so it's rendered with
+// a path ("../docs") relative to the configured views root.
+// =========================================================
 
-// =========================
-// TEST SESSION
-// =========================
-app.get("/test-session", (req, res) => {
-  req.session.user = { test: "ok" };
-  res.json(req.session);
+// Default swagger-ui-express page at /api-docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Raw OpenAPI spec as JSON, consumed by the custom EJS page below
+app.get("/api-docs.json", (req, res) => {
+  res.json(swaggerSpec);
 });
+
+// Custom EJS-rendered docs page at /docs
+app.get("/docs", (req, res) => {
+  res.render("../docs", { title: "API Documentation" });
+});
+
+// Public — no login required
+app.use("/login", loginRouter);
+
+// Logged-in users, any role
+app.use("/dashboard", requireLogin, dashboardRouter);
+app.use("/store", requireLogin, storeRouter);
+app.use("/branch", requireLogin, branchRouter);
+app.use("/client", requireLogin, clientRouter);
+app.use("/employees", requireLogin, employeesRouter);
+app.use("/users", requireLogin, usersRouter);
+app.use("/currency", requireLogin, currencyRouter);
+app.use("/inventoryProduct", requireLogin, inventoryProductRouter);
+app.use("/inventoryHistory", requireLogin, inventoryHistoryRouter);
+app.use("/stockAdjustment", requireLogin, stockAdjustmentRouter);
+app.use("/clientOrder", requireLogin, clientOrderRouter);
+app.use("/clientOrderActivity", requireLogin, clientOrderActivityRouter);
+app.use("/purchaseRequest", requireLogin, purchaseRequestRouter);
+app.use(
+  "/purchaseRequestActivity",
+  requireLogin,
+  purchaseRequestActivityRouter,
+);
+app.use("/salesReceiving", requireLogin, salesReceivingRouter);
+app.use("/salesOrder", requireLogin, salesOrderRouter);
+app.use("/salesman", requireLogin, salesmanRouter);
+app.use("/salesReceivingActivity", requireLogin, salesReceivingActivityRouter);
+app.use("/salesOrderActivity", requireLogin, salesOrderActivityRouter);
+app.use("/purchaseOrderRequest", requireLogin, purchaseOrderRequestRouter);
+app.use("/purchaseOrderActivity", requireLogin, purchaseOrderActivityRouter);
+app.use(
+  "/purchaseReceivingReport",
+  requireLogin,
+  purchaseReceivingReportRouter,
+);
+app.use("/shipmentRequest", requireLogin, shipmentRequestRouter);
+app.use("/shipmentPlanning", requireLogin, shipmentPlanningRouter);
+app.use("/shipmentDispatch", requireLogin, shipmentDispatchRouter);
+app.use("/shipmentTracking", requireLogin, shipmentTrackingRouter);
+app.use(
+  "/shipmentProofOfDelivery",
+  requireLogin,
+  shipmentProofOfDeliveryRouter,
+);
+app.use("/shipmentReturn", requireLogin, shipmentReturnRouter);
+app.use("/shipmentActivity", requireLogin, shipmentActivityRouter);
+app.use("/staff", requireLogin, staffRouter);
+app.use("/vendor", requireLogin, vendorRouter);
+app.use("/driver", requireLogin, driverRouter);
+app.use("/driverRegistration", requireLogin, driverRegistrationRouter);
+app.use("/vehicle", requireLogin, vehicleRouter);
+app.use("/products", requireLogin, productsRouter);
+app.use("/types", requireLogin, typesRouter);
+app.use("/units", requireLogin, unitsRouter);
+app.use("/ledger", requireLogin, ledgerRouter);
+app.use("/categories", requireLogin, categoriesRouter);
+app.use("/procurement", requireLogin, procurementRouter);
+app.use("/warehouse", requireLogin, warehouseRouter);
+app.use("/userRoles", requireLogin, userRolesRouter);
+app.use("/syncIndex", requireLogin, syncIndexRouter);
+app.use("/topbar", requireLogin, topbarRouter);
+app.use("/driverRequest", requireLogin, driverRequestRouter);
+
+// Admin-only
+app.use(
+  "/admin",
+  requireLogin,
+  requireRole("admin", "administrator"),
+  adminRouter,
+);
+
+// driverDashboard already gates per-route internally with
+// requireRole("Driver") — requireLogin here is redundant but
+// harmless as a first line of defense.
+app.use("/driverDashboard", requireLogin, driverDashboardRouter);
 
 // =========================
 // 404 HANDLER

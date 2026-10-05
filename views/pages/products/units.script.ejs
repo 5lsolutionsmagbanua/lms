@@ -1,0 +1,357 @@
+<script>
+  const UnitsToast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+
+  let allUnits = [];
+  let filteredUnits = [];
+  let unitsCurrentPage = 1;
+  const UNITS_PAGE_SIZE = 4;
+  const UNIT_COLUMNS = 5;
+
+  $(function () {
+    init();
+
+    function init() {
+      loadUnits();
+      bindUnitEvents();
+    }
+
+    // ===================================
+    // LOAD UNITS
+    // ===================================
+    function loadUnits() {
+      $.ajax({
+        url: "/units/get-units",
+        method: "GET",
+
+        success: function (res) {
+          allUnits = res || [];
+          applyFilterAndRender();
+        },
+
+        error: function () {
+          $("#unitsTableBody").html(
+            `<tr><td colspan="${UNIT_COLUMNS}" class="text-center text-danger">Failed to load units.</td></tr>`,
+          );
+        },
+      });
+    }
+
+    function applyFilterAndRender() {
+      const term = ($("#unitSearch").val() || "").trim().toLowerCase();
+
+      filteredUnits = !term
+        ? allUnits.slice()
+        : allUnits.filter(
+            (u) =>
+              String(u.unit_name || "").toLowerCase().includes(term) ||
+              String(u.abbreviation || "").toLowerCase().includes(term),
+          );
+
+      unitsCurrentPage = 1;
+      renderUnitTable();
+      renderUnitPagination();
+    }
+
+    function renderUnitTable() {
+      const start = (unitsCurrentPage - 1) * UNITS_PAGE_SIZE;
+      const pageItems = filteredUnits.slice(start, start + UNITS_PAGE_SIZE);
+
+      let rows = "";
+
+      if (filteredUnits.length === 0) {
+        rows = `<tr><td colspan="${UNIT_COLUMNS}" class="text-center text-muted py-4">No units found</td></tr>`;
+        for (let i = 1; i < UNITS_PAGE_SIZE; i++) rows += fillerRow();
+        $("#unitsTableBody").html(rows);
+        $("#unitPaginationInfo").text("No results");
+        return;
+      }
+
+      pageItems.forEach((u) => {
+        const unitType = u.is_compound === "yes" ? "COMPOUND UNIT" : "SINGLE UNIT";
+        const badgeColor = u.is_compound === "yes" ? "primary" : "success";
+
+        rows += `
+          <tr>
+            <td>${u.id}</td>
+            <td title="${escapeHtml(u.unit_name)}">${escapeHtml(u.unit_name)}</td>
+            <td>${escapeHtml(u.abbreviation)}</td>
+            <td><span class="badge bg-${badgeColor}">${unitType}</span></td>
+            <td class="text-end">
+              <button class="btn btn-warning btn-sm editUnitBtn" data-id="${u.id}"><i class="bi bi-pencil"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      for (let i = pageItems.length; i < UNITS_PAGE_SIZE; i++) rows += fillerRow();
+
+      $("#unitsTableBody").html(rows);
+
+      const total = filteredUnits.length;
+      const shownStart = start + 1;
+      const shownEnd = Math.min(start + UNITS_PAGE_SIZE, total);
+      $("#unitPaginationInfo").text(`Showing ${shownStart}-${shownEnd} of ${total}`);
+    }
+
+    function fillerRow() {
+      let cells = "";
+      for (let i = 0; i < UNIT_COLUMNS; i++) cells += `<td class="filler-row">&nbsp;</td>`;
+      return `<tr>${cells}</tr>`;
+    }
+
+    function renderUnitPagination() {
+      const totalPages = Math.max(1, Math.ceil(filteredUnits.length / UNITS_PAGE_SIZE));
+      let html = "";
+
+      html += `<li class="page-item ${unitsCurrentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${unitsCurrentPage - 1}">Prev</a>
+              </li>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<li class="page-item ${p === unitsCurrentPage ? "active" : ""}">
+                  <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>`;
+      }
+
+      html += `<li class="page-item ${unitsCurrentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${unitsCurrentPage + 1}">Next</a>
+              </li>`;
+
+      $("#unitPagination").html(html);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // ===================================
+    // EVENTS
+    // ===================================
+    function bindUnitEvents() {
+      $("#unitSearch").on("keyup", applyFilterAndRender);
+
+      $(document).on("click", "#unitPagination .page-link", function (e) {
+        e.preventDefault();
+        const page = parseInt($(this).data("page"), 10);
+        const totalPages = Math.max(1, Math.ceil(filteredUnits.length / UNITS_PAGE_SIZE));
+        if (isNaN(page) || page < 1 || page > totalPages) return;
+        unitsCurrentPage = page;
+        renderUnitTable();
+        renderUnitPagination();
+      });
+
+      $("#printUnitsBtn").on("click", printUnits);
+      $("#exportUnitsExcelBtn").on("click", function () {
+        window.location.href = "/units/export-excel";
+      });
+
+      // ADD UNIT
+      $("#saveUnitBtn").click(function () {
+        $.ajax({
+          url: "/units/add-unit",
+          method: "POST",
+
+          data: {
+            unit_name: $("#unit_name").val(),
+            abbreviation: $("#abbreviation").val(),
+            is_compound: $("#compound_unit").val(),
+          },
+
+          success: function (res) {
+            $("#addUnitsModal").modal("hide");
+
+            $("#unit_name").val("");
+            $("#abbreviation").val("");
+            $("#compound_unit").val("no");
+
+            loadUnits();
+            UnitsToast.fire({ icon: "success", title: res.message || "Unit added successfully." });
+          },
+
+          error: function (xhr) {
+            UnitsToast.fire({ icon: "error", title: xhr.responseJSON?.message || "Unable to save." });
+          },
+        });
+      });
+
+      // LOAD EDIT
+      $(document).on("click", ".editUnitBtn", function () {
+        const id = $(this).data("id");
+
+        $.ajax({
+          url: `/units/get-unit/${id}`,
+          method: "GET",
+
+          success: function (u) {
+            $("#edit_unit_id").val(u.id);
+            $("#edit_unit_name").val(u.unit_name);
+            $("#edit_abbreviation").val(u.abbreviation);
+            $("#edit_compound_unit").val(u.is_compound);
+
+            $("#editUnitsModal").modal("show");
+          },
+
+          error: function () {
+            UnitsToast.fire({ icon: "error", title: "Failed to load unit." });
+          },
+        });
+      });
+
+      // UPDATE
+      $("#updateUnitBtn").click(function () {
+        const id = $("#edit_unit_id").val();
+
+        $.ajax({
+          url: `/units/update-unit/${id}`,
+          method: "PUT",
+
+          data: {
+            unit_name: $("#edit_unit_name").val(),
+            abbreviation: $("#edit_abbreviation").val(),
+            is_compound: $("#edit_compound_unit").val(),
+          },
+
+          success: function (res) {
+            $("#editUnitsModal").modal("hide");
+            loadUnits();
+            UnitsToast.fire({ icon: "success", title: res.message || "Unit updated successfully." });
+          },
+
+          error: function (xhr) {
+            UnitsToast.fire({ icon: "error", title: xhr.responseJSON?.message || "Update failed." });
+          },
+        });
+      });
+
+      // BULK UPLOAD
+      $("#bulkUploadUnitSubmitBtn").click(function () {
+        const fileInput = document.getElementById("bulkUploadUnitFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          UnitsToast.fire({ icon: "warning", title: "Please choose a file to upload." });
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const $btn = $("#bulkUploadUnitSubmitBtn");
+        $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
+        $("#bulkUploadUnitReport").addClass("d-none");
+
+        $.ajax({
+          url: "/units/bulk-upload",
+          method: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function (res) {
+            showBulkReport(res.report, res.message);
+            loadUnits();
+          },
+
+          error: function (err) {
+            const res = err.responseJSON;
+            if (res && res.report) {
+              showBulkReport(res.report, res.message);
+            } else {
+              UnitsToast.fire({ icon: "error", title: res?.message || "Bulk upload failed." });
+            }
+          },
+
+          complete: function () {
+            $btn.prop("disabled", false).html('<i class="bi bi-cloud-upload"></i> Upload File');
+          },
+        });
+      });
+
+      function showBulkReport(report, message) {
+        $("#bulkUploadUnitReport").removeClass("d-none");
+
+        const summaryColor = report.failed > 0 ? "text-warning" : "text-success";
+        $("#bulkUploadUnitSummary")
+          .removeClass()
+          .addClass(`fw-bold mb-2 ${summaryColor}`)
+          .text(message || `${report.success} of ${report.total} imported.`);
+
+        if (report.errors && report.errors.length > 0) {
+          let list = "<ul class='ps-3 mb-0'>";
+          report.errors.forEach((e) => {
+            list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+          });
+          list += "</ul>";
+          $("#bulkUploadUnitErrors").html(list);
+        } else {
+          $("#bulkUploadUnitErrors").html("");
+        }
+      }
+
+      $("#bulkUploadUnitModal").on("hidden.bs.modal", function () {
+        $("#bulkUploadUnitFile").val("");
+        $("#bulkUploadUnitReport").addClass("d-none");
+      });
+    }
+
+    // ===================================
+    // PRINT
+    // ===================================
+    function printUnits() {
+      const rows = filteredUnits
+        .map(
+          (u) => `
+          <tr>
+            <td>${u.id}</td>
+            <td>${escapeHtml(u.unit_name)}</td>
+            <td>${escapeHtml(u.abbreviation)}</td>
+            <td>${u.is_compound === "yes" ? "Compound" : "Single"}</td>
+          </tr>
+        `,
+        )
+        .join("");
+
+      const html = `
+        <html>
+          <head>
+            <title>Units</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f1f1f1; }
+            </style>
+          </head>
+          <body>
+            <h2>Units</h2>
+            <div style="color:#666;margin-bottom:16px;font-size:12px;">Generated ${new Date().toLocaleString()} &middot; ${filteredUnits.length} record(s)</div>
+            <table>
+              <thead><tr><th>ID</th><th>Unit Name</th><th>Abbreviation</th><th>Compound Unit</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.onload = function () {
+        printWindow.print();
+      };
+    }
+  });
+</script>

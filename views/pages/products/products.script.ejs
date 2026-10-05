@@ -1,0 +1,494 @@
+<script>
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+
+  // =========================
+  // STATE (client-side pagination, same pattern as branch/vehicle)
+  // =========================
+  let allProducts = [];
+  let filteredProducts = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 4;
+  const PRODUCT_COLUMNS = 7;
+
+  $(document).ready(function () {
+    init();
+
+    function init() {
+      loadTypes();
+      loadCategories();
+      loadProducts();
+      bindEvents();
+    }
+
+    // =========================
+    // EVENTS
+    // =========================
+    function bindEvents() {
+      $("#saveProductBtn").on("click", saveProduct);
+      $(document).on("click", ".viewProductBtn", viewProduct);
+      $(document).on("click", ".editProductBtn", editProduct);
+      $(document).on("click", ".barcodeProductBtn", showBarcode);
+      $(document).on("click", ".printProductBtn", printSingleProduct);
+
+      $("#productSearchInput").on("keyup", applyFilterAndRender);
+
+      $(document).on("click", "#productPagination .page-link", function (e) {
+        e.preventDefault();
+        const page = parseInt($(this).data("page"), 10);
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredProducts.length / PAGE_SIZE),
+        );
+        if (isNaN(page) || page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderTable();
+        renderPagination();
+      });
+
+      $("#printProductsBtn").on("click", printProductList);
+      $("#exportExcelBtn").on("click", function () {
+        window.location.href = "/products/export";
+      });
+
+      $("#submitImportBtn").on("click", submitImport);
+    }
+
+    // =========================
+    // SAVE PRODUCT
+    // =========================
+    function saveProduct(e) {
+      e.preventDefault();
+
+      const id = $("#saveProductBtn").data("edit-id");
+
+      const data = {
+        inventory_name: $("#inventoryName").val(),
+        type_id: $("#typeSelect").val(),
+        category_id: $("#categorySelect").val(),
+        brand: $("#brand").val(),
+        model: $("#model").val(),
+        description: $("#description").val(),
+      };
+
+      if (!data.inventory_name || !data.type_id || !data.category_id) {
+        Toast.fire({
+          icon: "warning",
+          title: "Please complete required fields",
+        });
+        return;
+      }
+
+      const url = id ? "/products/" + id : "/products";
+      const method = id ? "PUT" : "POST";
+
+      $.ajax({
+        url,
+        method,
+        data,
+
+        beforeSend: function () {
+          $("#saveProductBtn").prop("disabled", true).text("Saving...");
+        },
+
+        success: function () {
+          $("#addProductModal").modal("hide");
+          $("#addProductForm")[0].reset();
+          $("#saveProductBtn").removeData("edit-id");
+          $("#productModalTitle").text("Add Product");
+
+          loadProducts();
+
+          Toast.fire({
+            icon: "success",
+            title: id
+              ? "Product updated successfully"
+              : "Product created successfully",
+          });
+        },
+
+        error: function (xhr) {
+          Toast.fire({
+            icon: "error",
+            title: xhr.responseJSON?.message || "Something went wrong.",
+          });
+        },
+
+        complete: function () {
+          $("#saveProductBtn").prop("disabled", false).text("Save Product");
+        },
+      });
+    }
+
+    // =========================
+    // VIEW PRODUCT
+    // =========================
+    function viewProduct() {
+      const id = $(this).data("id");
+
+      $.get("/products/" + id)
+        .done(function (p) {
+          $("#view_name").text(p.inventory_name);
+          $("#view_type").text(p.type_name || "-");
+          $("#view_category").text(p.category_name || "-");
+          $("#view_brand").text(p.brand || "-");
+          $("#view_model").text(p.model || "-");
+          $("#view_description").text(p.description || "-");
+
+          $("#viewProductModal").modal("show");
+        })
+        .fail(function () {
+          Toast.fire({ icon: "error", title: "Unable to load product" });
+        });
+    }
+
+    // =========================
+    // EDIT PRODUCT
+    // =========================
+    function editProduct() {
+      const id = $(this).data("id");
+
+      $.get("/products/" + id)
+        .done(function (p) {
+          $("#inventoryName").val(p.inventory_name);
+          $("#typeSelect").val(p.type_id);
+          $("#categorySelect").val(p.category_id);
+          $("#brand").val(p.brand);
+          $("#model").val(p.model);
+          $("#description").val(p.description);
+
+          $("#saveProductBtn").data("edit-id", id);
+          $("#productModalTitle").text("Edit Product");
+
+          $("#addProductModal").modal("show");
+        })
+        .fail(function () {
+          Toast.fire({ icon: "error", title: "Unable to retrieve product" });
+        });
+    }
+
+    // =========================
+    // BARCODE
+    // =========================
+    function showBarcode() {
+      const id = $(this).data("id");
+
+      $("#barcode").empty();
+
+      JsBarcode("#barcode", "PROD-" + id, {
+        format: "CODE128",
+        width: 2,
+        height: 80,
+        displayValue: true,
+      });
+
+      $("#barcodeModal").modal("show");
+    }
+
+    // =========================
+    // PRINT (single row)
+    // =========================
+    function printSingleProduct() {
+      const row = $(this).closest("tr").clone();
+      row.find(".filler-row").remove();
+
+      const win = window.open("", "", "width=900,height=600");
+
+      win.document.write(`
+        <html>
+          <head><title>Print Product</title></head>
+          <body>
+            <h3>Product Information</h3>
+            <table border="1" cellpadding="10">${row.html()}</table>
+          </body>
+        </html>
+      `);
+
+      win.document.close();
+      win.print();
+    }
+
+    // =========================
+    // PRINT (full filtered list)
+    // =========================
+    function printProductList() {
+      const rows = filteredProducts
+        .map(
+          (p) => `
+          <tr>
+            <td>${p.id}</td>
+            <td>${escapeHtml(p.inventory_name)}</td>
+            <td>${escapeHtml(p.type_name || "-")}</td>
+            <td>${escapeHtml(p.category_name || "-")}</td>
+            <td>${escapeHtml(p.brand ?? "-")}</td>
+            <td>${escapeHtml(p.description ?? "-")}</td>
+          </tr>
+        `,
+        )
+        .join("");
+
+      const html = `
+        <html>
+          <head>
+            <title>Product List</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              h2 { margin-bottom: 4px; }
+              .meta { color: #666; margin-bottom: 16px; font-size: 12px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f1f1f1; }
+            </style>
+          </head>
+          <body>
+            <h2>Product List</h2>
+            <div class="meta">Generated ${new Date().toLocaleString()} &middot; ${filteredProducts.length} record(s)</div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Type</th><th>Category</th><th>Brand</th><th>Description</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.onload = function () {
+        printWindow.print();
+      };
+    }
+
+    // =========================
+    // BULK UPLOAD / IMPORT
+    // =========================
+    function submitImport() {
+      const fileInput = document.getElementById("importFile");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        Toast.fire({
+          icon: "warning",
+          title: "Please choose a file to upload.",
+        });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const $btn = $("#submitImportBtn");
+      $btn
+        .prop("disabled", true)
+        .html(
+          '<span class="spinner-border spinner-border-sm"></span> Uploading...',
+        );
+
+      $.ajax({
+        url: "/products/import",
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+
+        success: function (res) {
+          Toast.fire({
+            icon: res.skipped > 0 ? "warning" : "success",
+            title: `${res.imported} of ${res.total} products imported${res.skipped ? `, ${res.skipped} skipped` : ""}.`,
+          });
+
+          $("#importFile").val("");
+          $("#importModal").modal("hide");
+          loadProducts();
+        },
+
+        error: function (err) {
+          Toast.fire({
+            icon: "error",
+            title: err.responseJSON?.message || "Import failed.",
+          });
+        },
+
+        complete: function () {
+          $btn
+            .prop("disabled", false)
+            .html('<i class="bi bi-cloud-upload"></i> Upload File');
+        },
+      });
+    }
+
+    // =========================
+    // SEARCH + PAGINATE
+    // =========================
+    function applyFilterAndRender() {
+      const term = ($("#productSearchInput").val() || "").trim().toLowerCase();
+
+      filteredProducts = !term
+        ? allProducts.slice()
+        : allProducts.filter((p) => {
+            return (
+              String(p.inventory_name || "")
+                .toLowerCase()
+                .includes(term) ||
+              String(p.type_name || "")
+                .toLowerCase()
+                .includes(term) ||
+              String(p.category_name || "")
+                .toLowerCase()
+                .includes(term) ||
+              String(p.brand || "")
+                .toLowerCase()
+                .includes(term)
+            );
+          });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    // =========================
+    // RENDER TABLE (fixed height)
+    // =========================
+    function renderTable() {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = filteredProducts.slice(start, start + PAGE_SIZE);
+
+      let html = "";
+
+      pageItems.forEach((p) => {
+        html += `
+          <tr>
+            <td>${p.id}</td>
+            <td title="${escapeHtml(p.inventory_name)}">${escapeHtml(p.inventory_name)}</td>
+            <td>${escapeHtml(p.type_name || "-")}</td>
+            <td>${escapeHtml(p.category_name || "-")}</td>
+            <td>${escapeHtml(p.brand ?? "-")}</td>
+            <td title="${escapeHtml(p.description ?? "-")}">${escapeHtml(p.description ?? "-")}</td>
+            <td class="text-end">
+              <button class="btn btn-info btn-sm viewProductBtn" data-id="${p.id}"><i class="bi bi-eye"></i></button>
+              <button class="btn btn-warning btn-sm editProductBtn" data-id="${p.id}"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-secondary btn-sm printProductBtn" data-id="${p.id}"><i class="bi bi-printer"></i></button>
+              <button class="btn btn-dark btn-sm barcodeProductBtn" data-id="${p.id}"><i class="bi bi-upc-scan"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      for (let i = pageItems.length; i < PAGE_SIZE; i++) html += fillerRow();
+
+      if (filteredProducts.length === 0) {
+        html = `<tr><td colspan="${PRODUCT_COLUMNS}" class="text-center text-muted py-4">No products found</td></tr>`;
+        for (let i = 1; i < PAGE_SIZE; i++) html += fillerRow();
+      }
+
+      $("#productTableBody").html(html);
+
+      const total = filteredProducts.length;
+      const shownStart = total === 0 ? 0 : start + 1;
+      const shownEnd = Math.min(start + PAGE_SIZE, total);
+      $("#productPaginationInfo").text(
+        total === 0
+          ? "No results"
+          : `Showing ${shownStart}-${shownEnd} of ${total}`,
+      );
+    }
+
+    function fillerRow() {
+      let cells = "";
+      for (let i = 0; i < PRODUCT_COLUMNS; i++)
+        cells += `<td class="filler-row">&nbsp;</td>`;
+      return `<tr>${cells}</tr>`;
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredProducts.length / PAGE_SIZE),
+      );
+      let html = "";
+
+      html += `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}">Prev</a>
+              </li>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<li class="page-item ${p === currentPage ? "active" : ""}">
+                  <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>`;
+      }
+
+      html += `<li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
+              </li>`;
+
+      $("#productPagination").html(html);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // exposed for loadProducts() below (declared outside this IIFE-ish scope)
+    window.__productsRenderHook = applyFilterAndRender;
+  });
+
+  // =========================
+  // LOAD TYPES
+  // =========================
+  function loadTypes() {
+    $.get("/products/get-types", function (res) {
+      let html = `<option value="">Select Type</option>`;
+      res.forEach((t) => {
+        html += `<option value="${t.id}">${t.type_name}</option>`;
+      });
+      $("#typeSelect").html(html);
+    });
+  }
+
+  // =========================
+  // LOAD CATEGORIES
+  // =========================
+  function loadCategories() {
+    $.get("/products/get-categories", function (res) {
+      let html = `<option value="">Select Category</option>`;
+      res.forEach((c) => {
+        html += `<option value="${c.id}">${c.category_name}</option>`;
+      });
+      $("#categorySelect").html(html);
+    });
+  }
+
+  // =========================
+  // LOAD PRODUCTS
+  // =========================
+  function loadProducts() {
+    $.ajax({
+      url: "/products/get-products",
+      method: "GET",
+      success: function (res) {
+        allProducts = res || [];
+        if (typeof window.__productsRenderHook === "function") {
+          window.__productsRenderHook();
+        }
+      },
+      error: function () {
+        Toast.fire({ icon: "error", title: "Failed to load products" });
+      },
+    });
+  }
+</script>

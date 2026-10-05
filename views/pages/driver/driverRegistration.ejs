@@ -1,0 +1,587 @@
+<!-- =====================================================
+ADD DRIVER MODAL
+===================================================== -->
+<div class="modal fade" id="addDriverModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-person-plus"></i> Add Driver
+        </h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><h6>Personal Information</h6></div>
+
+          <div class="col-md-3">
+            <label>Select User *</label>
+            <select class="form-select" id="add_user_id">
+              <option value="">Select Driver from Users</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label>Mobile</label>
+            <input class="form-control" id="add_mobile_number" />
+          </div>
+
+          <div class="col-md-3">
+            <label>Date Hired</label>
+            <input type="date" class="form-control" id="add_date_hired" />
+          </div>
+
+          <div class="col-12">
+            <label>Address</label>
+            <textarea class="form-control" id="add_address"></textarea>
+          </div>
+
+          <div class="col-12"><h6>License</h6></div>
+
+          <div class="col-md-4">
+            <label>License No</label>
+            <input class="form-control" id="add_license_number" />
+          </div>
+
+          <div class="col-md-4">
+            <label>License Type</label>
+            <select class="form-select" id="add_license_type">
+              <option value="Professional">Professional</option>
+              <option value="Non-Professional">Non-Professional</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label>Expiry</label>
+            <input type="date" class="form-control" id="add_license_expiry" />
+          </div>
+
+          <div class="col-12"><h6>Status</h6></div>
+
+          <div class="col-md-4">
+            <label>Attendance</label>
+            <select class="form-select" id="add_attendance_status">
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Rest Day">Rest Day</option>
+              <option value="Leave">Leave</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label>Availability</label>
+            <select class="form-select" id="add_availability_status" disabled>
+              <option value="Available" selected>Available</option>
+            </select>
+            <div class="form-text">New drivers always start as Available.</div>
+          </div>
+
+          <div class="col-md-4">
+            <label>Status</label>
+            <select class="form-select" id="add_is_active">
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
+
+          <div class="col-12"><h6>Emergency Contact</h6></div>
+
+          <div class="col-md-6">
+            <input
+              class="form-control"
+              id="add_emergency_contact_name"
+              placeholder="Contact Name"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <input
+              class="form-control"
+              id="add_emergency_contact_number"
+              placeholder="Contact Number"
+            />
+          </div>
+
+          <div class="col-12">
+            <textarea
+              class="form-control"
+              id="add_remarks"
+              placeholder="Remarks"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-primary" id="saveDriverBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+EDIT DRIVER MODAL
+===================================================== -->
+<div class="modal fade" id="editDriverModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i> Edit Driver
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="edit_driver_id" />
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label>Branch</label>
+            <select class="form-select" id="edit_branch_id"></select>
+          </div>
+
+          <div class="col-md-4">
+            <label>First Name</label>
+            <input class="form-control" id="edit_first_name" />
+          </div>
+
+          <div class="col-md-4">
+            <label>Middle Name</label>
+            <input class="form-control" id="edit_middle_name" />
+          </div>
+
+          <div class="col-md-4">
+            <label>Last Name</label>
+            <input class="form-control" id="edit_last_name" />
+          </div>
+
+          <div class="col-md-4">
+            <label>Mobile</label>
+            <input class="form-control" id="edit_mobile_number" />
+          </div>
+
+          <div class="col-md-4">
+            <label>Date Hired</label>
+            <input type="date" class="form-control" id="edit_date_hired" />
+          </div>
+
+          <div class="col-12">
+            <label>Address</label>
+            <textarea class="form-control" id="edit_address"></textarea>
+          </div>
+
+          <div class="col-12"><h6>License</h6></div>
+
+          <div class="col-md-4">
+            <label>License No</label>
+            <input class="form-control" id="edit_license_number" />
+          </div>
+
+          <div class="col-md-4">
+            <label>License Type</label>
+            <select class="form-select" id="edit_license_type">
+              <option value="Professional">Professional</option>
+              <option value="Non-Professional">Non-Professional</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label>Expiry</label>
+            <input type="date" class="form-control" id="edit_license_expiry" />
+          </div>
+
+          <div class="col-12"><h6>Status</h6></div>
+
+          <div class="col-md-4">
+            <label>Attendance</label>
+            <select class="form-select" id="edit_attendance_status">
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Rest Day">Rest Day</option>
+              <option value="Leave">Leave</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label>Availability</label>
+            <select class="form-select" id="edit_availability_status">
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Driving">Driving</option>
+              <option value="Delivering">Delivering</option>
+              <option value="Returning">Returning</option>
+              <option value="On Break">On Break</option>
+              <option value="Unavailable">Unavailable</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label>Status</label>
+            <select class="form-select" id="edit_is_active">
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
+
+          <div class="col-12"><h6>Emergency Contact</h6></div>
+
+          <div class="col-md-6">
+            <input
+              class="form-control"
+              id="edit_emergency_contact_name"
+              placeholder="Contact Name"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <input
+              class="form-control"
+              id="edit_emergency_contact_number"
+              placeholder="Contact Number"
+            />
+          </div>
+
+          <div class="col-12">
+            <label>Remarks</label>
+            <textarea class="form-control" id="edit_remarks"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-warning" id="updateDriverBtn">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+VIEW DRIVER MODAL
+===================================================== -->
+<div class="modal fade" id="viewDriverModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="bi bi-eye"></i> Driver Details</h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">ID</small>
+              <div id="view_driver_id" class="fw-semibold"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Driver Code</small>
+              <div id="view_driver_code" class="fw-semibold"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Full Name</small>
+              <div id="view_full_name" class="fw-semibold"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Branch</small>
+              <div id="view_branch"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Mobile</small>
+              <div id="view_mobile"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted">Date Hired</small>
+              <div id="view_date_hired"></div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded p-3">
+              <small class="text-muted">Address</small>
+              <div id="view_address"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3">
+              <small class="text-muted">License No.</small>
+              <div id="view_license_number"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3">
+              <small class="text-muted">License Type</small>
+              <div id="view_license_type"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3">
+              <small class="text-muted">Expiry</small>
+              <div id="view_license_expiry"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center">
+              <small class="text-muted d-block">Attendance</small>
+              <div id="view_attendance_status"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center">
+              <small class="text-muted d-block">Availability</small>
+              <div id="view_availability_status"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 text-center">
+              <small class="text-muted d-block">Status</small>
+              <div id="view_status"></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3">
+              <small class="text-muted">Emergency Contact Name</small>
+              <div id="view_emergency_contact_name"></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3">
+              <small class="text-muted">Emergency Contact Number</small>
+              <div id="view_emergency_contact_number"></div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded p-3">
+              <small class="text-muted">Remarks</small>
+              <div id="view_remarks"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+BULK UPLOAD DRIVERS MODAL
+===================================================== -->
+<div class="modal fade" id="bulkUploadDriverModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-cloud-upload"></i> Bulk Upload Drivers
+        </h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div
+          class="d-flex align-items-start gap-3 p-3 mb-3 rounded bg-light border"
+        >
+          <i class="bi bi-file-earmark-spreadsheet fs-3 text-primary"></i>
+          <div class="flex-grow-1">
+            <div class="fw-semibold">Start from the template</div>
+            <p class="text-muted small mb-2">
+              Download the Excel template, fill in one row per driver, then
+              upload it below. Required columns are marked with an asterisk.
+            </p>
+            <button
+              class="btn btn-outline-primary btn-sm"
+              id="downloadDriverTemplateBtn"
+              type="button"
+            >
+              <i class="bi bi-download"></i> Download Template
+            </button>
+          </div>
+        </div>
+
+        <label class="form-label">Upload Completed File</label>
+        <input
+          type="file"
+          class="form-control"
+          id="bulkUploadDriverFile"
+          accept=".xlsx,.xls"
+        />
+        <div class="form-text">Accepted formats: .xlsx, .xls</div>
+
+        <div id="bulkUploadDriverReport" class="mt-3 d-none">
+          <div id="bulkUploadDriverSummary"></div>
+          <div id="bulkUploadDriverErrors" class="small text-danger"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary" id="bulkUploadDriverSubmitBtn">
+          <i class="bi bi-cloud-upload"></i> Upload File
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- PANEL -->
+    <section class="panel">
+      <!-- HEADER -->
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
+      >
+        <div>
+          <h2 class="h5 mb-1 section-title">
+            <i class="bi bi-person-vcard"></i>
+            Driver Management
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage drivers, attendance, availability, and dispatch assignments
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button
+            class="btn btn-outline-secondary rounded-pill fw-semibold"
+            id="printDriverBtn"
+            type="button"
+          >
+            <i class="bi bi-printer"></i> Print
+          </button>
+
+          <button
+            class="btn btn-outline-success rounded-pill fw-semibold"
+            id="exportDriverExcelBtn"
+            type="button"
+          >
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+          </button>
+
+          <button
+            class="btn btn-outline-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#bulkUploadDriverModal"
+            type="button"
+          >
+            <i class="bi bi-cloud-upload"></i> Bulk Upload
+          </button>
+
+          <button
+            class="btn btn-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#addDriverModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Add Driver
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH / ENTRIES PER PAGE -->
+      <div class="row px-3 pt-3 g-2 align-items-center justify-content-between">
+        <div class="col-md-4">
+          <input
+            type="search"
+            class="form-control form-control-sm"
+            id="driverSearch"
+            placeholder="Search driver..."
+          />
+        </div>
+
+        <div class="col-md-auto ms-auto">
+          <div class="d-flex align-items-center gap-2">
+            <label for="driverEntriesPerPage" class="small text-muted mb-0">
+              Show
+            </label>
+            <select
+              class="form-select form-select-sm"
+              id="driverEntriesPerPage"
+              style="width: auto"
+            >
+              <option value="4" selected>4</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+            <span class="small text-muted">entries</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive px-3 pb-2 pt-2">
+        <table class="table align-middle table-hover" id="driverTable">
+          <thead>
+            <tr>
+              <th>Driver ID</th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>License No.</th>
+              <th>License Expiry</th>
+
+              <th>Attendance</th>
+              <th>Availability</th>
+
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="driverTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 pb-3"
+      >
+        <div id="driverPaginationInfo" class="small text-muted"></div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="driverPagination"></ul>
+        </nav>
+      </div>
+    </section>
+  </div>
+</main>

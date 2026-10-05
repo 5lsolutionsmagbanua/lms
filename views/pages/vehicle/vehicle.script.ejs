@@ -1,0 +1,789 @@
+<script>
+  /* ============================================================
+     VEHICLE PAGE SCRIPT
+
+     - Data is fetched once from the server and paginated/filtered
+       entirely client-side (same pattern as the branch page):
+       allVehicles -> filteredVehicles -> current PAGE_SIZE slice.
+     - Table height is fixed: filler rows pad short pages so the
+       table never resizes between 1 result and a full page.
+     - Every response — validation, success, error — surfaces as a
+       non-blocking top-right toast. The only non-toast dialog left
+       is bootstrap modals themselves (Add/Edit/View), which aren't
+       alerts.
+     - Refresh button and Delete button/handler have been removed
+       per request; the DELETE /vehicle/:id route still exists
+       server-side but nothing in this UI calls it.
+     ============================================================ */
+
+  // Vehicle statuses that only the shipment dispatch flow may set.
+  const SYSTEM_MANAGED_VEHICLE_STATUSES = ["Assigned", "In Transit"];
+  const PAGE_SIZE_DEFAULT = 4;
+  const TABLE_COLUMNS = 15;
+
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    didOpen: (t) => {
+      t.addEventListener("mouseenter", Swal.stopTimer);
+      t.addEventListener("mouseleave", Swal.resumeTimer);
+    },
+  });
+
+  let allVehicles = [];
+  let filteredVehicles = [];
+  let currentPage = 1;
+  let pageSize = PAGE_SIZE_DEFAULT;
+
+  $(function () {
+    console.log("✅ Vehicle module loaded");
+    init();
+
+    function init() {
+      fetchVehicles();
+      loadDrivers();
+      bindVehicleEvents();
+    }
+
+    function toast(icon, title) {
+      Toast.fire({ icon, title });
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatDate(date) {
+      if (!date) return "-";
+      return new Date(date).toLocaleString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    function badgeForStatus(status) {
+      switch (status) {
+        case "Available":
+          return "success";
+        case "Assigned":
+          return "primary";
+        case "In Transit":
+          return "info";
+        case "Maintenance":
+          return "warning text-dark";
+        case "Unavailable":
+          return "danger";
+        default:
+          return "secondary";
+      }
+    }
+
+    // Returns true (and shows a toast warning) if the given
+    // vehicle status is not allowed to be set manually.
+    function isSystemManagedVehicleStatus(status, { warn = true } = {}) {
+      const blocked = SYSTEM_MANAGED_VEHICLE_STATUSES.includes(status);
+
+      if (blocked && warn) {
+        console.warn(`[vehicle] Blocked manual status selection: "${status}"`);
+        toast(
+          "warning",
+          `"${status}" is set automatically when a shipment is assigned to this vehicle — it can't be chosen manually.`,
+        );
+      }
+
+      return blocked;
+    }
+
+    // =====================================================
+    // FETCH VEHICLES (network call)
+    // =====================================================
+    function fetchVehicles(callback) {
+      console.log("[vehicle] Fetching vehicles from server...");
+
+      $.ajax({
+        url: "/vehicle/list",
+        method: "GET",
+
+        success: function (res) {
+          allVehicles = res || [];
+          console.log(`[vehicle] -> ${allVehicles.length} vehicle(s) loaded`);
+
+          applyFilterAndRender();
+
+          if (typeof callback === "function") callback(null);
+        },
+
+        error: function (xhr) {
+          console.error("[vehicle] Failed to load vehicles", xhr);
+          toast("error", "Failed to load vehicles.");
+
+          if (typeof callback === "function") callback(xhr);
+        },
+      });
+    }
+
+    // =====================================================
+    // FILTER (search text + status dropdown) -> PAGINATE -> RENDER
+    // =====================================================
+    function applyFilterAndRender() {
+      const term = ($("#vehicleSearchInput").val() || "").trim().toLowerCase();
+      const statusFilter = $("#filterStatus").val();
+
+      filteredVehicles = allVehicles.filter((v) => {
+        const matchesStatus = !statusFilter || v.status === statusFilter;
+        if (!matchesStatus) return false;
+
+        if (!term) return true;
+
+        return (
+          String(v.vehicle_code || "")
+            .toLowerCase()
+            .includes(term) ||
+          String(v.plate_number || "")
+            .toLowerCase()
+            .includes(term) ||
+          String(v.vehicle_type || "")
+            .toLowerCase()
+            .includes(term) ||
+          String(v.brand || "")
+            .toLowerCase()
+            .includes(term) ||
+          String(v.model || "")
+            .toLowerCase()
+            .includes(term) ||
+          String(v.driver_name || "")
+            .toLowerCase()
+            .includes(term)
+        );
+      });
+
+      currentPage = 1;
+      renderVehicleTable();
+      renderPagination();
+    }
+
+    // =====================================================
+    // RENDER TABLE (fixed height — always pageSize rows tall)
+    // =====================================================
+    function renderVehicleTable() {
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = filteredVehicles.slice(start, start + pageSize);
+
+      let rows = "";
+
+      pageItems.forEach((v) => {
+        rows += `
+          <tr>
+            <td>${v.id}</td>
+            <td><span class="fw-semibold text-primary">${v.vehicle_code}</span></td>
+            <td>${v.plate_number}</td>
+            <td>${v.vehicle_type}</td>
+            <td title="${escapeHtml(v.brand || "-")}">${v.brand || "-"}</td>
+            <td title="${escapeHtml(v.model || "-")}">${v.model || "-"}</td>
+            <td>${v.capacity || "-"}</td>
+            <td title="${escapeHtml(v.driver_name || "-")}">${v.driver_name || "-"}</td>
+            <td>${v.registration_expiry || "-"}</td>
+            <td>${v.insurance_expiry || "-"}</td>
+            <td><span class="badge bg-${badgeForStatus(v.status)}">${v.status}</span></td>
+            <td title="${escapeHtml(v.remarks || "-")}">${v.remarks || "-"}</td>
+            <td>${formatDate(v.created_at)}</td>
+            <td>${v.created_by || "-"}</td>
+            <td class="text-end">
+              <button class="btn btn-info btn-sm viewVehicleBtn" data-id="${v.id}" title="View">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-warning btn-sm editVehicleBtn" data-id="${v.id}" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      for (let i = pageItems.length; i < pageSize; i++) {
+        rows += fillerRow();
+      }
+
+      if (filteredVehicles.length === 0) {
+        rows = `
+          <tr>
+            <td colspan="${TABLE_COLUMNS}" class="text-center text-muted py-4">No vehicles found</td>
+          </tr>
+        `;
+        for (let i = 1; i < pageSize; i++) rows += fillerRow();
+      }
+
+      $("#vehicleTableBody").html(rows);
+    }
+
+    function fillerRow() {
+      let cells = "";
+      for (let i = 0; i < TABLE_COLUMNS; i++)
+        cells += `<td class="filler-row">&nbsp;</td>`;
+      return `<tr>${cells}</tr>`;
+    }
+
+    // =====================================================
+    // PAGINATION CONTROLS
+    // =====================================================
+    function renderPagination() {
+      const total = filteredVehicles.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const start = (currentPage - 1) * pageSize;
+      const shownStart = total === 0 ? 0 : start + 1;
+      const shownEnd = Math.min(start + pageSize, total);
+
+      $("#vehiclePaginationInfo").text(
+        total === 0
+          ? "No entries"
+          : `Showing ${shownStart}-${shownEnd} of ${total} entries`,
+      );
+
+      let html = "";
+      html += `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <button class="page-link" data-page="${currentPage - 1}">Prev</button>
+              </li>`;
+
+      const windowSize = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+      let endPage = Math.min(totalPages, startPage + windowSize - 1);
+      startPage = Math.max(1, endPage - windowSize + 1);
+
+      if (startPage > 1) {
+        html += `<li class="page-item"><button class="page-link" data-page="1">1</button></li>`;
+        if (startPage > 2)
+          html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      }
+
+      for (let p = startPage; p <= endPage; p++) {
+        html += `<li class="page-item ${p === currentPage ? "active" : ""}">
+                  <button class="page-link" data-page="${p}">${p}</button>
+                </li>`;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1)
+          html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+        html += `<li class="page-item"><button class="page-link" data-page="${totalPages}">${totalPages}</button></li>`;
+      }
+
+      html += `<li class="page-item ${currentPage >= totalPages ? "disabled" : ""}">
+                <button class="page-link" data-page="${currentPage + 1}">Next</button>
+              </li>`;
+
+      $("#vehiclePagination").html(html);
+    }
+
+    // =====================================================
+    // LOAD DRIVERS (for Add/Edit Vehicle dropdowns)
+    // =====================================================
+    function loadDrivers() {
+      console.log("[vehicle] Loading available drivers for dropdowns...");
+
+      $.ajax({
+        url: "/vehicle/drivers/list",
+        type: "GET",
+
+        success: function (res) {
+          let options = `<option value="">Select Driver</option>`;
+
+          if (res.length === 0) {
+            options += `<option disabled>No available drivers</option>`;
+          } else {
+            res.forEach((driver) => {
+              options += `
+                <option value="${driver.id}">
+                  ${driver.driver_code} - ${driver.driver_name}
+                </option>
+              `;
+            });
+          }
+
+          $("#add_driver_id").html(options);
+          $("#edit_driver_id").html(options);
+
+          console.log(`[vehicle] -> ${res.length} available driver(s) loaded`);
+        },
+
+        error: function (xhr) {
+          console.error("[vehicle] Failed to load drivers", xhr);
+          toast("error", "Unable to load drivers.");
+        },
+      });
+    }
+
+    // =====================================================
+    // PRINT — uses the FULL filtered list (not just the
+    // current page), so pagination doesn't limit the report.
+    // =====================================================
+    function printVehicleTable() {
+      const rows = filteredVehicles
+        .map(
+          (v) => `
+          <tr>
+            <td>${v.id}</td>
+            <td>${escapeHtml(v.vehicle_code)}</td>
+            <td>${escapeHtml(v.plate_number)}</td>
+            <td>${escapeHtml(v.vehicle_type)}</td>
+            <td>${escapeHtml(v.brand || "-")}</td>
+            <td>${escapeHtml(v.model || "-")}</td>
+            <td>${escapeHtml(v.driver_name || "Unassigned")}</td>
+            <td>${escapeHtml(v.status)}</td>
+          </tr>
+        `,
+        )
+        .join("");
+
+      const html = `
+        <html>
+          <head>
+            <title>Vehicle List</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              h2 { margin-bottom: 4px; }
+              .meta { color: #666; margin-bottom: 16px; font-size: 12px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f1f1f1; }
+            </style>
+          </head>
+          <body>
+            <h2>Vehicle List</h2>
+            <div class="meta">Generated ${new Date().toLocaleString()} &middot; ${filteredVehicles.length} record(s)</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Code</th><th>Plate Number</th><th>Type</th>
+                  <th>Brand</th><th>Model</th><th>Assigned Driver</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.onload = function () {
+        printWindow.print();
+      };
+    }
+
+    // =====================================================
+    // EVENTS
+    // =====================================================
+    function bindVehicleEvents() {
+      // ==========================================
+      // SEARCH / STATUS FILTER / PAGE SIZE (client-side only)
+      // ==========================================
+      $("#vehicleSearchInput").on("keyup", applyFilterAndRender);
+      $("#filterStatus").on("change", applyFilterAndRender);
+
+      $("#entriesPerPage").on("change", function () {
+        pageSize = parseInt($(this).val(), 10) || PAGE_SIZE_DEFAULT;
+        currentPage = 1;
+        renderVehicleTable();
+        renderPagination();
+      });
+
+      $(document).on("click", "#vehiclePagination .page-link", function () {
+        const p = parseInt($(this).data("page"), 10);
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredVehicles.length / pageSize),
+        );
+        if (isNaN(p) || p < 1 || p > totalPages) return;
+        currentPage = p;
+        renderVehicleTable();
+        renderPagination();
+      });
+
+      // ==========================================
+      // PRINT
+      // ==========================================
+      $("#printVehicleBtn").click(function () {
+        printVehicleTable();
+      });
+
+      // ==========================================
+      // EXPORT EXCEL — server-generated, styled, all vehicles
+      // matching the current search/status filter... actually
+      // always the full set, server-side, for a complete report
+      // ==========================================
+      $("#exportVehicleExcelBtn").click(function () {
+        window.location.href = "/vehicle/export/excel";
+      });
+
+      // ==========================================
+      // BULK UPLOAD
+      // ==========================================
+      $("#bulkUploadVehicleSubmitBtn").click(function () {
+        const fileInput = document.getElementById("bulkUploadVehicleFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          toast("warning", "Please choose a file to upload.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const $btn = $("#bulkUploadVehicleSubmitBtn");
+        $btn
+          .prop("disabled", true)
+          .html(
+            '<span class="spinner-border spinner-border-sm"></span> Uploading...',
+          );
+        $("#bulkUploadVehicleReport").addClass("d-none");
+
+        $.ajax({
+          url: "/vehicle/bulk/upload",
+          method: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function (res) {
+            showBulkReport(res.report, res.message);
+            fetchVehicles();
+            loadDrivers();
+          },
+
+          error: function (err) {
+            const res = err.responseJSON;
+            if (res && res.report) {
+              showBulkReport(res.report, res.message);
+            } else {
+              toast("error", res?.message || "Bulk upload failed.");
+            }
+          },
+
+          complete: function () {
+            $btn
+              .prop("disabled", false)
+              .html('<i class="bi bi-cloud-upload"></i> Upload File');
+          },
+        });
+      });
+
+      function showBulkReport(report, message) {
+        $("#bulkUploadVehicleReport").removeClass("d-none");
+
+        const summaryColor =
+          report.failed > 0 ? "text-warning" : "text-success";
+        $("#bulkUploadVehicleSummary")
+          .removeClass()
+          .addClass(`fw-bold mb-2 ${summaryColor}`)
+          .text(message || `${report.success} of ${report.total} imported.`);
+
+        if (report.errors && report.errors.length > 0) {
+          let list = "<ul class='ps-3 mb-0'>";
+          report.errors.forEach((e) => {
+            list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+          });
+          list += "</ul>";
+          $("#bulkUploadVehicleErrors").html(list);
+        } else {
+          $("#bulkUploadVehicleErrors").html("");
+        }
+      }
+
+      $("#bulkUploadVehicleModal").on("hidden.bs.modal", function () {
+        $("#bulkUploadVehicleFile").val("");
+        $("#bulkUploadVehicleReport").addClass("d-none");
+      });
+
+      // ==========================================
+      // ADD VEHICLE
+      // ==========================================
+      $("#saveVehicleBtn").click(function () {
+        const data = {
+          plate_number: $("#add_plate_number").val(),
+          vehicle_type: $("#add_vehicle_type").val(),
+          brand: $("#add_brand").val(),
+          model: $("#add_model").val(),
+          capacity: $("#add_capacity").val(),
+          year_model: $("#add_year_model").val(),
+          color: $("#add_color").val(),
+          fuel_type: $("#add_fuel_type").val(),
+          odometer: $("#add_odometer").val(),
+          driver_id: $("#add_driver_id").val(),
+          registration_expiry: $("#add_reg_expiry").val() || null,
+          insurance_expiry: $("#add_insurance_expiry").val() || null,
+          remarks: $("#add_remarks").val(),
+        };
+
+        console.log("========== ADD VEHICLE PAYLOAD ==========");
+        console.log(data);
+        console.log("==========================================");
+
+        if (!data.plate_number || !data.vehicle_type) {
+          console.warn("[vehicle] Add rejected: missing plate number or type");
+          return toast(
+            "warning",
+            "Plate Number and Vehicle Type are required.",
+          );
+        }
+
+        $.ajax({
+          url: "/vehicle",
+          method: "POST",
+          data: data,
+
+          beforeSend: function () {
+            console.log("[vehicle] Sending add-vehicle request...");
+            $("#saveVehicleBtn").prop("disabled", true);
+          },
+
+          success: function (res) {
+            console.log("[vehicle] Vehicle added:", res);
+
+            $("#addVehicleModal").modal("hide");
+            $("#addVehicleForm")[0]?.reset();
+
+            fetchVehicles();
+            loadDrivers();
+
+            toast("success", `${res.message} — ${res.vehicle_code}`);
+          },
+
+          error: function (err) {
+            console.error("[vehicle] Add vehicle failed", err);
+            toast(
+              "error",
+              err.responseJSON?.message || "Failed to save vehicle",
+            );
+          },
+
+          complete: function () {
+            $("#saveVehicleBtn").prop("disabled", false);
+          },
+        });
+      });
+
+      // ==========================================
+      // VIEW VEHICLE
+      // ==========================================
+      $(document).on("click", ".viewVehicleBtn", function () {
+        const id = $(this).data("id");
+
+        console.log(`[vehicle] Viewing vehicle ${id}`);
+
+        $.ajax({
+          url: `/vehicle/${id}`,
+          method: "GET",
+
+          success: function (v) {
+            $("#view_code").text(v.vehicle_code || "-");
+            $("#view_plate").text(v.plate_number || "-");
+            $("#view_type").text(v.vehicle_type || "-");
+            $("#view_capacity").text(v.capacity || "-");
+
+            $("#view_brand").text(v.brand || "-");
+            $("#view_model").text(v.model || "-");
+            $("#view_year_model").text(v.year_model || "-");
+            $("#view_color").text(v.color || "-");
+
+            $("#view_driver").text(v.driver_name || "Unassigned");
+
+            $("#view_fuel_type").text(v.fuel_type || "-");
+            $("#view_odometer").text(v.odometer || "-");
+
+            $("#view_reg_expiry").text(v.registration_expiry || "-");
+            $("#view_insurance_expiry").text(v.insurance_expiry || "-");
+
+            $("#view_remarks").text(v.remarks || "-");
+
+            $("#view_status").html(
+              `<span class="badge bg-${badgeForStatus(v.status)}">${v.status}</span>`,
+            );
+
+            $("#viewVehicleModal").modal("show");
+          },
+
+          error: function (xhr) {
+            console.error(`[vehicle] Failed to load vehicle ${id}`, xhr);
+            toast("error", "Failed to load vehicle details.");
+          },
+        });
+      });
+
+      // ==========================================
+      // EDIT VEHICLE
+      // ==========================================
+      $(document).on("click", ".editVehicleBtn", function () {
+        const id = $(this).data("id");
+
+        console.log(`[vehicle] Opening edit form for vehicle ${id}`);
+
+        $.ajax({
+          url: `/vehicle/${id}`,
+          method: "GET",
+
+          success: function (v) {
+            $("#edit_vehicle_id").val(v.id);
+
+            $("#edit_vehicle_code").val(v.vehicle_code);
+            $("#edit_plate_number").val(v.plate_number);
+            $("#edit_vehicle_type").val(v.vehicle_type);
+
+            $("#edit_brand").val(v.brand);
+            $("#edit_model").val(v.model);
+
+            $("#edit_capacity").val(v.capacity);
+
+            $("#edit_year_model").val(v.year_model);
+            $("#edit_color").val(v.color);
+            $("#edit_fuel_type").val(v.fuel_type);
+            $("#edit_odometer").val(v.odometer);
+
+            $("#edit_driver_id").val(v.driver_id);
+
+            $("#edit_reg_expiry").val(
+              v.registration_expiry ? v.registration_expiry.split("T")[0] : "",
+            );
+
+            $("#edit_insurance_expiry").val(
+              v.insurance_expiry ? v.insurance_expiry.split("T")[0] : "",
+            );
+
+            $("#edit_remarks").val(v.remarks);
+            $("#edit_status").val(v.status);
+
+            // If the vehicle is currently in a system-managed state
+            // (Assigned/In Transit) because a shipment is active,
+            // show it as read-only context instead of an editable
+            // field — mirrors the driver edit form's same guard.
+            if (SYSTEM_MANAGED_VEHICLE_STATUSES.includes(v.status)) {
+              console.log(
+                `[vehicle] Vehicle ${id} is currently "${v.status}" (shipment-managed) — disabling manual edit of status.`,
+              );
+              $("#edit_status")
+                .prop("disabled", true)
+                .attr(
+                  "title",
+                  "This vehicle is on an active shipment. Status will revert automatically when it's completed or cancelled.",
+                );
+            } else {
+              $("#edit_status").prop("disabled", false).removeAttr("title");
+            }
+
+            $("#editVehicleModal").modal("show");
+          },
+
+          error: function (xhr) {
+            console.error(
+              `[vehicle] Failed to load vehicle ${id} for edit`,
+              xhr,
+            );
+            toast("error", "Failed to load vehicle details.");
+          },
+        });
+      });
+
+      // ==========================================
+      // UPDATE VEHICLE
+      // ==========================================
+      $("#updateVehicleBtn").click(function () {
+        const id = $("#edit_vehicle_id").val();
+        const status = $("#edit_status").val();
+
+        // Client-side guard, mirrors the server-side check in
+        // vehicle.routes.js. If the field is disabled
+        // (system-managed) its value is still submitted as-is, so
+        // this only fires if someone re-enables/tampers with it.
+        if (isSystemManagedVehicleStatus(status)) {
+          return;
+        }
+
+        const data = {
+          plate_number: $("#edit_plate_number").val(),
+          vehicle_type: $("#edit_vehicle_type").val(),
+
+          brand: $("#edit_brand").val(),
+          model: $("#edit_model").val(),
+          capacity: $("#edit_capacity").val(),
+
+          year_model: $("#edit_year_model").val(),
+          color: $("#edit_color").val(),
+          fuel_type: $("#edit_fuel_type").val(),
+          odometer: $("#edit_odometer").val(),
+
+          driver_id: $("#edit_driver_id").val(),
+
+          registration_expiry: $("#edit_reg_expiry").val() || null,
+          insurance_expiry: $("#edit_insurance_expiry").val() || null,
+
+          remarks: $("#edit_remarks").val(),
+          status: status,
+        };
+
+        console.log("========== UPDATE VEHICLE PAYLOAD ==========");
+        console.log({ id, ...data });
+        console.log("=============================================");
+
+        $.ajax({
+          url: `/vehicle/${id}`,
+          method: "PUT",
+          data: data,
+
+          beforeSend: function () {
+            console.log(`[vehicle] Updating vehicle ${id}...`);
+            $("#updateVehicleBtn").prop("disabled", true);
+          },
+
+          success: function (res) {
+            console.log(`[vehicle] Vehicle ${id} updated:`, res);
+
+            $("#editVehicleModal").modal("hide");
+
+            fetchVehicles();
+            loadDrivers();
+
+            toast("success", res.message);
+          },
+
+          error: function (err) {
+            console.error(`[vehicle] Update failed for vehicle ${id}`, err);
+            toast(
+              "error",
+              err.responseJSON?.message || "Failed to update vehicle",
+            );
+          },
+
+          complete: function () {
+            $("#updateVehicleBtn").prop("disabled", false);
+          },
+        });
+      });
+
+      // Guard rail: warn immediately if someone manually selects a
+      // system-managed status in the edit dropdown, before they
+      // even hit "Update".
+      $(document).on("change", "#edit_status", function () {
+        const value = $(this).val();
+        if (isSystemManagedVehicleStatus(value)) {
+          // Revert selection back to "Available" so the form can't
+          // be submitted in a blocked state.
+          $(this).val("Available");
+        }
+      });
+    }
+  });
+</script>

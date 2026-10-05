@@ -1,0 +1,4036 @@
+{
+  "swagger": "2.0",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LMS API",
+    "version": "1.0.0",
+    "description": "API documentation for the LMS backend (authentication, dashboards, etc.)"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local dev"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Protected dashboard endpoints"
+    },
+    {
+      "name": "Store",
+      "description": "Store management"
+    },
+    {
+      "name": "Branch",
+      "description": "Branch management"
+    },
+    {
+      "name": "Client",
+      "description": "Client records"
+    },
+    {
+      "name": "Employees",
+      "description": "Employee records"
+    },
+    {
+      "name": "Users",
+      "description": "User accounts"
+    },
+    {
+      "name": "Currency",
+      "description": "Currency settings"
+    },
+    {
+      "name": "Inventory",
+      "description": "Inventory products, history, and stock adjustments"
+    },
+    {
+      "name": "Client Orders",
+      "description": "Client orders and activity log"
+    },
+    {
+      "name": "Purchase Requests",
+      "description": "Purchase requests and activity log"
+    },
+    {
+      "name": "Sales Receiving",
+      "description": "Sales receiving and activity log"
+    },
+    {
+      "name": "Sales Orders",
+      "description": "Sales orders and activity log"
+    },
+    {
+      "name": "Purchase Orders",
+      "description": "Purchase order requests, activity, and receiving reports"
+    },
+    {
+      "name": "Shipment",
+      "description": "Shipment request, planning, dispatch, tracking, POD, returns, activity"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only endpoints"
+    },
+    {
+      "name": "Vendor",
+      "description": "Vendor records"
+    },
+    {
+      "name": "Staff",
+      "description": "Staff records"
+    },
+    {
+      "name": "Driver",
+      "description": "Driver records and registration"
+    },
+    {
+      "name": "Vehicle",
+      "description": "Vehicle records"
+    },
+    {
+      "name": "Salesman",
+      "description": "Salesman records"
+    },
+    {
+      "name": "Products",
+      "description": "Product catalog, types, units, categories"
+    },
+    {
+      "name": "Ledger",
+      "description": "Ledger entries"
+    },
+    {
+      "name": "Procurement",
+      "description": "Procurement"
+    },
+    {
+      "name": "Warehouse",
+      "description": "Warehouse management"
+    },
+    {
+      "name": "User Roles",
+      "description": "Role management"
+    },
+    {
+      "name": "Sync",
+      "description": "Sync index"
+    },
+    {
+      "name": "Driver Dashboard",
+      "description": "Driver-facing dashboard"
+    },
+    {
+      "name": "Topbar",
+      "description": "Topbar / navigation data"
+    }
+  ],
+  "paths": {
+    "/api-docs.json": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/test-session": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/login/": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Render the login page",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Authenticate a user and set a JWT cookie",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing username or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid username or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account is inactive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/logout": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Clear the auth cookie and redirect to login page",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/dashboard/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/store/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/store/get-stores": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/get-store/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/add-store": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/update-store/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/delete-store/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/export-excel": {
+      "get": {
+        "description": "",
+        "produces": [
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/store/bulk-upload": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/branch/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/branch/get-branches": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/branch/get-branch/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/branch/add-branch": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "branch_name": {
+                  "example": "any"
+                },
+                "company_name": {
+                  "example": "any"
+                },
+                "address": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "contact_number": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/branch/update-branch": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                },
+                "branch_name": {
+                  "example": "any"
+                },
+                "company_name": {
+                  "example": "any"
+                },
+                "address": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "contact_number": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/branch/delete-branch": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/client/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/employees/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/users/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "branch_id": {
+                  "example": "any"
+                },
+                "role_id": {
+                  "example": "any"
+                },
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "username": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/get-branches": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/get-roles": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/get-users": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "branch_id": {
+                  "example": "any"
+                },
+                "role_id": {
+                  "example": "any"
+                },
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "username": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/currency/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/inventoryProduct/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/inventoryHistory/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/stockAdjustment/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/clientOrder/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/clientOrderActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/purchaseRequest/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/purchaseRequestActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/salesReceiving/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/salesOrder/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/salesman/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/salesReceivingActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/salesOrderActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/purchaseOrderRequest/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/purchaseOrderActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/purchaseReceivingReport/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentRequest/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-shipments": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/drivers/list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/vehicles/list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-shipment/{ticket}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-types": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-branches": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-stores": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-units": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/get-products": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/add-shipment": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ticket_number": {
+                  "example": "any"
+                },
+                "store_id": {
+                  "example": "any"
+                },
+                "priority": {
+                  "example": "any"
+                },
+                "items": {
+                  "example": "any"
+                },
+                "notes": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/update-shipment": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "shipment_id": {
+                  "example": "any"
+                },
+                "store_id": {
+                  "example": "any"
+                },
+                "priority": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "notes": {
+                  "example": "any"
+                },
+                "items": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentRequest/delete-shipment/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentPlanning/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentPlanning/shipment-planning/{id}/approve": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/shipmentPlanning/shipment-planning/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "planning_date": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "items": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/shipmentPlanning/shipment-planning/{id}/lock": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/shipmentDispatch/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentDispatch/assign": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "shipment_ids": {
+                  "example": "any"
+                },
+                "shipment_id": {
+                  "example": "any"
+                },
+                "dispatch_number": {
+                  "example": "any"
+                },
+                "driver_id": {
+                  "example": "any"
+                },
+                "vehicle_id": {
+                  "example": "any"
+                },
+                "dispatch_date": {
+                  "example": "any"
+                },
+                "helper_name": {
+                  "example": "any"
+                },
+                "estimated_delivery": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentTracking/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentTracking/get-shipments": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "dateType",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentTracking/get-shipment/{ticket}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentTracking/bulk-import": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "rows": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentTracking/bulk-update-status": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tracking_row_ids": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipmentProofOfDelivery/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentReturn/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/shipmentActivity/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/staff/dashboard": {
+      "get": {
+        "description": "",
+        "responses": {
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/vendor/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/driver/dashboard": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/driverRegistration/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "example": "any"
+                },
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                },
+                "middle_name": {
+                  "example": "any"
+                },
+                "mobile_number": {
+                  "example": "any"
+                },
+                "license_number": {
+                  "example": "any"
+                },
+                "license_type": {
+                  "example": "any"
+                },
+                "license_expiry": {
+                  "example": "any"
+                },
+                "date_hired": {
+                  "example": "any"
+                },
+                "address": {
+                  "example": "any"
+                },
+                "attendance_status": {
+                  "example": "any"
+                },
+                "emergency_contact_name": {
+                  "example": "any"
+                },
+                "emergency_contact_number": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                },
+                "is_active": {
+                  "example": "any"
+                },
+                "created_by": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/driverRegistration/get-drivers": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/driverRegistration/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                },
+                "middle_name": {
+                  "example": "any"
+                },
+                "mobile_number": {
+                  "example": "any"
+                },
+                "license_number": {
+                  "example": "any"
+                },
+                "license_type": {
+                  "example": "any"
+                },
+                "license_expiry": {
+                  "example": "any"
+                },
+                "date_hired": {
+                  "example": "any"
+                },
+                "address": {
+                  "example": "any"
+                },
+                "attendance_status": {
+                  "example": "any"
+                },
+                "availability_status": {
+                  "example": "any"
+                },
+                "emergency_contact_name": {
+                  "example": "any"
+                },
+                "emergency_contact_number": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                },
+                "is_active": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/vehicle/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "plate_number": {
+                  "example": "any"
+                },
+                "vehicle_type": {
+                  "example": "any"
+                },
+                "capacity": {
+                  "example": "any"
+                },
+                "brand": {
+                  "example": "any"
+                },
+                "model": {
+                  "example": "any"
+                },
+                "year_model": {
+                  "example": "any"
+                },
+                "color": {
+                  "example": "any"
+                },
+                "fuel_type": {
+                  "example": "any"
+                },
+                "odometer": {
+                  "example": "any"
+                },
+                "driver_id": {
+                  "example": "any"
+                },
+                "registration_expiry": {
+                  "example": "any"
+                },
+                "insurance_expiry": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/vehicle/drivers/list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/vehicle/list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/vehicle/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "plate_number": {
+                  "example": "any"
+                },
+                "vehicle_type": {
+                  "example": "any"
+                },
+                "capacity": {
+                  "example": "any"
+                },
+                "brand": {
+                  "example": "any"
+                },
+                "model": {
+                  "example": "any"
+                },
+                "year_model": {
+                  "example": "any"
+                },
+                "color": {
+                  "example": "any"
+                },
+                "fuel_type": {
+                  "example": "any"
+                },
+                "odometer": {
+                  "example": "any"
+                },
+                "driver_id": {
+                  "example": "any"
+                },
+                "registration_expiry": {
+                  "example": "any"
+                },
+                "insurance_expiry": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/products/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/products/get-types": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/products/get-categories": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/products/get-products": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/products/export": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/products/import": {
+      "post": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/products/lookup-barcode/{code}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/types/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/types/get-types": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/types/get-type/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/types/add-type": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "is_serialized": {
+                  "example": "any"
+                },
+                "is_return_required": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/types/update-type/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "is_serialized": {
+                  "example": "any"
+                },
+                "is_return_required": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/types/delete-type/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/units/get-units": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/search-unit/{keyword}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/get-unit/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/add-unit": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "unit_name": {
+                  "example": "any"
+                },
+                "abbreviation": {
+                  "example": "any"
+                },
+                "is_compound": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/update-unit/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "unit_name": {
+                  "example": "any"
+                },
+                "abbreviation": {
+                  "example": "any"
+                },
+                "is_compound": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/units/delete-unit/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/ledger/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/ledger/get-transaction-types": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/ledger/get-transaction-type/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/ledger/add-transaction-type": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "transaction_type_name": {
+                  "example": "any"
+                },
+                "code": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "direction": {
+                  "example": "any"
+                },
+                "created_by": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/ledger/update-transaction-type": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                },
+                "transaction_type_name": {
+                  "example": "any"
+                },
+                "code": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "direction": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/ledger/delete-transaction-type/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/categories/get-categories": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/search": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/get-category/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/add-category": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "category_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "created_by": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/update-category/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "category_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/categories/delete-category/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/procurement/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/warehouse/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/userRoles/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/userRoles/get-roles": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/userRoles/add-role": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/userRoles/update-role": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                },
+                "role_name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/userRoles/delete-role": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/syncIndex/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/driverDashboard/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/driverDashboard/dashboard": {
+      "get": {
+        "description": "",
+        "responses": {
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/driverDashboard/my-deliveries": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/driverDashboard/delivery/{itemId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/driverDashboard/complete": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "dispatch_item_id": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "remarks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/topbar/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/topbar/api/user": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token"
+      }
+    },
+    "parameters": {
+      "IdParam": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        },
+        "description": "Record ID"
+      },
+      "PageParam": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "LimitParam": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "default": 20
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Not logged in",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Logged in but role not permitted",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "username",
+              "password"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "jdoe"
+                  }
+                }
+              },
+              "password": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "format": {
+                    "type": "string",
+                    "example": "password"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "secret123"
+                  }
+                }
+              },
+              "remember": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "LoginSuccess": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Login successful."
+                  }
+                }
+              },
+              "redirect": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "/dashboard"
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "object"
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      },
+                      "username": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "string"
+                          },
+                          "example": {
+                            "type": "string",
+                            "example": "jdoe"
+                          }
+                        }
+                      },
+                      "full_name": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "string"
+                          },
+                          "example": {
+                            "type": "string",
+                            "example": "John Doe"
+                          }
+                        }
+                      },
+                      "role": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "string"
+                          },
+                          "example": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      },
+                      "role_id": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Invalid username or password."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Store": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "store_name": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Main Branch Store"
+                  }
+                }
+              },
+              "store_code": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "MBS-01"
+                  }
+                }
+              },
+              "store_address": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "123 Rizal St, Manila"
+                  }
+                }
+              },
+              "contact_person": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Juan Dela Cruz"
+                  }
+                }
+              },
+              "contact_number": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "09123456789"
+                  }
+                }
+              },
+              "is_active": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "created_at": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "format": {
+                    "type": "string",
+                    "example": "date-time"
+                  }
+                }
+              },
+              "updated_at": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "format": {
+                    "type": "string",
+                    "example": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "StoreInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "store_name",
+              "store_code",
+              "store_address",
+              "contact_person",
+              "contact_number"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "store_name": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Main Branch Store"
+                  }
+                }
+              },
+              "store_code": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "MBS-01"
+                  }
+                }
+              },
+              "store_address": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "123 Rizal St, Manila"
+                  }
+                }
+              },
+              "contact_person": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Juan Dela Cruz"
+                  }
+                }
+              },
+              "contact_number": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "09123456789"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "StoreValidationError": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Please correct the highlighted fields."
+                  }
+                }
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "object"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "string"
+                      }
+                    }
+                  },
+                  "example": {
+                    "type": "object",
+                    "properties": {
+                      "store_code": {
+                        "type": "string",
+                        "example": "This store code is already in use."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "PaginatedStores": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "$ref": "#/components/schemas/Store"
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "object"
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "page": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      },
+                      "limit": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 4
+                          }
+                        }
+                      },
+                      "total": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 42
+                          }
+                        }
+                      },
+                      "totalPages": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 11
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BulkUploadReport": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "18 of 20 stores imported successfully."
+                  }
+                }
+              },
+              "report": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "object"
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "total": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 20
+                          }
+                        }
+                      },
+                      "success": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 18
+                          }
+                        }
+                      },
+                      "failed": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 2
+                          }
+                        }
+                      },
+                      "errors": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "array"
+                          },
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "example": "object"
+                              },
+                              "properties": {
+                                "type": "object",
+                                "properties": {
+                                  "row": {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "example": "integer"
+                                      },
+                                      "example": {
+                                        "type": "number",
+                                        "example": 5
+                                      }
+                                    }
+                                  },
+                                  "message": {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "example": "string"
+                                      },
+                                      "example": {
+                                        "type": "string",
+                                        "example": "Store code \"MBS-01\" already exists in the database."
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

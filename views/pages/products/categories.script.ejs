@@ -1,0 +1,370 @@
+<script>
+  const CategoriesToast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+
+  let allCategories = [];
+  let filteredCategories = [];
+  let categoriesCurrentPage = 1;
+  const CATEGORIES_PAGE_SIZE = 4;
+  const CATEGORY_COLUMNS = 5;
+
+  $(function () {
+    init();
+
+    function init() {
+      loadCategories();
+      bindCategoryEvents();
+    }
+
+    // ================================
+    // LOAD CATEGORIES
+    // ================================
+    function loadCategories() {
+      $.ajax({
+        url: "/categories/get-categories",
+        method: "GET",
+        success: function (res) {
+          allCategories = res || [];
+          applyFilterAndRender();
+        },
+        error: function () {
+          $("#categoryTableBody").html(
+            `<tr><td colspan="${CATEGORY_COLUMNS}" class="text-center text-danger">Failed to load categories</td></tr>`,
+          );
+        },
+      });
+    }
+
+    function applyFilterAndRender() {
+      const term = ($("#categorySearch").val() || "").trim().toLowerCase();
+
+      filteredCategories = !term
+        ? allCategories.slice()
+        : allCategories.filter((c) => String(c.category_name || "").toLowerCase().includes(term));
+
+      categoriesCurrentPage = 1;
+      renderCategoryTable();
+      renderCategoryPagination();
+    }
+
+    function renderCategoryTable() {
+      const start = (categoriesCurrentPage - 1) * CATEGORIES_PAGE_SIZE;
+      const pageItems = filteredCategories.slice(start, start + CATEGORIES_PAGE_SIZE);
+
+      let rows = "";
+
+      if (filteredCategories.length === 0) {
+        rows = `
+          <tr>
+            <td colspan="${CATEGORY_COLUMNS}" class="text-center text-muted py-4">
+              <i class="bi bi-inbox"></i><br>No categories found
+            </td>
+          </tr>
+        `;
+        for (let i = 1; i < CATEGORIES_PAGE_SIZE; i++) rows += fillerRow();
+        $("#categoryTableBody").html(rows);
+        $("#categoryPaginationInfo").text("No results");
+        return;
+      }
+
+      pageItems.forEach((c) => {
+        rows += `
+          <tr>
+            <td>${c.id}</td>
+            <td title="${escapeHtml(c.category_name ?? "-")}"><div class="fw-semibold">${escapeHtml(c.category_name ?? "-")}</div></td>
+            <td title="${escapeHtml(c.description ?? "-")}">${escapeHtml(c.description ?? "-")}</td>
+            <td><span class="badge bg-${c.status === "active" ? "success" : "danger"}">${c.status}</span></td>
+            <td class="text-end">
+              <button class="btn btn-warning btn-sm editCategoryBtn" data-id="${c.id}"><i class="bi bi-pencil"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      for (let i = pageItems.length; i < CATEGORIES_PAGE_SIZE; i++) rows += fillerRow();
+
+      $("#categoryTableBody").html(rows);
+
+      const total = filteredCategories.length;
+      const shownStart = start + 1;
+      const shownEnd = Math.min(start + CATEGORIES_PAGE_SIZE, total);
+      $("#categoryPaginationInfo").text(`Showing ${shownStart}-${shownEnd} of ${total}`);
+    }
+
+    function fillerRow() {
+      let cells = "";
+      for (let i = 0; i < CATEGORY_COLUMNS; i++) cells += `<td class="filler-row">&nbsp;</td>`;
+      return `<tr>${cells}</tr>`;
+    }
+
+    function renderCategoryPagination() {
+      const totalPages = Math.max(1, Math.ceil(filteredCategories.length / CATEGORIES_PAGE_SIZE));
+      let html = "";
+
+      html += `<li class="page-item ${categoriesCurrentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${categoriesCurrentPage - 1}">Prev</a>
+              </li>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<li class="page-item ${p === categoriesCurrentPage ? "active" : ""}">
+                  <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>`;
+      }
+
+      html += `<li class="page-item ${categoriesCurrentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${categoriesCurrentPage + 1}">Next</a>
+              </li>`;
+
+      $("#categoryPagination").html(html);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // ================================
+    // EVENTS
+    // ================================
+    function bindCategoryEvents() {
+      $("#categorySearch").on("keyup", applyFilterAndRender);
+
+      $(document).on("click", "#categoryPagination .page-link", function (e) {
+        e.preventDefault();
+        const page = parseInt($(this).data("page"), 10);
+        const totalPages = Math.max(1, Math.ceil(filteredCategories.length / CATEGORIES_PAGE_SIZE));
+        if (isNaN(page) || page < 1 || page > totalPages) return;
+        categoriesCurrentPage = page;
+        renderCategoryTable();
+        renderCategoryPagination();
+      });
+
+      $("#printCategoriesBtn").on("click", printCategories);
+      $("#exportCategoriesExcelBtn").on("click", function () {
+        window.location.href = "/categories/export-excel";
+      });
+
+      // ================= ADD CATEGORY =================
+      $("#saveCategoryBtn").click(function () {
+        const name = $("#category_name").val().trim();
+        const desc = $("#category_description").val();
+        const status = $("#category_status").val();
+
+        if (!name) {
+          CategoriesToast.fire({ icon: "warning", title: "Category name is required." });
+          return;
+        }
+
+        $("#saveCategoryBtn").prop("disabled", true).text("Saving...");
+
+        $.ajax({
+          url: "/categories/add-category",
+          method: "POST",
+          data: { category_name: name, description: desc, status },
+
+          success: function (res) {
+            $("#addCategoryModal").modal("hide");
+            $("#category_name, #category_description").val("");
+            loadCategories();
+            CategoriesToast.fire({ icon: "success", title: res.message || "Category created successfully." });
+          },
+
+          error: function (err) {
+            CategoriesToast.fire({ icon: "error", title: err.responseJSON?.message || "Failed to add category" });
+          },
+
+          complete: function () {
+            $("#saveCategoryBtn").prop("disabled", false).text("Save Category");
+          },
+        });
+      });
+
+      // ================= EDIT CATEGORY =================
+      $(document).on("click", ".editCategoryBtn", function () {
+        const id = $(this).data("id");
+
+        $.ajax({
+          url: `/categories/get-category/${id}`,
+          method: "GET",
+
+          success: function (c) {
+            $("#edit_category_id").val(c.id);
+            $("#edit_category_name").val(c.category_name);
+            $("#edit_category_description").val(c.description);
+            $("#edit_category_status").val(c.status);
+
+            $("#editCategoryModal").modal("show");
+          },
+
+          error: function () {
+            CategoriesToast.fire({ icon: "error", title: "Failed to load category" });
+          },
+        });
+      });
+
+      // ================= UPDATE CATEGORY =================
+      $("#updateCategoryBtn").click(function () {
+        const id = $("#edit_category_id").val();
+        const name = $("#edit_category_name").val().trim();
+        const desc = $("#edit_category_description").val();
+        const status = $("#edit_category_status").val();
+
+        if (!name) {
+          CategoriesToast.fire({ icon: "warning", title: "Category name is required." });
+          return;
+        }
+
+        $("#updateCategoryBtn").prop("disabled", true).text("Updating...");
+
+        $.ajax({
+          url: `/categories/update-category/${id}`,
+          method: "PUT",
+          data: { category_name: name, description: desc, status },
+
+          success: function (res) {
+            $("#editCategoryModal").modal("hide");
+            $("#edit_category_id, #edit_category_name, #edit_category_description").val("");
+            loadCategories();
+            CategoriesToast.fire({ icon: "success", title: res.message || "Category updated successfully." });
+          },
+
+          error: function () {
+            CategoriesToast.fire({ icon: "error", title: "Update failed" });
+          },
+
+          complete: function () {
+            $("#updateCategoryBtn").prop("disabled", false).text("Update");
+          },
+        });
+      });
+
+      // BULK UPLOAD
+      $("#bulkUploadCategorySubmitBtn").click(function () {
+        const fileInput = document.getElementById("bulkUploadCategoryFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          CategoriesToast.fire({ icon: "warning", title: "Please choose a file to upload." });
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const $btn = $("#bulkUploadCategorySubmitBtn");
+        $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
+        $("#bulkUploadCategoryReport").addClass("d-none");
+
+        $.ajax({
+          url: "/categories/bulk-upload",
+          method: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function (res) {
+            showBulkReport(res.report, res.message);
+            loadCategories();
+          },
+
+          error: function (err) {
+            const res = err.responseJSON;
+            if (res && res.report) {
+              showBulkReport(res.report, res.message);
+            } else {
+              CategoriesToast.fire({ icon: "error", title: res?.message || "Bulk upload failed." });
+            }
+          },
+
+          complete: function () {
+            $btn.prop("disabled", false).html('<i class="bi bi-cloud-upload"></i> Upload File');
+          },
+        });
+      });
+
+      function showBulkReport(report, message) {
+        $("#bulkUploadCategoryReport").removeClass("d-none");
+
+        const summaryColor = report.failed > 0 ? "text-warning" : "text-success";
+        $("#bulkUploadCategorySummary")
+          .removeClass()
+          .addClass(`fw-bold mb-2 ${summaryColor}`)
+          .text(message || `${report.success} of ${report.total} imported.`);
+
+        if (report.errors && report.errors.length > 0) {
+          let list = "<ul class='ps-3 mb-0'>";
+          report.errors.forEach((e) => {
+            list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+          });
+          list += "</ul>";
+          $("#bulkUploadCategoryErrors").html(list);
+        } else {
+          $("#bulkUploadCategoryErrors").html("");
+        }
+      }
+
+      $("#bulkUploadCategoryModal").on("hidden.bs.modal", function () {
+        $("#bulkUploadCategoryFile").val("");
+        $("#bulkUploadCategoryReport").addClass("d-none");
+      });
+    }
+
+    // ================================
+    // PRINT
+    // ================================
+    function printCategories() {
+      const rows = filteredCategories
+        .map(
+          (c) => `
+          <tr>
+            <td>${c.id}</td>
+            <td>${escapeHtml(c.category_name ?? "-")}</td>
+            <td>${escapeHtml(c.description ?? "-")}</td>
+            <td>${c.status}</td>
+          </tr>
+        `,
+        )
+        .join("");
+
+      const html = `
+        <html>
+          <head>
+            <title>Categories</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f1f1f1; }
+            </style>
+          </head>
+          <body>
+            <h2>Categories</h2>
+            <div style="color:#666;margin-bottom:16px;font-size:12px;">Generated ${new Date().toLocaleString()} &middot; ${filteredCategories.length} record(s)</div>
+            <table>
+              <thead><tr><th>ID</th><th>Category Name</th><th>Description</th><th>Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.onload = function () {
+        printWindow.print();
+      };
+    }
+  });
+</script>

@@ -1,4 +1,69 @@
+<!-- Theme toggle script -->
 <script>
+  (function () {
+    const root = document.documentElement;
+    const themeIcon = document.getElementById("themeIcon");
+    const themeToggleBtn = document.getElementById("themeToggle");
+    const STORAGE_KEY = "lms-theme";
+
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        root.setAttribute("data-bs-theme", "dark");
+        themeIcon.classList.remove("bi-moon-stars");
+        themeIcon.classList.add("bi-sun");
+      } else {
+        root.setAttribute("data-bs-theme", "light");
+        themeIcon.classList.remove("bi-sun");
+        themeIcon.classList.add("bi-moon-stars");
+      }
+    }
+
+    // Initial theme: saved preference > system preference > light
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    applyTheme(saved || (systemPrefersDark ? "dark" : "light"));
+
+    themeToggleBtn.addEventListener("click", function () {
+      const current = root.getAttribute("data-bs-theme");
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      localStorage.setItem(STORAGE_KEY, next);
+    });
+  })();
+</script>
+
+<!-- Password visibility toggle -->
+<script>
+  const togglePassword = document.querySelector("#togglePassword");
+  const passwordInput = document.querySelector("#passwordInput");
+
+  togglePassword.addEventListener("click", function (e) {
+    const type =
+      passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+
+    this.classList.toggle("bi-eye");
+    this.classList.toggle("bi-eye-slash");
+  });
+</script>
+
+<!-- Login submit (AJAX + SweetAlert2 toast) -->
+<script>
+  // Reusable Toast
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    },
+  });
+
   $(document).ready(function () {
     $("#loginForm").on("submit", function (e) {
       e.preventDefault();
@@ -13,71 +78,63 @@
       remember: $("#remember").is(":checked"),
     };
 
+    // Validate inputs
     if (!data.username || !data.password) {
-      Swal.fire({
-        icon: "error",
-        title: "Missing Fields",
-        text: "Please enter username and password",
+      Toast.fire({
+        icon: "warning",
+        title: "Please enter your username and password.",
       });
       return;
     }
 
+    const $btn = $("#loginBtn");
+    const originalText = $btn.text();
+    $btn.prop("disabled", true).text("Logging in...");
+
     $.ajax({
       url: "/login",
-      method: "POST",
+      type: "POST",
       contentType: "application/json",
       data: JSON.stringify(data),
 
       success: function (res) {
-        Swal.fire({
+        Toast.fire({
           icon: "success",
-          title: "Login Successful",
-          text: "Redirecting to dashboard...",
-          timer: 2000, // 2 seconds
-          showConfirmButton: false,
-          allowOutsideClick: false,
+          title: "Login successful! Redirecting...",
         });
 
-        // 🔥 ROLE BASED REDIRECT
-        setTimeout(() => {
-          if (res.role === "admin") {
-            window.location.href = "/dashboard";
-          } else if (res.role === "manager") {
-            window.location.href = "/dashboard";
-          } else if (res.role === "staff") {
-            window.location.href = "/dashboard";
-          } else if (res.role === "driver") {
-            window.location.href = "/dashboard";
-          } else {
-            window.location.href = "/dashboard";
-          }
-        }, 1000);
+        setTimeout(function () {
+          window.location.href = res.redirect || "/dashboard";
+        }, 1200);
       },
 
-      error: function (err) {
-        let title = "Login Failed";
-        let message = "Something went wrong";
+      error: function (xhr) {
+        let title = "Something went wrong.";
 
-        if (err.status === 401) {
-          title = "Invalid Credentials";
-          message = err.responseJSON?.message;
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          title = xhr.responseJSON.message;
         }
 
-        if (err.status === 403) {
-          title = "Access Denied";
-          message = err.responseJSON?.message;
-        } 
+        switch (xhr.status) {
+          case 401:
+            title = "Invalid username or password.";
+            break;
 
-        if (err.status === 500) {
-          title = "Server Error";
-          message = "Please try again later";
+          case 403:
+            title = "Your account is inactive.";
+            break;
+
+          case 500:
+            title = "Server error. Please try again later.";
+            break;
         }
 
-        Swal.fire({
+        Toast.fire({
           icon: "error",
           title: title,
-          text: message,
         });
+
+        $btn.prop("disabled", false).text(originalText);
       },
     });
   }

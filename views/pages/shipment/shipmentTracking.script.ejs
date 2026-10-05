@@ -1,0 +1,1380 @@
+<script>
+  /* ============================================================
+   SHIPMENT TRACKING PAGE SCRIPT — CONSOLIDATED
+
+   STATUS VOCABULARY UPDATE: shipment_dispatch_items.status is now
+   written by TWO surfaces — this admin page (mark-delivered /
+   bulk-import / bulk-update-status) AND the driver mobile app
+   (driverDashboard's /complete route). Both surfaces use the SAME
+   status strings:
+       Preparing | Picked | In Transit | Arrived | Delayed | Delivered | Cancelled
+   Every lookup table below (STATUS_META, PRIORITY_CLASS,
+   PROGRESS_COLOR, MILESTONE_ICON, TRACK_STATUS_FILL/FONT) has been
+   updated to that vocabulary so a ticket completed from the driver
+   app renders identically to one updated from this page.
+
+   Pagination (4/page), status filter dropdown (plus pills), bulk
+   import (Excel/CSV via SheetJS), bulk status update for selected
+   rows, styled Excel export (ExcelJS) with a status-selection
+   modal, and a real timeline sourced from shipment_tracking_history
+   (with proof-of-delivery photo + who changed it), plus a single-
+   shipment "Mark as Delivered" flow with photo upload.
+============================================================ */
+
+  const STATUS_META = {
+    Preparing: { cls: "status-pending" },
+    Picked: { cls: "status-pickedup" },
+    "In Transit": { cls: "status-transit" },
+    Arrived: { cls: "status-outfordelivery" },
+    Delayed: { cls: "status-delayed" },
+    Delivered: { cls: "status-delivered" },
+    Cancelled: { cls: "status-delayed" },
+  };
+
+  function statusMeta(status) {
+    return STATUS_META[status] || { cls: "status-pending" };
+  }
+
+  const PRIORITY_CLASS = {
+    Low: "pri-standard",
+    Normal: "pri-standard",
+    High: "pri-express",
+    Urgent: "pri-critical",
+  };
+
+  const PROGRESS_COLOR = {
+    Preparing: "var(--slate)",
+    Picked: "var(--azure)",
+    "In Transit": "var(--amber)",
+    Arrived: "var(--violet)",
+    Delayed: "var(--rose)",
+    Delivered: "var(--emerald)",
+    Cancelled: "var(--rose)",
+  };
+
+  // Mirrors shipmentTracking.js's STATUS_PROGRESS server-side — used
+  // by openViewModal()'s progress bar without a round trip.
+  const STATUS_PROGRESS = {
+    Preparing: 10,
+    Picked: 30,
+    "In Transit": 60,
+    Arrived: 85,
+    Delayed: 45,
+    Delivered: 100,
+    Cancelled: 0,
+  };
+
+  // ==============================
+  // MILESTONE STRIP — Dispatched / Picked / In Transit / Arrived /
+  // Delivered, each with its own timestamp, all laid out together
+  // in one row. This is the "form" view: every status side-by-side
+  // instead of a scrolling list of cards.
+  // Global (not inside $(function)) so every caller can reach it.
+  // The server already normalizes raw statuses onto these labels
+  // via STATUS_TO_MILESTONE before sending `milestones` down, so
+  // this just needs to render what it's given.
+  // ==============================
+  const MILESTONE_ICON = {
+    Dispatched: "bi-box-seam",
+    Picked: "bi-hand-index-thumb",
+    "In Transit": "bi-truck",
+    Arrived: "bi-signpost-split",
+    Delivered: "bi-check-circle-fill",
+  };
+
+  function buildMilestoneStripHTML(milestones, exception) {
+    if (!milestones || milestones.length === 0) return "";
+
+    // Index of the furthest step that's actually reached (not just
+    // implied) — used to mark exactly one step as "current".
+    const lastReachedIdx = milestones.reduce(
+      (acc, m, i) => (m.reached ? i : acc),
+      -1,
+    );
+
+    const steps = milestones
+      .map((m, i) => {
+        const icon = MILESTONE_ICON[m.label] || "bi-circle";
+        let stateClass = "ms-pending";
+        let timeHtml = `<span class="ms-time ms-time-pending">Not yet</span>`;
+
+        if (m.reached) {
+          stateClass = i === lastReachedIdx ? "ms-current" : "ms-done";
+          timeHtml = `<span class="ms-time">${new Date(m.time).toLocaleString()}</span>`;
+        } else if (m.implied) {
+          stateClass = "ms-implied";
+          timeHtml = `<span class="ms-time ms-time-implied">Passed through</span>`;
+        }
+
+        const connector =
+          i < milestones.length - 1
+            ? `<div class="ms-connector ${m.reached ? "ms-connector-filled" : ""}"></div>`
+            : "";
+
+        return `
+        <div class="ms-step ${stateClass}">
+          <div class="ms-dot"><i class="bi ${icon}"></i></div>
+          <div class="ms-label">${m.label}</div>
+          ${timeHtml}
+        </div>
+        ${connector}`;
+      })
+      .join("");
+
+    const exceptionBanner = exception
+      ? `<div class="ms-exception">
+         <i class="bi bi-exclamation-triangle-fill"></i>
+         <strong>${exception.status}</strong>
+         ${exception.time ? `&middot; ${new Date(exception.time).toLocaleString()}` : ""}
+         ${exception.remarks ? `&middot; ${exception.remarks}` : ""}
+       </div>`
+      : "";
+
+    return `<div class="ms-strip">${steps}</div>${exceptionBanner}`;
+  }
+
+  // ==============================
+  // GLOBAL STATE
+  // ==============================
+  let allShipments = [];
+  let filteredShipments = [];
+  let activeStatus = "ALL";
+  let searchTerm = "";
+  let activeDateFilter = { dateType: "dispatch", from: null, to: null };
+
+  let currentPage = 1;
+  const rowsPerPage = 4;
+
+  let bulkImportRows = [];
+
+  // Tracks the tracking_row_id (shipment_dispatch_items.id) of whatever
+  // shipment is currently open in the View modal, so "Mark as Delivered"
+  // knows which row to update.
+  let currentViewTrackingRowId = null;
+  let currentViewTicket = null;
+
+  $(function () {
+    init();
+
+    function init() {
+      loadShipments();
+      bindEvents();
+    }
+
+    // ==============================
+    // LOAD SHIPMENTS
+    // ==============================
+    function loadShipments() {
+      const params = {};
+      if (activeDateFilter.from) {
+        params.dateType = activeDateFilter.dateType;
+        params.from = activeDateFilter.from;
+        params.to = activeDateFilter.to;
+      }
+
+      $.ajax({
+        url: "/shipmentTracking/get-shipments",
+        method: "GET",
+        data: params,
+        cache: false,
+
+        beforeSend: function () {
+          $("#trackTableBody").html(`
+          <tr>
+            <td colspan="10" class="text-center py-5">
+              <div class="spinner-border text-primary"></div>
+              <br><br>
+              Loading shipments...
+            </td>
+          </tr>
+        `);
+        },
+
+        success: function (res) {
+          allShipments = res || [];
+          currentPage = 1;
+          renderPills();
+          renderTable();
+        },
+
+        error: function (xhr) {
+          $("#trackTableBody").html(`
+          <tr>
+            <td colspan="10" class="text-center text-danger py-5">
+              <i class="bi bi-exclamation-triangle fs-1"></i>
+              <br><br>
+              Failed to load shipments.
+            </td>
+          </tr>
+        `);
+          Swal.fire(
+            "Error",
+            xhr.responseJSON?.message || "Unable to load shipments.",
+            "error",
+          );
+        },
+      });
+    }
+    window.loadShipments = loadShipments;
+
+    // ==============================
+    // STATUS PILLS
+    // ==============================
+    const pillDefs = [
+      { key: "ALL", label: "ALL" },
+      { key: "In Transit", label: "IN TRANSIT" },
+      { key: "Arrived", label: "ARRIVED" },
+      { key: "Delayed", label: "DELAYED" },
+      { key: "Preparing", label: "PREPARING" },
+      { key: "Picked", label: "PICKED" },
+      { key: "Delivered", label: "DELIVERED" },
+      { key: "Cancelled", label: "CANCELLED" },
+    ];
+
+    function renderPills() {
+      const wrap = document.getElementById("statusPills");
+      wrap.innerHTML = pillDefs
+        .map((p) => {
+          const count =
+            p.key === "ALL"
+              ? allShipments.length
+              : allShipments.filter((s) => s.status === p.key).length;
+          if (p.key !== "ALL" && count === 0) return "";
+          const active = p.key === activeStatus ? "active" : "";
+          return `<button type="button" class="f-pill ${active}" data-key="${p.key}">${p.label} <span class="n">${count}</span></button>`;
+        })
+        .join("");
+
+      wrap.querySelectorAll(".f-pill").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeStatus = btn.dataset.key;
+          $("#filterStatus").val(activeStatus === "ALL" ? "" : activeStatus);
+          currentPage = 1;
+          renderPills();
+          renderTable();
+        });
+      });
+    }
+
+    // ==============================
+    // PAGINATION
+    // ==============================
+    function renderPagination() {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredShipments.length / rowsPerPage),
+      );
+      const start =
+        filteredShipments.length === 0
+          ? 0
+          : (currentPage - 1) * rowsPerPage + 1;
+      const end = Math.min(currentPage * rowsPerPage, filteredShipments.length);
+
+      $("#paginationInfo").text(
+        `Showing ${start} to ${end} of ${filteredShipments.length} entries`,
+      );
+
+      let html = `
+      <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+        <a class="page-link" href="#" id="trackPrevPage"><i class="bi bi-chevron-left"></i></a>
+      </li>`;
+
+      for (let i = 1; i <= totalPages; i++) {
+        html += `
+        <li class="page-item ${currentPage === i ? "active" : ""}">
+          <a href="#" class="page-link trackPageNumber" data-page="${i}">${i}</a>
+        </li>`;
+      }
+
+      html += `
+      <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+        <a class="page-link" href="#" id="trackNextPage"><i class="bi bi-chevron-right"></i></a>
+      </li>`;
+
+      $("#trackingPagination").html(html);
+    }
+
+    // ==============================
+    // TABLE
+    // ==============================
+    function renderTable() {
+      const body = document.getElementById("trackTableBody");
+
+      filteredShipments = allShipments.filter((s) => {
+        const matchStatus = activeStatus === "ALL" || s.status === activeStatus;
+        const hay =
+          `${s.tracking_no} ${s.customer} ${s.driver_name || ""} ${s.dispatch_number || ""}`.toLowerCase();
+        const matchSearch = hay.includes(searchTerm.toLowerCase());
+        return matchStatus && matchSearch;
+      });
+
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredShipments.length / rowsPerPage),
+      );
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * rowsPerPage;
+      const pageData = filteredShipments.slice(start, start + rowsPerPage);
+
+      if (pageData.length === 0) {
+        body.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="10">
+            <i class="bi bi-inbox" style="font-size:22px; display:block; margin-bottom:8px;"></i>
+            No shipments match your filters
+          </td>
+        </tr>`;
+        renderPagination();
+        updateBulkStatusState();
+        return;
+      }
+
+      body.innerHTML = pageData
+        .map((s) => {
+          const st = statusMeta(s.status);
+          const priClass = PRIORITY_CLASS[s.priority] || "pri-standard";
+          const progressColor = PROGRESS_COLOR[s.status] || "var(--slate)";
+
+          const etaMain =
+            s.status === "Delivered"
+              ? s.delivered_at
+                ? `Delivered ${new Date(s.delivered_at).toLocaleString()}`
+                : "Delivered"
+              : s.estimated_delivery
+                ? new Date(s.estimated_delivery).toLocaleString()
+                : "—";
+
+          return `
+        <tr>
+          <td class="text-center"><input type="checkbox" class="trackingCheckbox" value="${s.tracking_row_id}"></td>
+          <td><span class="cell-track">${s.tracking_no}</span></td>
+          <td><span class="cell-primary">${s.customer}</span></td>
+          <td>
+            <div class="route-line">
+              <span class="cell-primary">${s.store_code || ""}</span>
+              <span class="to"><i class="bi bi-arrow-right"></i>${s.store_address || s.customer}</span>
+            </div>
+          </td>
+          <td>
+            <span class="cell-primary">${s.driver_name || "&mdash;"}</span>
+            <div class="cell-sub">${s.driver_name ? `${s.vehicle_code || ""} &middot; ${s.plate_number || ""}` : "Unassigned"}</div>
+          </td>
+          <td><span class="pri ${priClass}">${s.priority || "—"}</span></td>
+          <td>
+            <div class="prog-cell">
+              <div class="prog-track"><div class="prog-fill" style="width:${s.progress_pct}%; background:${progressColor};"></div></div>
+              <span class="prog-pct">${s.progress_pct}%</span>
+            </div>
+          </td>
+          <td><div class="eta-main">${etaMain}</div></td>
+          <td><span class="status-pill ${st.cls}"><span class="dot"></span>${s.status}</span></td>
+          <td>
+            <div class="action-icons">
+              <button class="icon-btn i-view" title="View" data-ticket="${s.tracking_no}" data-action="view"><i class="bi bi-eye"></i></button>
+              <button class="icon-btn i-time" title="Timeline" data-ticket="${s.tracking_no}" data-action="timeline"><i class="bi bi-clock-history"></i></button>
+            </div>
+          </td>
+        </tr>`;
+        })
+        .join("");
+
+      body
+        .querySelectorAll('[data-action="view"]')
+        .forEach((b) =>
+          b.addEventListener("click", () => openViewModal(b.dataset.ticket)),
+        );
+      body
+        .querySelectorAll('[data-action="timeline"]')
+        .forEach((b) =>
+          b.addEventListener("click", () =>
+            openTimelineModal(b.dataset.ticket),
+          ),
+        );
+
+      renderPagination();
+      updateBulkStatusState();
+    }
+
+    $(document).on("click", "#trackPrevPage", function (e) {
+      e.preventDefault();
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    });
+    $(document).on("click", "#trackNextPage", function (e) {
+      e.preventDefault();
+      const totalPages = Math.ceil(filteredShipments.length / rowsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+      }
+    });
+    $(document).on("click", ".trackPageNumber", function (e) {
+      e.preventDefault();
+      currentPage = Number($(this).data("page"));
+      renderTable();
+    });
+
+    // ==============================
+    // TIMELINE HTML BUILDER
+    // Renders each history step; adds a "changed by" line and a
+    // proof-of-delivery thumbnail/link when present. changed_by will
+    // now correctly show the driver's name/identifier for steps
+    // logged from the mobile app, same as it shows the admin user
+    // for steps logged from this page.
+    // ==============================
+    function buildTimelineHTML(steps) {
+      if (!steps || steps.length === 0) {
+        return `<div class="text-muted text-center py-3">No tracking events yet.</div>`;
+      }
+      return steps
+        .map((st) => {
+          const icon =
+            st.state === "done"
+              ? "bi-check-lg"
+              : st.state === "current"
+                ? "bi-truck"
+                : "bi-circle";
+          const now =
+            st.state === "current"
+              ? `<span class="t-badge-now">Live</span>`
+              : "";
+          const time = st.time ? new Date(st.time).toLocaleString() : "—";
+          const by = st.changed_by
+            ? `<div class="t-by">by ${st.changed_by}</div>`
+            : "";
+          const proof = st.proof_photo_path
+            ? `<div class="t-proof">
+               <a href="${st.proof_photo_path}" target="_blank" rel="noopener">
+                 <img src="${st.proof_photo_path}" alt="Proof of delivery" class="t-proof-thumb">
+                 <span>View proof of delivery</span>
+               </a>
+             </div>`
+            : "";
+          return `
+        <div class="t-item ${st.state}">
+          <div class="t-dot"><i class="bi ${icon}"></i></div>
+          <div class="t-card">
+            <div>
+              <div class="t-title">${st.title}</div>
+              <div class="t-desc">${st.desc || ""}</div>
+              ${by}
+              ${proof}
+              ${now}
+            </div>
+            <div class="t-time">${time}</div>
+          </div>
+        </div>`;
+        })
+        .join("");
+    }
+
+    // ==============================
+    // VIEW MODAL
+    // ==============================
+    function openViewModal(ticket) {
+      new bootstrap.Modal(document.getElementById("viewTrackingModal")).show();
+
+      currentViewTicket = ticket;
+      $("#vt-trackno").text(ticket);
+      $("#vt-items").html(
+        `<tr><td colspan="7" class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></td></tr>`,
+      );
+      $("#vt-timeline").html("");
+      $("#markDeliveredBtn").hide();
+
+      $.ajax({
+        url: "/shipmentTracking/get-shipment/" + ticket,
+        method: "GET",
+        cache: false,
+
+        success: function (res) {
+          const { header, items, dispatch, timeline, milestones, exception } =
+            res;
+          const status = dispatch ? dispatch.dispatch_status : header.status;
+          const st = statusMeta(status);
+          const priClass = PRIORITY_CLASS[header.priority] || "pri-standard";
+          const progress =
+            STATUS_PROGRESS[status] !== undefined ? STATUS_PROGRESS[status] : 0;
+
+          currentViewTrackingRowId = dispatch ? dispatch.tracking_row_id : null;
+          $("#markDeliveredBtn").toggle(
+            !!currentViewTrackingRowId &&
+              status !== "Delivered" &&
+              status !== "Cancelled",
+          );
+
+          $("#vt-status").html(
+            `<span class="status-pill ${st.cls}"><span class="dot"></span>${status}</span>`,
+          );
+          $("#vt-priority").html(
+            `<span class="pri ${priClass}">${header.priority}</span>`,
+          );
+          $("#vt-eta").text(
+            dispatch && dispatch.estimated_delivery
+              ? new Date(dispatch.estimated_delivery).toLocaleString()
+              : "—",
+          );
+          $("#vt-eta-sub").text(
+            dispatch &&
+              dispatch.dispatch_status === "Delivered" &&
+              dispatch.delivered_at
+              ? `Delivered ${new Date(dispatch.delivered_at).toLocaleString()}`
+              : "",
+          );
+          $("#vt-dispatch").text(dispatch ? dispatch.dispatch_number : "—");
+          $("#vt-driver").text(
+            dispatch && dispatch.driver_name
+              ? dispatch.driver_name
+              : "Unassigned",
+          );
+          $("#vt-vehicle").text(
+            dispatch && dispatch.vehicle_code ? dispatch.vehicle_code : "—",
+          );
+          $("#vt-vehicle-sub").text(
+            dispatch ? dispatch.plate_number || "" : "",
+          );
+          $("#vt-location").text(header.store_name);
+          $("#vt-route").text(header.store_address || "");
+
+          $("#vt-progress-pct").text(progress + "%");
+          $("#vt-progress-lbl").text(status || "—");
+          $("#vt-progress-fill").css({
+            width: progress + "%",
+            background: PROGRESS_COLOR[status] || "var(--slate)",
+          });
+
+          $("#vt-items").html(
+            items
+              .map(
+                (it) => `
+            <tr>
+              <td>${header.ticket_number}</td>
+              <td>${header.store_name}</td>
+              <td class="mono">${it.product_id}</td>
+              <td>${it.product_name}</td>
+              <td>${header.store_code}</td>
+              <td>${it.quantity}</td>
+              <td>${it.unit_name || "—"}</td>
+            </tr>`,
+              )
+              .join(""),
+          );
+
+          $("#vt-milestones").html(
+            buildMilestoneStripHTML(milestones, exception),
+          );
+          $("#vt-timeline").html(buildTimelineHTML(timeline));
+        },
+
+        error: function (xhr) {
+          $("#viewTrackingModal").modal("hide");
+          Swal.fire(
+            "Error",
+            xhr.responseJSON?.message || "Unable to load shipment.",
+            "error",
+          );
+        },
+      });
+    }
+
+    // ==============================
+    // TIMELINE MODAL
+    // ==============================
+    function openTimelineModal(ticket) {
+      new bootstrap.Modal(
+        document.getElementById("trackingTimelineModal"),
+      ).show();
+      $("#tl-trackno").text(ticket);
+      $("#tl-milestones").html("");
+      $("#tl-timeline").html(
+        `<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>`,
+      );
+
+      $.ajax({
+        url: "/shipmentTracking/get-shipment/" + ticket,
+        method: "GET",
+        cache: false,
+        success: function (res) {
+          $("#tl-milestones").html(
+            buildMilestoneStripHTML(res.milestones, res.exception),
+          );
+          $("#tl-timeline").html(buildTimelineHTML(res.timeline));
+        },
+        error: function (xhr) {
+          $("#trackingTimelineModal").modal("hide");
+          Swal.fire(
+            "Error",
+            xhr.responseJSON?.message || "Unable to load timeline.",
+            "error",
+          );
+        },
+      });
+    }
+
+    // ==============================
+    // DATE RANGE MODAL
+    // ==============================
+    function quickRangeToDates(range) {
+      const today = new Date();
+      const fmt = (d) => d.toISOString().slice(0, 10);
+      const start = new Date(today);
+      const end = new Date(today);
+
+      switch (range) {
+        case "today":
+          break;
+        case "yesterday":
+          start.setDate(start.getDate() - 1);
+          end.setDate(end.getDate() - 1);
+          break;
+        case "7d":
+          start.setDate(start.getDate() - 6);
+          break;
+        case "30d":
+          start.setDate(start.getDate() - 29);
+          break;
+        case "month":
+          start.setDate(1);
+          break;
+        case "lastmonth":
+          start.setMonth(start.getMonth() - 1, 1);
+          end.setDate(0);
+          break;
+        default:
+          return null;
+      }
+
+      return { from: fmt(start), to: fmt(end) };
+    }
+
+    $("#quickRangeGrid").on("click", ".qr-btn", function () {
+      $(".qr-btn").removeClass("active");
+      $(this).addClass("active");
+
+      const range = $(this).data("range");
+      if (range === "custom") return;
+
+      const dates = quickRangeToDates(range);
+      if (dates) {
+        $("#dateFromInput").val(dates.from);
+        $("#dateToInput").val(dates.to);
+      }
+    });
+
+    $("#applyDateFilterBtn").on("click", function () {
+      activeDateFilter = {
+        dateType: ($("#dateFilterType").val() || "Dispatch Date")
+          .toLowerCase()
+          .includes("deliver")
+          ? "delivery"
+          : "dispatch",
+        from: $("#dateFromInput").val() || null,
+        to: $("#dateToInput").val() || null,
+      };
+
+      $("#trackingDateRangeModal").modal("hide");
+      loadShipments();
+    });
+
+    $("#resetFilterBtn").on("click", function () {
+      $(".qr-btn").removeClass("active");
+      $('.qr-btn[data-range="today"]').addClass("active");
+      $("#dateFromInput, #dateToInput").val("");
+      activeDateFilter = { dateType: "dispatch", from: null, to: null };
+      loadShipments();
+    });
+
+    // ==============================
+    // SEARCH + STATUS FILTER DROPDOWN + SYNC
+    // ==============================
+    function bindEvents() {
+      $("#searchInput").on("input", function () {
+        searchTerm = $(this).val();
+        currentPage = 1;
+        renderTable();
+      });
+
+      $("#filterStatus").on("change", function () {
+        activeStatus = $(this).val() || "ALL";
+        currentPage = 1;
+        renderPills();
+        renderTable();
+      });
+
+      $("#syncBtn").on("click", function () {
+        const icon = $(this).find("i");
+        icon.addClass("spin");
+        loadShipments();
+        setTimeout(() => icon.removeClass("spin"), 700);
+      });
+    }
+  });
+
+  // ==============================
+  // BULK SELECTION (checkboxes)
+  // ==============================
+  $(document).on("change", "#selectAllTracking", function () {
+    $(".trackingCheckbox").prop("checked", $(this).is(":checked"));
+    updateBulkStatusState();
+  });
+
+  $(document).on("change", ".trackingCheckbox", updateBulkStatusState);
+
+  function updateBulkStatusState() {
+    const count = $(".trackingCheckbox:checked").length;
+    $("#bulkStatusBtn").prop("disabled", count === 0);
+    $("#selectedCountLabel").text(count > 0 ? `${count} selected` : "");
+  }
+
+  // ==============================
+  // BULK STATUS UPDATE
+  // ==============================
+  $("#bulkStatusBtn").on("click", function () {
+    const selectedIds = $(".trackingCheckbox:checked")
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    if (selectedIds.length === 0) return;
+
+    $("#bulkStatusSummary").text(`Updating ${selectedIds.length} shipment(s).`);
+    $("#bulkNewStatus").val("");
+    $("#bulkStatusRemarks").val("");
+
+    new bootstrap.Modal(document.getElementById("bulkStatusModal")).show();
+  });
+
+  $("#saveBulkStatusBtn").on("click", function () {
+    const selectedIds = $(".trackingCheckbox:checked")
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    const newStatus = $("#bulkNewStatus").val();
+    const remarks = $("#bulkStatusRemarks").val();
+
+    if (!newStatus) {
+      Swal.fire("Warning", "Please select a status.", "warning");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      Swal.fire("Warning", "No shipments selected.", "warning");
+      return;
+    }
+
+    $.ajax({
+      url: "/shipmentTracking/bulk-update-status",
+      method: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify({
+        tracking_row_ids: selectedIds,
+        status: newStatus,
+        remarks: remarks,
+      }),
+
+      beforeSend: function () {
+        $("#saveBulkStatusBtn")
+          .prop("disabled", true)
+          .html(
+            `<span class="spinner-border spinner-border-sm"></span> Updating...`,
+          );
+      },
+
+      success: function (res) {
+        bootstrap.Modal.getInstance(
+          document.getElementById("bulkStatusModal"),
+        ).hide();
+        $("#selectAllTracking").prop("checked", false);
+
+        Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: res.message,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        window.loadShipments();
+      },
+
+      error: function (xhr) {
+        Swal.fire(
+          "Error",
+          xhr.responseJSON?.message || "Unable to update status.",
+          "error",
+        );
+      },
+
+      complete: function () {
+        $("#saveBulkStatusBtn")
+          .prop("disabled", false)
+          .html(`<i class="bi bi-check-circle"></i> Update`);
+      },
+    });
+  });
+
+  // ==============================
+  // MARK AS DELIVERED (single shipment, with proof photo)
+  // ==============================
+  $(document).on("click", "#markDeliveredBtn", function () {
+    $("#md-trackno").text(currentViewTicket || "—");
+    $("#deliveryProofFile").val("");
+    $("#deliveryProofPreview").html("");
+    $("#deliveryRemarks").val("");
+    new bootstrap.Modal(document.getElementById("markDeliveredModal")).show();
+  });
+
+  $(document).on("change", "#deliveryProofFile", function (e) {
+    const file = e.target.files[0];
+    if (!file) {
+      $("#deliveryProofPreview").html("");
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    $("#deliveryProofPreview").html(
+      `<img src="${url}" style="max-width:100%; max-height:180px; border-radius:8px;">`,
+    );
+  });
+
+  $(document).on("click", "#confirmMarkDeliveredBtn", function () {
+    if (!currentViewTrackingRowId) {
+      Swal.fire("Error", "No shipment selected.", "error");
+      return;
+    }
+
+    const formData = new FormData();
+    const file = $("#deliveryProofFile")[0].files[0];
+    if (file) formData.append("proof_photo", file);
+    formData.append("remarks", $("#deliveryRemarks").val());
+
+    $.ajax({
+      url: "/shipmentTracking/mark-delivered/" + currentViewTrackingRowId,
+      method: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+
+      beforeSend: function () {
+        $("#confirmMarkDeliveredBtn")
+          .prop("disabled", true)
+          .html(
+            `<span class="spinner-border spinner-border-sm"></span> Saving...`,
+          );
+      },
+
+      success: function (res) {
+        bootstrap.Modal.getInstance(
+          document.getElementById("markDeliveredModal"),
+        ).hide();
+
+        Swal.fire({
+          icon: "success",
+          title: "Delivered!",
+          text: res.message,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        $("#markDeliveredBtn").hide();
+
+        // Refresh the still-open View modal's timeline/status in place,
+        // and refresh the underlying table.
+        if (currentViewTicket) {
+          $.ajax({
+            url: "/shipmentTracking/get-shipment/" + currentViewTicket,
+            method: "GET",
+            cache: false,
+            success: function (fresh) {
+              const status = fresh.dispatch
+                ? fresh.dispatch.dispatch_status
+                : fresh.header.status;
+              const st = statusMeta(status);
+              $("#vt-status").html(
+                `<span class="status-pill ${st.cls}"><span class="dot"></span>${status}</span>`,
+              );
+              $("#vt-milestones").html(
+                buildMilestoneStripHTML(fresh.milestones, fresh.exception),
+              );
+              $("#vt-timeline").html(buildTimelineHTML(fresh.timeline));
+            },
+          });
+        }
+
+        window.loadShipments();
+      },
+
+      error: function (xhr) {
+        Swal.fire(
+          "Error",
+          xhr.responseJSON?.message || "Failed to mark as delivered.",
+          "error",
+        );
+      },
+
+      complete: function () {
+        $("#confirmMarkDeliveredBtn")
+          .prop("disabled", false)
+          .html(`<i class="bi bi-check-circle"></i> Confirm Delivery`);
+      },
+    });
+  });
+
+  // Re-expose buildTimelineHTML for the "refresh after mark-delivered"
+  // call above, since it's defined inside the $(function(){...}) scope.
+  function buildTimelineHTML(steps) {
+    if (!steps || steps.length === 0) {
+      return `<div class="text-muted text-center py-3">No tracking events yet.</div>`;
+    }
+    return steps
+      .map((st) => {
+        const icon =
+          st.state === "done"
+            ? "bi-check-lg"
+            : st.state === "current"
+              ? "bi-truck"
+              : "bi-circle";
+        const now =
+          st.state === "current" ? `<span class="t-badge-now">Live</span>` : "";
+        const time = st.time ? new Date(st.time).toLocaleString() : "—";
+        const by = st.changed_by
+          ? `<div class="t-by">by ${st.changed_by}</div>`
+          : "";
+        const proof = st.proof_photo_path
+          ? `<div class="t-proof">
+             <a href="${st.proof_photo_path}" target="_blank" rel="noopener">
+               <img src="${st.proof_photo_path}" alt="Proof of delivery" class="t-proof-thumb">
+               <span>View proof of delivery</span>
+             </a>
+           </div>`
+          : "";
+        return `
+      <div class="t-item ${st.state}">
+        <div class="t-dot"><i class="bi ${icon}"></i></div>
+        <div class="t-card">
+          <div>
+            <div class="t-title">${st.title}</div>
+            <div class="t-desc">${st.desc || ""}</div>
+            ${by}
+            ${proof}
+            ${now}
+          </div>
+          <div class="t-time">${time}</div>
+        </div>
+      </div>`;
+      })
+      .join("");
+  }
+
+  // ==============================
+  // BULK IMPORT (Excel/CSV via SheetJS)
+  // ==============================
+  $("#bulkImportBtn").on("click", function () {
+    $("#bulkImportFile").val("").click();
+  });
+
+  $("#bulkImportFile").on("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+      bulkImportRows = rows.filter((r) => r.ticket_number);
+
+      if (bulkImportRows.length === 0) {
+        Swal.fire(
+          "No valid rows",
+          "No rows with a ticket_number were found.",
+          "warning",
+        );
+        return;
+      }
+
+      renderBulkImportPreview(bulkImportRows);
+      new bootstrap.Modal(document.getElementById("bulkImportModal")).show();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  function renderBulkImportPreview(rows) {
+    const cols = Object.keys(rows[0]);
+    $("#bulkImportPreviewHead").html(
+      `<tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>`,
+    );
+    $("#bulkImportPreviewBody").html(
+      rows
+        .map(
+          (r) =>
+            `<tr>${cols.map((c) => `<td>${r[c] ?? ""}</td>`).join("")}</tr>`,
+        )
+        .join(""),
+    );
+  }
+
+  $("#confirmBulkImportBtn").on("click", function () {
+    if (bulkImportRows.length === 0) return;
+
+    $.ajax({
+      url: "/shipmentTracking/bulk-import",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ rows: bulkImportRows }),
+
+      beforeSend: function () {
+        $("#confirmBulkImportBtn")
+          .prop("disabled", true)
+          .html(
+            `<span class="spinner-border spinner-border-sm"></span> Importing...`,
+          );
+      },
+
+      success: function (res) {
+        bootstrap.Modal.getInstance(
+          document.getElementById("bulkImportModal"),
+        ).hide();
+        Swal.fire({
+          icon: "success",
+          title: "Imported",
+          text:
+            res.message ||
+            `${res.updated || bulkImportRows.length} row(s) updated.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+        bulkImportRows = [];
+        window.loadShipments();
+      },
+
+      error: function (xhr) {
+        Swal.fire(
+          "Error",
+          xhr.responseJSON?.message || "Bulk import failed.",
+          "error",
+        );
+      },
+
+      complete: function () {
+        $("#confirmBulkImportBtn")
+          .prop("disabled", false)
+          .html(`<i class="bi bi-check-circle"></i> Import All`);
+      },
+    });
+  });
+
+  // ==============================
+  // EXPORT TO EXCEL (status-selection modal + styled workbook)
+  // ==============================
+  $(document).on("click", "#exportExcelBtn", function () {
+    if (allShipments.length === 0) {
+      Swal.fire("Nothing to export", "No tracked shipments loaded.", "info");
+      return;
+    }
+    new bootstrap.Modal(document.getElementById("exportExcelModal")).show();
+  });
+
+  $(document).on("change", "#exStatusAll", function () {
+    $(".export-status-item").prop("checked", $(this).is(":checked"));
+  });
+  $(document).on("change", ".export-status-item", function () {
+    const allChecked =
+      $(".export-status-item:checked").length ===
+      $(".export-status-item").length;
+    $("#exStatusAll").prop("checked", allChecked);
+  });
+
+  $("#confirmExportExcelBtn").on("click", function () {
+    const selectedStatuses = $(".export-status-item:checked")
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    if (selectedStatuses.length === 0) {
+      Swal.fire("Warning", "Please select at least one status.", "warning");
+      return;
+    }
+
+    const dataToExport = allShipments.filter((s) =>
+      selectedStatuses.includes(s.status),
+    );
+
+    if (dataToExport.length === 0) {
+      Swal.fire(
+        "Nothing to export",
+        "No shipments match the selected statuses.",
+        "info",
+      );
+      return;
+    }
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("exportExcelModal"),
+    ).hide();
+    buildTrackingWorkbook(dataToExport);
+  });
+
+  // Status -> ARGB fill/font, matching the status-pill palette
+  const TRACK_STATUS_FILL = {
+    Preparing: "FFE2E3E5",
+    Picked: "FFCFE2FF",
+    "In Transit": "FFCFF4FC",
+    Arrived: "FFE7D6FE",
+    Delayed: "FFFFF3CD",
+    Delivered: "FFD1E7DD",
+    Cancelled: "FFF8D7DA",
+  };
+  const TRACK_STATUS_FONT = {
+    Preparing: "FF41464B",
+    Picked: "FF084298",
+    "In Transit": "FF055160",
+    Arrived: "FF59359A",
+    Delayed: "FF664D03",
+    Delivered: "FF0F5132",
+    Cancelled: "FF842029",
+  };
+  const TRACK_HEADER_FILL = "FF198754";
+  const TRACK_HEADER_FONT = "FFFFFFFF";
+  const TRACK_BORDER = {
+    top: { style: "thin", color: { argb: "FFD0D0D0" } },
+    left: { style: "thin", color: { argb: "FFD0D0D0" } },
+    bottom: { style: "thin", color: { argb: "FFD0D0D0" } },
+    right: { style: "thin", color: { argb: "FFD0D0D0" } },
+  };
+
+  // Canvas-based text measurement — used for accurate wrap-text
+  // row-height auto-sizing.
+  const _measureCanvas = document.createElement("canvas");
+  const _measureCtx = _measureCanvas.getContext("2d");
+
+  function countWrappedLines(text, pixelWidth, font) {
+    if (!text) return 1;
+    _measureCtx.font = font;
+
+    const words = String(text).split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 1;
+
+    let lines = 1;
+    let currentLineWidth = 0;
+    const spaceWidth = _measureCtx.measureText(" ").width;
+
+    for (const word of words) {
+      const wordWidth = _measureCtx.measureText(word).width;
+
+      if (wordWidth > pixelWidth) {
+        lines += Math.ceil(wordWidth / pixelWidth);
+        currentLineWidth = 0;
+        continue;
+      }
+
+      const testWidth =
+        currentLineWidth === 0
+          ? wordWidth
+          : currentLineWidth + spaceWidth + wordWidth;
+
+      if (testWidth > pixelWidth) {
+        lines++;
+        currentLineWidth = wordWidth;
+      } else {
+        currentLineWidth = testWidth;
+      }
+    }
+
+    return lines;
+  }
+
+  function excelColWidthToPixels(charWidth) {
+    const rawPixels = charWidth * 7 + 5;
+    const CELL_PADDING = 10;
+    const SAFETY_FACTOR = 0.92;
+    return Math.floor((rawPixels - CELL_PADDING) * SAFETY_FACTOR);
+  }
+
+  async function buildTrackingWorkbook(shipments) {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Shipment Tracking";
+    workbook.created = new Date();
+
+    const FONT_SPEC = "11px Calibri, Arial, sans-serif";
+
+    const sheet = workbook.addWorksheet("Tracked Shipments", {
+      views: [{ state: "frozen", ySplit: 3 }],
+      pageSetup: {
+        orientation: "landscape",
+        paperSize: 9,
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+        margins: {
+          left: 0.4,
+          right: 0.4,
+          top: 0.5,
+          bottom: 0.6,
+          header: 0.2,
+          footer: 0.3,
+        },
+        horizontalCentered: true,
+      },
+    });
+
+    sheet.headerFooter = {
+      oddHeader: `&L&8Shipment Tracking Report&R&8Generated: ${new Date().toLocaleString()}`,
+      oddFooter: `&C&8Page &P of &N`,
+    };
+
+    const columns = [
+      { header: "Tracking No.", key: "tracking_no", width: 16 },
+      { header: "Dispatch #", key: "dispatch_number", width: 16 },
+      { header: "Customer", key: "customer", width: 22 },
+      { header: "Store Address", key: "store_address", width: 26 },
+      { header: "Priority", key: "priority", width: 10 },
+      { header: "Driver", key: "driver_name", width: 18 },
+      { header: "Vehicle", key: "vehicle_code", width: 12 },
+      { header: "Status", key: "status", width: 16 },
+      { header: "Dispatch Date", key: "dispatch_date", width: 20 },
+      { header: "ETA / Delivered", key: "eta", width: 20 },
+      { header: "Remarks", key: "remarks", width: 24 },
+    ];
+
+    sheet.columns = columns;
+    sheet.pageSetup.printTitlesRow = "3:3";
+
+    sheet.mergeCells(1, 1, 1, columns.length);
+    const titleCell = sheet.getCell(1, 1);
+    titleCell.value = "Shipment Tracking Report";
+    titleCell.font = {
+      bold: true,
+      size: 14,
+      color: { argb: TRACK_HEADER_FONT },
+    };
+    titleCell.alignment = { vertical: "middle", horizontal: "center" };
+    titleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: TRACK_HEADER_FILL },
+    };
+    sheet.getRow(1).height = 26;
+
+    sheet.mergeCells(2, 1, 2, columns.length);
+    const subCell = sheet.getCell(2, 1);
+    subCell.value = `${shipments.length} shipment(s)   |   Generated: ${new Date().toLocaleString()}`;
+    subCell.font = { italic: true, size: 10, color: { argb: "FF555555" } };
+    subCell.alignment = { vertical: "middle", horizontal: "center" };
+
+    const headerRow = sheet.getRow(3);
+    columns.forEach((col, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = col.header;
+      cell.font = { bold: true, color: { argb: TRACK_HEADER_FONT } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: TRACK_HEADER_FILL },
+      };
+      cell.border = TRACK_BORDER;
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
+    });
+    headerRow.height = 20;
+
+    let rowIndex = 4;
+    shipments.forEach((s) => {
+      const row = sheet.getRow(rowIndex);
+      row.values = {
+        tracking_no: s.tracking_no,
+        dispatch_number: s.dispatch_number || "-",
+        customer: s.customer,
+        store_address: s.store_address || "-",
+        priority: s.priority || "-",
+        driver_name: s.driver_name || "Unassigned",
+        vehicle_code: s.vehicle_code || "-",
+        status: s.status,
+        dispatch_date: s.dispatch_date
+          ? new Date(s.dispatch_date).toLocaleString()
+          : "-",
+        eta:
+          s.status === "Delivered"
+            ? s.delivered_at
+              ? new Date(s.delivered_at).toLocaleString()
+              : "-"
+            : s.estimated_delivery
+              ? new Date(s.estimated_delivery).toLocaleString()
+              : "-",
+        remarks: s.remarks || "",
+      };
+
+      const bandFill = rowIndex % 2 === 0 ? "FFF7F7F7" : "FFFFFFFF";
+
+      columns.forEach((col, i) => {
+        const cell = row.getCell(i + 1);
+        cell.border = TRACK_BORDER;
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true,
+        };
+        if (col.key !== "status") {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: bandFill },
+          };
+        }
+      });
+
+      const statusCell = row.getCell(8);
+      statusCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: TRACK_STATUS_FILL[s.status] || "FFF1F1F1" },
+      };
+      statusCell.font = {
+        bold: true,
+        color: { argb: TRACK_STATUS_FONT[s.status] || "FF333333" },
+      };
+      statusCell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
+
+      // Real pixel-based auto-height, same approach used for shipmentRequest exports
+      const estimatedLines = Math.max(
+        ...columns.map((col, i) => {
+          const value = row.getCell(i + 1).value;
+          const text = value ? String(value) : "";
+          const pixelWidth = excelColWidthToPixels(col.width);
+          return countWrappedLines(text, pixelWidth, FONT_SPEC);
+        }),
+      );
+      row.height = Math.min(150, Math.max(18, estimatedLines * 15 + 4));
+
+      rowIndex++;
+    });
+
+    sheet.autoFilter = {
+      from: { row: 3, column: 1 },
+      to: { row: 3, column: columns.length },
+    };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(
+      blob,
+      `shipment-tracking-${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+  }
+</script>

@@ -2,10 +2,11 @@
 <html lang="en">
 
   <head>
-    <%- include('../components/header.ejs') %>s
+    <%- include('../components/header.ejs') %>
   </head>
   <body>
     <div class="admin-shell">
+      <div class="sidebar-backdrop" data-sidebar-close></div>
       <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
       <!-- sidebard content -->
       <%- include('../components/sidebar.ejs') %>
@@ -19,7 +20,7 @@
         </nav>
         <main class="dashboard-content">
           <!-- dashboard content -->
-          <%- include('../pages/driver/driver.ejs') %>
+          <%- include('../pages/warehouse/warehouse.ejs') %>
           <!-- dashboard content -->
           <!-- footer content -->
          <%- include('../components/footer.ejs') %>

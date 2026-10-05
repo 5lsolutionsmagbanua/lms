@@ -1,0 +1,270 @@
+<div class="modal fade" id="addTransactionTypeModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle"></i>
+          Add Transaction Type
+        </h5>
+
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="transactionTypeForm">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label"> Transaction Type Name </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="transaction_type_name"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"> Code </label>
+
+              <input type="text" class="form-control" id="code" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label"> Description </label>
+
+              <textarea
+                class="form-control"
+                rows="3"
+                id="description"
+              ></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"> Status </label>
+
+              <select class="form-select" id="direction">
+                <option value="in">IN</option>
+
+                <option value="out">OUT</option>
+
+                <option value="none">NONE</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+
+          <button class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT TRANSACTION TYPE MODAL -->
+<div class="modal fade" id="addTransactionTypeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="transactionTypeModalTitle">
+          <i class="bi bi-plus-circle"></i>
+          Add Transaction Type
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <form id="transactionTypeForm">
+        <div class="modal-body">
+          <!-- Hidden ID (used for Edit) -->
+          <input type="hidden" id="transaction_type_id" />
+
+          <div class="row g-3">
+            <!-- Transaction Type Name -->
+            <div class="col-md-6">
+              <label class="form-label"> Transaction Type Name </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="transaction_type_name"
+                placeholder="e.g. Transfer Incoming"
+                required
+              />
+            </div>
+
+            <!-- Code -->
+            <div class="col-md-6">
+              <label class="form-label"> Code </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="code"
+                placeholder="e.g. TRANSFER_IN"
+                required
+              />
+            </div>
+
+            <!-- Direction -->
+            <div class="col-md-6">
+              <label class="form-label"> Direction </label>
+
+              <select class="form-select" id="direction">
+                <option value="in">IN</option>
+                <option value="out">OUT</option>
+                <option value="none">NONE</option>
+              </select>
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-6">
+              <label class="form-label"> Status </label>
+
+              <select class="form-select" id="status">
+                <option value="active">ACTIVE</option>
+                <option value="inactive">INACTIVE</option>
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label"> Description </label>
+
+              <textarea
+                class="form-control"
+                id="description"
+                rows="4"
+                placeholder="Enter transaction type description..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="saveTransactionTypeBtn"
+          >
+            <i class="bi bi-save"></i>
+            Save Transaction Type
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- Header -->
+      <div
+        class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+      >
+        <div>
+          <h2 class="h5 mb-1">
+            <i class="bi bi-journal-text"></i>
+            Transaction Types
+          </h2>
+
+          <p class="text-muted mb-0">
+            Manage ledger transaction categories and directions.
+          </p>
+        </div>
+
+        <button
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#addTransactionTypeModal"
+        >
+          <i class="bi bi-plus-circle"></i>
+          Add Transaction Type
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="panel-body p-4">
+        <!-- Search and Show -->
+        <div class="row mb-3 align-items-center">
+          <div class="col-md-2">
+            <div class="d-flex align-items-center gap-2">
+              <span>Show</span>
+
+              <select class="form-select form-select-sm" style="width: 80px">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+                <option>100</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3 ms-auto">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search transaction type..."
+            />
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th width="80">ID</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th width="120">Direction</th>
+                <th width="100">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="transactionTypeTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>Showing 1 to 6 of 6 entries</div>
+
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled">
+                <a class="page-link"> Previous </a>
+              </li>
+
+              <li class="page-item active">
+                <a class="page-link"> 1 </a>
+              </li>
+
+              <li class="page-item disabled">
+                <a class="page-link"> Next </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>

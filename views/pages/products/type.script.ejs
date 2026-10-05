@@ -1,0 +1,390 @@
+<script>
+  const TypesToast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+
+  let allTypes = [];
+  let filteredTypes = [];
+  let typesCurrentPage = 1;
+  const TYPES_PAGE_SIZE = 4;
+  const TYPE_COLUMNS = 7;
+
+  $(function () {
+    init();
+
+    function init() {
+      loadTypes();
+      bindTypeEvents();
+    }
+
+    // ================================
+    // LOAD TYPES
+    // ================================
+    function loadTypes() {
+      $.ajax({
+        url: "/types/get-types",
+        method: "GET",
+        success: function (res) {
+          allTypes = res || [];
+          applyFilterAndRender();
+        },
+        error: function () {
+          TypesToast.fire({ icon: "error", title: "Failed to load types." });
+        },
+      });
+    }
+
+    function applyFilterAndRender() {
+      const term = ($("#typeSearchInput").val() || "").trim().toLowerCase();
+
+      filteredTypes = !term
+        ? allTypes.slice()
+        : allTypes.filter((t) => String(t.type_name || "").toLowerCase().includes(term));
+
+      typesCurrentPage = 1;
+      renderTypeTable();
+      renderTypePagination();
+    }
+
+    function renderTypeTable() {
+      const start = (typesCurrentPage - 1) * TYPES_PAGE_SIZE;
+      const pageItems = filteredTypes.slice(start, start + TYPES_PAGE_SIZE);
+
+      let rows = "";
+
+      pageItems.forEach((t) => {
+        rows += `
+          <tr>
+            <td>${t.id}</td>
+            <td title="${escapeHtml(t.type_name)}">${escapeHtml(t.type_name)}</td>
+            <td title="${escapeHtml(t.description || "-")}">${escapeHtml(t.description || "-")}</td>
+
+            <td>
+              <span class="badge bg-${t.is_serialized === "yes" ? "success" : "secondary"}">${t.is_serialized}</span>
+            </td>
+
+            <td>
+              <span class="badge bg-${t.is_return_required === "yes" ? "warning" : "secondary"}">${t.is_return_required}</span>
+            </td>
+
+            <td>
+              <span class="badge bg-${t.status === "active" ? "success" : "danger"}">${t.status}</span>
+            </td>
+
+            <td class="text-end">
+              <button class="btn btn-info btn-sm viewTypeBtn" data-id="${t.id}"><i class="bi bi-eye"></i></button>
+              <button class="btn btn-warning btn-sm editTypeBtn" data-id="${t.id}"><i class="bi bi-pencil"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      for (let i = pageItems.length; i < TYPES_PAGE_SIZE; i++) rows += fillerRow();
+
+      if (filteredTypes.length === 0) {
+        rows = `<tr><td colspan="${TYPE_COLUMNS}" class="text-center text-muted py-4">No types found</td></tr>`;
+        for (let i = 1; i < TYPES_PAGE_SIZE; i++) rows += fillerRow();
+      }
+
+      $("#typeTableBody").html(rows);
+
+      const total = filteredTypes.length;
+      const shownStart = total === 0 ? 0 : start + 1;
+      const shownEnd = Math.min(start + TYPES_PAGE_SIZE, total);
+      $("#typePaginationInfo").text(total === 0 ? "No results" : `Showing ${shownStart}-${shownEnd} of ${total}`);
+    }
+
+    function fillerRow() {
+      let cells = "";
+      for (let i = 0; i < TYPE_COLUMNS; i++) cells += `<td class="filler-row">&nbsp;</td>`;
+      return `<tr>${cells}</tr>`;
+    }
+
+    function renderTypePagination() {
+      const totalPages = Math.max(1, Math.ceil(filteredTypes.length / TYPES_PAGE_SIZE));
+      let html = "";
+
+      html += `<li class="page-item ${typesCurrentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${typesCurrentPage - 1}">Prev</a>
+              </li>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<li class="page-item ${p === typesCurrentPage ? "active" : ""}">
+                  <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>`;
+      }
+
+      html += `<li class="page-item ${typesCurrentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${typesCurrentPage + 1}">Next</a>
+              </li>`;
+
+      $("#typePagination").html(html);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // ================================
+    // EVENTS
+    // ================================
+    function bindTypeEvents() {
+      $("#typeSearchInput").on("keyup", applyFilterAndRender);
+
+      $(document).on("click", "#typePagination .page-link", function (e) {
+        e.preventDefault();
+        const page = parseInt($(this).data("page"), 10);
+        const totalPages = Math.max(1, Math.ceil(filteredTypes.length / TYPES_PAGE_SIZE));
+        if (isNaN(page) || page < 1 || page > totalPages) return;
+        typesCurrentPage = page;
+        renderTypeTable();
+        renderTypePagination();
+      });
+
+      $("#printTypesBtn").on("click", printTypes);
+      $("#exportTypesExcelBtn").on("click", function () {
+        window.location.href = "/types/export-excel";
+      });
+
+      // ADD TYPE
+      $("#saveTypeBtn").click(function () {
+        const type_name = $("#type_name").val().trim();
+
+        if (!type_name) {
+          TypesToast.fire({ icon: "warning", title: "Type name is required." });
+          return;
+        }
+
+        $.ajax({
+          url: "/types/add-type",
+          method: "POST",
+          data: {
+            type_name,
+            description: $("#type_description").val(),
+            is_serialized: $("#is_serialized").val(),
+            is_return_required: $("#is_return_required").val(),
+          },
+          success: function (res) {
+            $("#addTypeModal").modal("hide");
+            $("#type_name, #type_description").val("");
+            loadTypes();
+            TypesToast.fire({ icon: "success", title: res.message || "Type created successfully." });
+          },
+          error: function (err) {
+            TypesToast.fire({ icon: "error", title: err.responseJSON?.message || "Failed to add type." });
+          },
+        });
+      });
+
+      // VIEW TYPE
+      $(document).on("click", ".viewTypeBtn", function () {
+        const id = $(this).data("id");
+
+        $.ajax({
+          url: `/types/get-type/${id}`,
+          method: "GET",
+          success: function (t) {
+            $("#view_type_id").text(t.id);
+            $("#view_type_name").text(t.type_name);
+            $("#view_type_description").text(t.description || "-");
+
+            $("#view_is_serialized").html(
+              `<span class="badge bg-${t.is_serialized === "yes" ? "success" : "secondary"}">${t.is_serialized}</span>`,
+            );
+            $("#view_is_return_required").html(
+              `<span class="badge bg-${t.is_return_required === "yes" ? "warning" : "secondary"}">${t.is_return_required}</span>`,
+            );
+            $("#view_status").html(
+              `<span class="badge bg-${t.status === "active" ? "success" : "danger"}">${t.status}</span>`,
+            );
+
+            $("#view_created_at").text(t.created_at || "-");
+
+            $("#viewTypeModal").modal("show");
+          },
+          error: function () {
+            TypesToast.fire({ icon: "error", title: "Failed to load type." });
+          },
+        });
+      });
+
+      // EDIT TYPE
+      $(document).on("click", ".editTypeBtn", function () {
+        const id = $(this).data("id");
+
+        $.ajax({
+          url: `/types/get-type/${id}`,
+          method: "GET",
+          success: function (t) {
+            $("#edit_type_id").val(t.id);
+            $("#edit_type_name").val(t.type_name);
+            $("#edit_type_description").val(t.description);
+            $("#edit_is_serialized").val(t.is_serialized);
+            $("#edit_is_return_required").val(t.is_return_required);
+            $("#edit_status").val(t.status);
+
+            $("#editTypeModal").modal("show");
+          },
+          error: function () {
+            TypesToast.fire({ icon: "error", title: "Failed to load type." });
+          },
+        });
+      });
+
+      // UPDATE TYPE
+      $("#updateTypeBtn").click(function () {
+        const id = $("#edit_type_id").val();
+
+        $.ajax({
+          url: `/types/update-type/${id}`,
+          method: "PUT",
+          data: {
+            type_name: $("#edit_type_name").val(),
+            description: $("#edit_type_description").val(),
+            is_serialized: $("#edit_is_serialized").val(),
+            is_return_required: $("#edit_is_return_required").val(),
+            status: $("#edit_status").val(),
+          },
+          success: function (res) {
+            $("#editTypeModal").modal("hide");
+            loadTypes();
+            TypesToast.fire({ icon: "success", title: res.message || "Type updated successfully." });
+          },
+          error: function (err) {
+            TypesToast.fire({ icon: "error", title: err.responseJSON?.message || "Update failed." });
+          },
+        });
+      });
+
+      // BULK UPLOAD
+      $("#bulkUploadTypeSubmitBtn").click(function () {
+        const fileInput = document.getElementById("bulkUploadTypeFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          TypesToast.fire({ icon: "warning", title: "Please choose a file to upload." });
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const $btn = $("#bulkUploadTypeSubmitBtn");
+        $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
+        $("#bulkUploadTypeReport").addClass("d-none");
+
+        $.ajax({
+          url: "/types/bulk-upload",
+          method: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function (res) {
+            showBulkReport(res.report, res.message);
+            loadTypes();
+          },
+
+          error: function (err) {
+            const res = err.responseJSON;
+            if (res && res.report) {
+              showBulkReport(res.report, res.message);
+            } else {
+              TypesToast.fire({ icon: "error", title: res?.message || "Bulk upload failed." });
+            }
+          },
+
+          complete: function () {
+            $btn.prop("disabled", false).html('<i class="bi bi-cloud-upload"></i> Upload File');
+          },
+        });
+      });
+
+      function showBulkReport(report, message) {
+        $("#bulkUploadTypeReport").removeClass("d-none");
+
+        const summaryColor = report.failed > 0 ? "text-warning" : "text-success";
+        $("#bulkUploadTypeSummary")
+          .removeClass()
+          .addClass(`fw-bold mb-2 ${summaryColor}`)
+          .text(message || `${report.success} of ${report.total} imported.`);
+
+        if (report.errors && report.errors.length > 0) {
+          let list = "<ul class='ps-3 mb-0'>";
+          report.errors.forEach((e) => {
+            list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+          });
+          list += "</ul>";
+          $("#bulkUploadTypeErrors").html(list);
+        } else {
+          $("#bulkUploadTypeErrors").html("");
+        }
+      }
+
+      $("#bulkUploadTypeModal").on("hidden.bs.modal", function () {
+        $("#bulkUploadTypeFile").val("");
+        $("#bulkUploadTypeReport").addClass("d-none");
+      });
+    }
+
+    // ================================
+    // PRINT
+    // ================================
+    function printTypes() {
+      const rows = filteredTypes
+        .map(
+          (t) => `
+          <tr>
+            <td>${t.id}</td>
+            <td>${escapeHtml(t.type_name)}</td>
+            <td>${escapeHtml(t.description || "-")}</td>
+            <td>${t.is_serialized}</td>
+            <td>${t.is_return_required}</td>
+            <td>${t.status}</td>
+          </tr>
+        `,
+        )
+        .join("");
+
+      const html = `
+        <html>
+          <head>
+            <title>Product Types</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; text-align: left; }
+              th { background: #f1f1f1; }
+            </style>
+          </head>
+          <body>
+            <h2>Product Types</h2>
+            <div style="color:#666;margin-bottom:16px;font-size:12px;">Generated ${new Date().toLocaleString()} &middot; ${filteredTypes.length} record(s)</div>
+            <table>
+              <thead><tr><th>ID</th><th>Type Name</th><th>Description</th><th>Serialized</th><th>Return Required</th><th>Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.onload = function () {
+        printWindow.print();
+      };
+    }
+  });
+</script>

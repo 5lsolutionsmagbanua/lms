@@ -1,255 +1,346 @@
 <main class="dashboard-content">
   <div class="container-fluid px-3 px-lg-4 py-4">
-    <!-- Panel -->
+    <!-- PANEL -->
     <section class="panel">
-      <!-- Header Actions -->
+      <!-- HEADER -->
       <div
-        class="panel-header d-flex flex-wrap gap-2 justify-content-between align-items-center"
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
       >
         <div>
           <h2 class="h5 mb-1 section-title">
             <i class="bi bi-diagram-3"></i>
-            <span style="font-weight: 700; color: #000">
-              Branch Management
-            </span>
+            Branch Management
           </h2>
           <p class="text-muted mb-0">
-            Manage branch records, codes, and status.
+            Manage branch records, company details, and contact information.
           </p>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-arrow-repeat"></i> Sync
+        <div class="d-flex gap-2 flex-wrap branch-toolbar">
+          <button
+            class="btn btn-outline-secondary rounded-pill fw-semibold"
+            id="printBranchBtn"
+            type="button"
+          >
+            <i class="bi bi-printer"></i> Print
           </button>
 
           <button
-            class="btn btn-sm btn-primary"
+            class="btn btn-outline-success rounded-pill fw-semibold"
+            id="exportExcelBtn"
+            type="button"
+          >
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+          </button>
+
+          <button
+            class="btn btn-outline-primary rounded-pill fw-semibold"
+            data-bs-toggle="modal"
+            data-bs-target="#bulkUploadModal"
+            type="button"
+          >
+            <i class="bi bi-upload"></i> Bulk Upload
+          </button>
+
+          <button
+            class="btn btn-primary rounded-pill fw-semibold"
             data-bs-toggle="modal"
             data-bs-target="#addBranchModal"
+            type="button"
           >
-            <i class="bi bi-plus-circle"></i> Add Branch
+            <i class="bi bi-plus-circle"></i>
+            Add Branch
           </button>
         </div>
       </div>
 
-      <!-- Add Branch Modal -->
-      <div class="modal fade" id="addBranchModal">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title">
-                <i class="bi bi-diagram-3"></i>
-                Add New Branch
-              </h5>
-
-              <button
-                class="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label">Branch Name *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Enter branch name"
-                  required
-                />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Branch Code *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="e.g. BR-001"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-secondary" data-bs-dismiss="modal">
-                Cancel
-              </button>
-
-              <button class="btn btn-primary">
-                <i class="bi bi-check-circle"></i>
-                Save Branch
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search -->
-      <div class="px-3 pb-2">
+      <!-- SEARCH -->
+      <div class="px-3 pt-3">
         <input
-          class="form-control form-control-sm table-search"
           type="search"
+          id="branchSearchInput"
+          class="form-control form-control-sm"
           placeholder="Search branch..."
-          data-table-search="branchTable"
         />
       </div>
 
-      <!-- Edit Branch Modal -->
-      <div class="modal fade" id="editBranchModal">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header bg-warning">
-              <h5 class="modal-title">
-                <i class="bi bi-pencil-square"></i>
-                Edit Branch
-              </h5>
-
-              <button class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label">ID</label>
-
-                <input type="text" class="form-control" value="1" disabled />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Branch Name</label>
-
-                <input type="text" class="form-control" value="Main Branch" />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Branch Code</label>
-
-                <input type="text" class="form-control" value="BR-001" />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Status</label>
-
-                <select class="form-select">
-                  <option selected>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-danger me-auto" type="button">
-                <i class="bi bi-trash"></i>
-                Delete
-              </button>
-
-              <button class="btn btn-secondary" data-bs-dismiss="modal">
-                Cancel
-              </button>
-
-              <button class="btn btn-warning">
-                <i class="bi bi-save"></i>
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="table-responsive">
-        <table
-          class="table align-middle mb-0"
-          id="branchTable"
-          data-searchable-table
-        >
-          <thead class="table-dark text-white">
+      <!-- TABLE -->
+      <div class="table-responsive px-3 pt-3">
+        <table class="table table-bordered text-center" id="branchTable">
+          <thead>
             <tr>
-              <th>ID</th>
+              <th>Branch ID</th>
               <th>Branch Name</th>
-              <th>Branch Code</th>
-              <th>Created At</th>
-              <th>Created By</th>
-              <th>Status</th>
-              <th class="text-end">Actions</th>
+              <th>Company Name</th>
+              <th>Address</th>
+              <th>Contact Number</th>
+              <th>Action</th>
             </tr>
           </thead>
 
-          <tbody>
-            <tr>
-              <td class="fw-semibold">1</td>
-              <td>Main Branch</td>
-              <td>BR-001</td>
-              <td>May 25, 2026</td>
-              <td>Admin</td>
-              <td>
-                <span class="badge text-bg-success">Active</span>
-              </td>
-              <td class="text-end">
-                <button
-                  class="btn btn-warning btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editBranchModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="fw-semibold">2</td>
-              <td>North Branch</td>
-              <td>BR-002</td>
-              <td>May 24, 2026</td>
-              <td>Admin</td>
-              <td>
-                <span class="badge text-bg-success">Active</span>
-              </td>
-              <td class="text-end">
-                <button
-                  class="btn btn-warning btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editBranchModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="fw-semibold">3</td>
-              <td>South Branch</td>
-              <td>BR-003</td>
-              <td>May 23, 2026</td>
-              <td>Admin</td>
-              <td>
-                <span class="badge text-bg-warning">Inactive</span>
-              </td>
-              <td class="text-end">
-                <button
-                  class="btn btn-warning btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editBranchModal"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-
-                <button class="btn btn-danger btn-sm">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="branchTableBody"></tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div
+        class="d-flex justify-content-between align-items-center px-3 pb-4 flex-wrap gap-2"
+      >
+        <small class="text-muted" id="branchPageInfo"></small>
+        <nav>
+          <ul class="pagination pagination-sm mb-0" id="branchPagination"></ul>
+        </nav>
       </div>
     </section>
   </div>
 </main>
+
+<!-- ============================================================ -->
+<!-- ADD BRANCH MODAL -->
+<!-- ============================================================ -->
+<div class="modal fade" id="addBranchModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-diagram-3"></i> Add Branch</h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addBranchForm">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>Branch Name</label>
+              <input
+                type="text"
+                id="branch_name"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Company Name</label>
+              <input
+                type="text"
+                id="company_name"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="col-md-12 mb-3">
+              <label>Address</label>
+              <input type="text" id="address" class="form-control" required />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Email</label>
+              <input type="email" id="email" class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Contact Number</label>
+              <input
+                type="text"
+                id="contact_number"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-primary" id="saveBranchBtn">Save Branch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- EDIT BRANCH MODAL (delete button removed) -->
+<!-- ============================================================ -->
+<div class="modal fade" id="editBranchModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i> Edit Branch
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="editBranchForm" novalidate>
+          <input type="hidden" id="edit_branch_id" />
+
+          <div class="row">
+            <!-- Branch Name -->
+            <div class="col-md-6 mb-3">
+              <label for="edit_branch_name" class="form-label">
+                Branch Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="edit_branch_name"
+                class="form-control"
+                placeholder="Enter branch name"
+                maxlength="100"
+                required
+              />
+            </div>
+
+            <!-- Company Name -->
+            <div class="col-md-6 mb-3">
+              <label for="edit_company_name" class="form-label">
+                Company Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="edit_company_name"
+                class="form-control"
+                placeholder="Enter company name"
+                maxlength="100"
+                required
+              />
+            </div>
+
+            <!-- Address -->
+            <div class="col-md-12 mb-3">
+              <label for="edit_address" class="form-label">
+                Address <span class="text-danger">*</span>
+              </label>
+              <textarea
+                id="edit_address"
+                class="form-control"
+                rows="3"
+                placeholder="Enter complete address"
+                required
+              ></textarea>
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6 mb-3">
+              <label for="edit_email" class="form-label">
+                Email <span class="text-danger">*</span>
+              </label>
+              <input
+                type="email"
+                id="edit_email"
+                class="form-control"
+                placeholder="example@email.com"
+                maxlength="100"
+                required
+              />
+            </div>
+
+            <!-- Contact Number -->
+            <div class="col-md-6 mb-3">
+              <label for="edit_contact_number" class="form-label">
+                Contact Number <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="edit_contact_number"
+                class="form-control"
+                placeholder="09XXXXXXXXX"
+                maxlength="11"
+                pattern="[0-9]{11}"
+                required
+              />
+              <small class="text-muted"> Must be exactly 11 digits. </small>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button type="button" class="btn btn-warning" id="updateBranchBtn">
+          <i class="bi bi-check-circle"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- BULK UPLOAD MODAL -->
+<!-- ============================================================ -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-upload"></i> Bulk Upload Branches
+        </h5>
+        <button
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted mb-3">
+          Download the template, fill it in, then upload it below to add
+          multiple branches at once.
+        </p>
+
+        <div class="template-download-card mb-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="icon-box">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <div>
+              <div class="fw-semibold">Branch Upload Template</div>
+              <small class="text-muted"
+                >.xlsx &middot; Branch Name, Company Name, Address, Email,
+                Contact Number</small
+              >
+            </div>
+          </div>
+          <a
+            href="/branch/download-template"
+            class="btn btn-success btn-sm"
+            id="downloadTemplateBtn"
+          >
+            <i class="bi bi-download"></i> Download Template
+          </a>
+        </div>
+
+        <div class="mb-3">
+          <label for="bulkUploadFile" class="form-label"
+            >Upload Completed Template</label
+          >
+          <input
+            type="file"
+            id="bulkUploadFile"
+            class="form-control"
+            accept=".xlsx,.xls"
+          />
+          <small class="text-muted">Accepted formats: .xlsx, .xls</small>
+        </div>
+
+        <div id="bulkUploadResult"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary" id="submitBulkUploadBtn">
+          <i class="bi bi-cloud-upload"></i> Upload
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

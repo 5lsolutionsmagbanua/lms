@@ -1,0 +1,2590 @@
+<script>
+  /* ============================================================
+   SHIPMENT REQUEST PAGE SCRIPT
+
+   CHANGES IN THIS PASS:
+   1. Delete action removed entirely (button + handler + ajax
+      call). The delete-shipment API route itself was left alone
+      server-side; nothing in the UI calls it anymore.
+   2. Table is now visually fixed-height: every row (real or
+      filler) is the same height via .shipment-row, and
+      renderShipmentTable() pads with blank filler rows up to
+      rowsPerPage so the table never resizes between a page with
+      1 result and a page with 4.
+   3. Edit modal now has a two-step flow:
+        Step 1 (default): item-editing form + "Save Changes".
+        Step 2 (after a successful save, shipment still Pending):
+          footer swaps to "Approve" / "Reject".
+            - Approve -> PUT /approve-shipment/:ticket, then closes
+              the edit modal and opens the existing Assign Driver &
+              Vehicle modal for the same ticket.
+            - Reject  -> PUT /reject-shipment/:ticket (new route),
+              sets status to Rejected.
+      Re-opening the modal always resets it back to Step 1.
+   4. All plain result messages (success / error / warning) now
+      go through the existing toast helper (showToast) instead of
+      Swal.fire dialogs. Anything that genuinely needs a click to
+      confirm (Approve?/Reject?/Delete-was-here) or needs form
+      inputs (the print/export driver pickers) is still a
+      SweetAlert dialog — a toast can't take a confirm click or a
+      dropdown selection.
+   ============================================================ */
+
+  // ==============================
+  // GLOBAL STATE
+  // ==============================
+  let requestItems = []; // items being added on the "New Shipment" form
+  let editItems = []; // items being edited on the "Edit Shipment" modal
+  let editingRowIndex = -1; // index of item currently being edited in edit modal
+  let editShipmentId = null;
+  let editTicketNumber = null;
+  let editPriorityValue = null;
+  let editIsDispatched = false; // true when the shipment being edited already has a dispatch record
+  let editStep = "form"; // "form" | "decision" — which footer the edit modal shows
+
+  let allShipments = []; // full dataset from server
+  let filteredShipments = []; // after search/priority/status filters
+  let currentPage = 1;
+  const rowsPerPage = 4;
+
+  $(function () {
+    init();
+
+    function init() {
+      loadDropdowns();
+      loadShipments();
+      bindEvents();
+    }
+
+    // ==============================
+    // LOAD ALL DROPDOWNS (New Shipment form)
+    // ==============================
+    function loadDropdowns() {
+      loadTypes();
+      loadBranches();
+      loadStores();
+      loadUnits();
+      loadProducts();
+    }
+
+    function loadTypes() {
+      $.ajax({
+        url: "/types/get-types",
+        method: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Type</option>`;
+          res.forEach((t) => {
+            options += `<option value="${t.id}">${t.type_name}</option>`;
+          });
+          $("#typeSelect").html(options);
+        },
+        error: function () {
+          console.log("Unable to load types.");
+        },
+      });
+    }
+
+    function loadBranches() {
+      $.ajax({
+        url: "/branch/get-branches",
+        method: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Branch</option>`;
+          res.forEach((b) => {
+            options += `<option value="${b.id}">${b.branch_name}</option>`;
+          });
+          $("#branchSelect").html(options);
+        },
+        error: function () {
+          console.log("Unable to load branches.");
+        },
+      });
+    }
+
+    function loadStores() {
+      $.ajax({
+        url: "/store/get-stores",
+        method: "GET",
+        success: function (res) {
+          const stores = Array.isArray(res)
+            ? res
+            : (res.data ?? res.stores ?? []);
+
+          if (!Array.isArray(stores)) {
+            console.error("Unexpected /store/get-stores response:", res);
+            showToast("error", "Store list came back in an unexpected format.");
+            return;
+          }
+
+          let options = `<option value="">Select Store</option>`;
+          stores.forEach((s) => {
+            options += `<option value="${s.id}">${s.store_name} (${s.store_code})</option>`;
+          });
+          $("#storeSelect").html(options);
+        },
+        error: function (xhr) {
+          console.error("store/get-stores failed:", xhr.responseText);
+          console.log("Unable to load stores.");
+        },
+      });
+    }
+
+    function loadProducts() {
+      $.ajax({
+        url: "/products/get-products",
+        method: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Item</option>`;
+          res.forEach((p) => {
+            options += `<option value="${p.id}">${p.inventory_name}</option>`;
+          });
+          $("#productSelect").html(options);
+        },
+        error: function () {
+          showToast("error", "Failed to load products.");
+        },
+      });
+    }
+
+    function loadUnits() {
+      $.ajax({
+        url: "/units/get-units",
+        method: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Unit</option>`;
+          res.forEach((u) => {
+            options += `<option value="${u.id}">${u.unit_name}</option>`;
+          });
+          $("#unitSelect").html(options);
+        },
+        error: function () {
+          console.log("Unable to load units.");
+        },
+      });
+    }
+
+    // ==============================
+    // LOAD SHIPMENTS (table + summary cards)
+    // ==============================
+    function loadShipments(callback = null) {
+      $.ajax({
+        url: "/shipmentRequest/get-shipments",
+        method: "GET",
+        cache: false,
+
+        beforeSend: function () {
+          $("#shipmentTableBody").html(`
+          <tr>
+            <td colspan="10" class="text-center py-5">
+              <div class="spinner-border text-primary"></div>
+              <br><br>
+              Loading shipments...
+            </td>
+          </tr>
+        `);
+        },
+
+        success: function (res) {
+          allShipments = [...res];
+          filteredShipments = [...res];
+          currentPage = 1;
+
+          updateSummaryCards();
+          renderShipmentTable();
+
+          if (typeof callback === "function") callback();
+        },
+
+        error: function () {
+          $("#shipmentTableBody").html(`
+          <tr>
+            <td colspan="10" class="text-center text-danger py-5">
+              <i class="bi bi-exclamation-triangle fs-1"></i>
+              <br><br>
+              Failed to load shipment requests.
+            </td>
+          </tr>
+        `);
+        },
+      });
+    }
+    // Expose for handlers defined outside this closure (edit/save flows)
+    window.loadShipments = loadShipments;
+
+    function updateSummaryCards() {
+      $("#pendingCount").text(
+        allShipments.filter((x) => x.status === "Pending").length,
+      );
+      $("#approvedCount").text(
+        allShipments.filter((x) => x.status === "Approved").length,
+      );
+      $("#transitCount").text(
+        allShipments.filter((x) => x.status === "In Transit").length,
+      );
+      $("#deliveredCount").text(
+        allShipments.filter((x) => x.status === "Delivered").length,
+      );
+    }
+
+    // ==============================
+    // TABLE ROW HEIGHT / FIXED SIZE
+    // Table always shows exactly `rowsPerPage` row-slots, whether
+    // there's 1 result or 4 — filler rows keep the table from
+    // growing/shrinking as you filter, search, or page through.
+    // ==============================
+    const COLUMN_COUNT = 10; // checkbox, id, ticket, store, items, priority, status, created, actions, barcode
+
+    function buildFillerRow() {
+      return `<tr class="shipment-row filler-row"><td colspan="${COLUMN_COUNT}">&nbsp;</td></tr>`;
+    }
+
+    function renderShipmentTable() {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const data = filteredShipments.slice(start, end);
+
+      const statusColors = {
+        Pending: "warning",
+        Approved: "primary",
+        Preparing: "info",
+        "In Transit": "info",
+        Dispatched: "dark",
+        Delivered: "success",
+        Rejected: "danger",
+        Cancelled: "danger",
+      };
+
+      const priorityColors = {
+        Low: "secondary",
+        Normal: "primary",
+        High: "warning",
+        Urgent: "danger",
+      };
+
+      let rows = "";
+      let renderedRowCount = 0;
+
+      if (data.length === 0) {
+        rows = `
+    <tr class="shipment-row empty-row">
+      <td colspan="${COLUMN_COUNT}" class="text-center text-muted py-4">
+        <i class="bi bi-truck fs-1"></i>
+        <br><br>
+        No shipment requests found.
+      </td>
+    </tr>
+  `;
+        renderedRowCount = 1;
+      } else {
+        data.forEach((shipment) => {
+          const assigned = Number(shipment.is_assigned) === 1;
+          const isPending = shipment.status === "Pending";
+
+          rows += `
+      <tr class="shipment-row">
+        <td class="text-center">
+    ${
+      assigned
+        ? `<input type="checkbox" disabled title="Already assigned">`
+        : `<input type="checkbox" class="shipmentCheckbox" value="${shipment.shipment_id}">`
+    }
+  </td>
+        <td>${shipment.shipment_id}</td>
+        <td>${shipment.ticket_number}</td>
+        <td>
+          ${shipment.store_name}
+          <br>
+          <small class="text-muted">${shipment.store_code}</small>
+        </td>
+        <td class="text-center">${shipment.total_items}</td>
+        <td>
+          <span class="badge bg-${priorityColors[shipment.priority] || "secondary"}">
+            ${shipment.priority}
+          </span>
+        </td>
+        <td>
+          <span class="badge bg-${statusColors[shipment.status] || "secondary"}">
+            ${shipment.status}
+          </span>
+        </td>
+        <td>${new Date(shipment.created_at).toLocaleDateString()}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center align-items-center gap-1 action-btn-group">
+            ${
+              assigned
+                ? `
+                <button class="btn btn-secondary btn-sm" disabled title="Already Assigned">
+                  <i class="bi bi-check2-circle"></i>
+                </button>
+              `
+                : `
+                <button
+                  class="btn btn-success btn-sm assignShipmentBtn"
+                  data-id="${shipment.shipment_id}"
+                  data-ticket="${shipment.ticket_number}"
+                  data-priority="${shipment.priority}">
+                  <i class="bi bi-person-check"></i>
+                </button>
+              `
+            }
+            <button class="btn btn-primary btn-sm viewShipmentBtn"
+              data-id="${shipment.shipment_id}"
+              data-ticket="${shipment.ticket_number}">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button
+              class="btn btn-warning btn-sm ${assigned ? "" : "editShipmentBtn"}"
+              data-ticket="${shipment.ticket_number}"
+              ${assigned ? `disabled title="Already dispatched — cannot edit"` : ""}>
+              <i class="bi bi-pencil"></i>
+            </button>
+          </div>
+        </td>
+        <td class="text-center">
+          ${
+            shipment.barcode
+              ? `<svg class="rowBarcode" data-barcode="${shipment.barcode}"></svg>`
+              : `<span class="text-muted">-</span>`
+          }
+        </td>
+      </tr>
+    `;
+          renderedRowCount++;
+        });
+      }
+
+      // Pad up to rowsPerPage so the table height never changes.
+      for (let i = renderedRowCount; i < rowsPerPage; i++) {
+        rows += buildFillerRow();
+      }
+
+      $("#shipmentTableBody").html(rows);
+      renderPagination();
+
+      $(".rowBarcode").each(function () {
+        const value = $(this).data("barcode");
+        JsBarcode(this, String(value), {
+          format: "CODE128",
+          displayValue: false,
+          height: 30,
+          width: 1.4,
+          margin: 0,
+        });
+        $(this).attr("title", value);
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredShipments.length / rowsPerPage),
+      );
+      const start =
+        filteredShipments.length === 0
+          ? 0
+          : (currentPage - 1) * rowsPerPage + 1;
+      const end = Math.min(currentPage * rowsPerPage, filteredShipments.length);
+
+      $("#paginationInfo").text(
+        `Showing ${start} to ${end} of ${filteredShipments.length} entries`,
+      );
+
+      let html = `
+      <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+        <a class="page-link" href="#" id="previousPage"><i class="bi bi-chevron-left"></i> Previous</a>
+      </li>
+    `;
+
+      for (let i = 1; i <= totalPages; i++) {
+        html += `
+        <li class="page-item ${currentPage === i ? "active" : ""}">
+          <a href="#" class="page-link pageNumber" data-page="${i}">${i}</a>
+        </li>
+      `;
+      }
+
+      html += `
+      <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+        <a class="page-link" href="#" id="nextPage">Next <i class="bi bi-chevron-right"></i></a>
+      </li>
+    `;
+
+      $("#shipmentPagination").html(html);
+    }
+
+    function applyFilters() {
+      const search = ($("#searchShipment").val() || "").toLowerCase();
+      const priority = $("#filterPriority").val();
+      const status = $("#filterStatus").val();
+
+      filteredShipments = allShipments.filter((x) => {
+        const matchSearch =
+          x.ticket_number.toLowerCase().includes(search) ||
+          x.store_name.toLowerCase().includes(search);
+        const matchPriority = priority === "" || x.priority === priority;
+        const matchStatus = status === "" || x.status === status;
+        return matchSearch && matchPriority && matchStatus;
+      });
+
+      currentPage = 1;
+      renderShipmentTable();
+    }
+
+    // ==============================
+    // ASSIGN SHIPMENT MODAL (#assignShipmentModal)
+    // ==============================
+    function loadAssignDrivers() {
+      return $.ajax({
+        url: "/shipmentRequest/drivers/list",
+        method: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Driver</option>`;
+          if (res.length === 0) {
+            options += `<option disabled>No available drivers</option>`;
+          } else {
+            res.forEach((driver) => {
+              options += `<option value="${driver.id}">${driver.driver_code} - ${driver.driver_name}</option>`;
+            });
+          }
+          $("#assignDriver").html(options);
+        },
+        error: function (xhr) {
+          console.error(xhr);
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to load available drivers.",
+          );
+        },
+      });
+    }
+
+    let assignVehiclesData = [];
+
+    function loadAssignVehicles() {
+      return $.ajax({
+        url: "/shipmentRequest/vehicles/list",
+        method: "GET",
+        success: function (res) {
+          assignVehiclesData = res || [];
+
+          let options = `<option value="">Select Vehicle</option>`;
+          if (res.length === 0) {
+            options += `<option disabled>No available vehicles</option>`;
+          } else {
+            res.forEach((vehicle) => {
+              options += `<option value="${vehicle.id}">${vehicle.vehicle_code} (${vehicle.plate_number})</option>`;
+            });
+          }
+          $("#assignVehicle").html(options);
+        },
+        error: function (xhr) {
+          console.error(xhr);
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to load available vehicles.",
+          );
+        },
+      });
+    }
+
+    $(document).on("change", "#assignVehicle", function () {
+      const vehicleId = $(this).val();
+      const vehicle = assignVehiclesData.find((v) => v.id == vehicleId);
+
+      if (!vehicle || !vehicle.driver_id) {
+        $("#assignDriver").val("");
+        return;
+      }
+
+      const optionExists =
+        $("#assignDriver option[value='" + vehicle.driver_id + "']").length > 0;
+
+      if (optionExists) {
+        $("#assignDriver").val(vehicle.driver_id);
+      } else {
+        $("#assignDriver").val("");
+        console.warn(
+          `[shipmentRequest] Vehicle ${vehicle.vehicle_code}'s linked driver (${vehicle.driver_name}) is not currently available.`,
+        );
+      }
+    });
+
+    function openAssignShipmentModal(shipmentId, ticketNumber, priority) {
+      $("#assignShipmentId").val(shipmentId);
+      $("#assignTicketNumber").val(ticketNumber);
+      $("#assignTicketDisplay").val(ticketNumber);
+      $("#assignPriority").val(priority);
+
+      const dispatchNumber = generateDispatchNumber(shipmentId);
+      $("#assignDispatchNumber").val(dispatchNumber);
+
+      $("#assignDispatchDate").val("");
+      $("#assignEstimatedDelivery").val("");
+      $("#assignHelperName").val("");
+      $("#assignRemarks").val("");
+
+      $("#assignVehicle")
+        .prop("disabled", true)
+        .html(`<option value="">Loading...</option>`);
+
+      $.when(loadAssignDrivers(), loadAssignVehicles()).always(function () {
+        $("#assignVehicle").prop("disabled", false);
+      });
+
+      // getOrCreateInstance (not `new bootstrap.Modal`) — this modal gets
+      // opened repeatedly (row click, barcode scan, post-approve handoff),
+      // and constructing a fresh instance on top of an existing one is
+      // what throws "Cannot read properties of undefined (reading
+      // 'backdrop')" from bootstrap's internals.
+      const assignModalEl = document.getElementById("assignShipmentModal");
+      if (!assignModalEl) {
+        console.error(
+          "[shipmentRequest] #assignShipmentModal not found in DOM.",
+        );
+        return;
+      }
+      bootstrap.Modal.getOrCreateInstance(assignModalEl).show();
+    }
+    window.openAssignShipmentModal = openAssignShipmentModal;
+
+    $(document).on("click", ".assignShipmentBtn", function () {
+      const shipmentId = $(this).data("id");
+      const ticket = $(this).data("ticket");
+      const priority = $(this).data("priority");
+
+      openAssignShipmentModal(shipmentId, ticket, priority);
+    });
+
+    // =====================================
+    // SAVE ASSIGNMENT
+    // =====================================
+    $("#saveAssignmentBtn").click(function () {
+      const data = {
+        shipment_id: $("#assignShipmentId").val(),
+        ticket_number: $("#assignTicketNumber").val(),
+        dispatch_number: $("#assignDispatchNumber").val(),
+        driver_id: $("#assignDriver").val(),
+        vehicle_id: $("#assignVehicle").val(),
+        helper_name: $("#assignHelperName").val(),
+        dispatch_date: $("#assignDispatchDate").val(),
+        estimated_delivery: $("#assignEstimatedDelivery").val(),
+        remarks: $("#assignRemarks").val(),
+      };
+
+      if (!data.driver_id) {
+        showToast("warning", "Please select a driver.");
+        return;
+      }
+      if (!data.vehicle_id) {
+        showToast("warning", "Please select a vehicle.");
+        return;
+      }
+      if (!data.dispatch_date) {
+        showToast("warning", "Please set a dispatch date.");
+        return;
+      }
+
+      $.ajax({
+        url: "/shipmentDispatch/assign",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+
+        beforeSend: function () {
+          $("#saveAssignmentBtn").prop("disabled", true).html(`
+                <span class="spinner-border spinner-border-sm"></span>
+                Saving...
+            `);
+        },
+
+        success: function (res) {
+          showToast("success", res.message || "Assigned successfully.");
+          $("#assignShipmentModal").modal("hide");
+          printShipmentsByTickets([$("#assignTicketNumber").val()]);
+          loadShipments();
+        },
+
+        error: function (xhr) {
+          console.error(xhr);
+          showToast("error", xhr.responseJSON?.message || "Assignment failed.");
+        },
+
+        complete: function () {
+          $("#saveAssignmentBtn")
+            .prop("disabled", false)
+            .html("Save Assignment");
+        },
+      });
+    });
+
+    /* ============================================================
+   PRINT SHIPMENT REQUESTS — GROUPED BY ASSIGNED DRIVER
+   ============================================================ */
+    function fetchShipmentDetails(ticketNumbers) {
+      const requests = ticketNumbers.map(
+        (ticket) =>
+          new Promise((resolve) => {
+            $.ajax({
+              url: "/shipmentRequest/get-shipment/" + ticket,
+              method: "GET",
+              cache: false,
+              success: (res) => resolve({ ok: true, ticket, res }),
+              error: (xhr) => resolve({ ok: false, ticket, xhr }),
+            });
+          }),
+      );
+
+      return Promise.all(requests);
+    }
+
+    function groupByDriver(results) {
+      const groups = {};
+
+      results.forEach((r) => {
+        if (!r.ok || !r.res.dispatch) {
+          if (!r.ok)
+            console.warn(`Failed to load shipment ${r.ticket} for printing.`);
+          return;
+        }
+
+        const { header, items, dispatch } = r.res;
+        const key = dispatch.driver_id || dispatch.driver_name || "Unassigned";
+
+        if (!groups[key]) {
+          groups[key] = {
+            driverLabel: dispatch.driver_name
+              ? `${dispatch.driver_code || ""} - ${dispatch.driver_name}`.trim()
+              : "Unassigned Driver",
+            vehicleLabel: dispatch.vehicle_code
+              ? `${dispatch.vehicle_code} (${dispatch.plate_number || ""})`
+              : "-",
+            shipments: [],
+          };
+        }
+
+        groups[key].shipments.push({ header, items, dispatch });
+      });
+
+      return groups;
+    }
+
+    function buildDriverPrintHtml(driverGroups) {
+      const today = new Date().toLocaleDateString();
+      let sections = "";
+
+      for (const group of Object.values(driverGroups)) {
+        const delivered = group.shipments.filter(
+          (s) => s.dispatch.dispatch_status === "Delivered",
+        );
+        const pending = group.shipments.filter(
+          (s) => s.dispatch.dispatch_status !== "Delivered",
+        );
+
+        sections += `
+      <div class="driver-section">
+        <div class="driver-header">
+          <h2>${group.driverLabel}</h2>
+          <div>
+            <div><strong>Vehicle:</strong> ${group.vehicleLabel}</div>
+            <span class="print-date">Printed: ${today}</span>
+          </div>
+        </div>
+
+        ${buildStatusSection("Pending / In Transit", pending, "warning")}
+        ${buildStatusSection("Delivered", delivered, "success")}
+      </div>`;
+      }
+
+      return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Assigned Shipments by Driver</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; font-size: 13px; }
+        .driver-section { page-break-after: always; margin-bottom: 20px; }
+        .driver-section:last-child { page-break-after: auto; }
+        .driver-header {
+          display: flex; justify-content: space-between; align-items: flex-start;
+          border-bottom: 2px solid #198754; padding-bottom: 8px; margin-bottom: 14px;
+        }
+        .driver-header h2 { margin: 0; color: #198754; }
+        .print-date { font-size: 11px; color: #666; }
+
+        .status-section { margin-bottom: 18px; }
+        .status-title {
+          font-size: 14px; font-weight: bold; margin-bottom: 8px;
+          padding: 4px 8px; border-radius: 4px; display: inline-block;
+        }
+        .status-title.warning { background: #fff3cd; color: #664d03; }
+        .status-title.success { background: #d1e7dd; color: #0f5132; }
+        .empty-note { font-size: 12px; color: #999; font-style: italic; margin-bottom: 10px; }
+
+        .shipment-meta {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;
+          margin-bottom: 8px; font-size: 12px;
+        }
+        .print-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .print-table th, .print-table td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        .print-table th { background: #f2f2f2; }
+        .remarks { font-size: 12px; margin-bottom: 10px; }
+        .shipment-divider { border: none; border-top: 1px dashed #bbb; margin: 14px 0; }
+      </style>
+    </head>
+    <body>${sections}</body>
+    </html>`;
+    }
+
+    function buildStatusSection(label, shipments, colorClass) {
+      if (shipments.length === 0) {
+        return `
+      <div class="status-section">
+        <div class="status-title ${colorClass}">${label} (0)</div>
+        <div class="empty-note">No shipments in this category.</div>
+      </div>`;
+      }
+
+      const blocks = shipments
+        .map(({ header, items, dispatch }) => {
+          const itemRows = items
+            .map(
+              (item) => `
+            <tr>
+              <td>${item.type_name || "-"}</td>
+              <td>${item.product_name || item.inventory_name || "-"}</td>
+              <td>${item.unit_name || "-"}</td>
+              <td class="text-center">${item.quantity}</td>
+            </tr>`,
+            )
+            .join("");
+
+          return `
+        <div class="shipment-block">
+          <div class="shipment-meta">
+            <div><strong>Ticket:</strong> ${header.ticket_number}</div>
+            <div><strong>Dispatch #:</strong> ${dispatch.dispatch_number || "-"}</div>
+             <div><strong>Store:</strong> ${header.store_name || "-"}</div>
+             <div><strong>Store Address:</strong> ${header.store_address || "-"}</div>
+            <div><strong>Priority:</strong> ${header.priority}</div>
+            <div><strong>Dispatch Date:</strong> ${dispatch.dispatch_date ? new Date(dispatch.dispatch_date).toLocaleString() : "-"}</div>
+            <div><strong>${dispatch.dispatch_status === "Delivered" ? "Delivered At" : "Est. Delivery"}:</strong>
+              ${
+                dispatch.dispatch_status === "Delivered"
+                  ? dispatch.delivered_at
+                    ? new Date(dispatch.delivered_at).toLocaleString()
+                    : "-"
+                  : dispatch.estimated_delivery
+                    ? new Date(dispatch.estimated_delivery).toLocaleString()
+                    : "-"
+              }
+            </div>
+            <div><strong>Helper:</strong> ${dispatch.helper_name || "-"}</div>
+          </div>
+          <table class="print-table">
+            <thead>
+              <tr><th>Type</th><th>Item</th><th>Unit</th><th>Qty</th></tr>
+            </thead>
+            <tbody>${itemRows}</tbody>
+          </table>
+          ${dispatch.remarks ? `<div class="remarks"><strong>Remarks:</strong> ${dispatch.remarks}</div>` : ""}
+        </div>`;
+        })
+        .join("<hr class='shipment-divider'>");
+
+      return `
+    <div class="status-section">
+      <div class="status-title ${colorClass}">${label} (${shipments.length})</div>
+      ${blocks}
+    </div>`;
+    }
+
+    function openPrintWindow(html) {
+      const printWindow = window.open("", "_blank", "width=900,height=700");
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+      };
+    }
+
+    function printShipmentsByTickets(ticketNumbers) {
+      if (!ticketNumbers || ticketNumbers.length === 0) {
+        showToast("info", "No assigned shipments found.");
+        return;
+      }
+
+      fetchShipmentDetails(ticketNumbers).then((results) => {
+        const grouped = groupByDriver(results);
+        if (Object.keys(grouped).length === 0) {
+          showToast("info", "No dispatch records found for these shipments.");
+          return;
+        }
+
+        openPrintWindow(buildDriverPrintHtml(grouped));
+      });
+    }
+
+    /* ============================================================
+   EXPORT ASSIGNED SHIPMENTS TO EXCEL (styled, grouped by driver)
+   ============================================================ */
+    $(document).on("click", "#exportAssignedExcelBtn", function () {
+      const assignedTickets = allShipments
+        .filter((s) => Number(s.is_assigned) === 1)
+        .map((s) => s.ticket_number);
+
+      if (assignedTickets.length === 0) {
+        showToast("info", "No assigned shipments found.");
+        return;
+      }
+
+      Swal.fire({
+        title: "Loading drivers...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
+
+      fetchShipmentDetails(assignedTickets).then((results) => {
+        Swal.close();
+
+        const grouped = groupByDriver(results);
+        const driverKeys = Object.keys(grouped);
+
+        if (driverKeys.length === 0) {
+          showToast("info", "No dispatch records found for these shipments.");
+          return;
+        }
+
+        showExcelDriverPicker(grouped);
+      });
+    });
+
+    // Interactive picker (dropdowns + confirm) — stays a SweetAlert
+    // dialog, since a toast can't hold form inputs.
+    function showExcelDriverPicker(driverGroups) {
+      const entries = Object.entries(driverGroups);
+
+      let optionsHtml = `<option value="__all__">All Drivers (${entries.length})</option>`;
+      entries.forEach(([key, group]) => {
+        optionsHtml += `<option value="${key}">${group.driverLabel} (${group.shipments.length} shipment${group.shipments.length > 1 ? "s" : ""})</option>`;
+      });
+
+      Swal.fire({
+        title: "Export Assigned Shipments",
+        html: `
+      <div class="text-start">
+        <label for="excelDriverSelect" class="form-label small text-muted mb-1">Select Driver</label>
+        <select id="excelDriverSelect" class="form-select mb-2">
+          ${optionsHtml}
+        </select>
+
+        <label for="excelStatusSelect" class="form-label small text-muted mb-1">Delivery Status</label>
+        <select id="excelStatusSelect" class="form-select">
+          <option value="__all__">All (Pending + Delivered)</option>
+          <option value="pending">Pending / In Transit only</option>
+          <option value="delivered">Delivered only</option>
+        </select>
+      </div>
+    `,
+        showCancelButton: true,
+        confirmButtonText: `<i class="bi bi-file-earmark-excel"></i> Export`,
+        confirmButtonColor: "#198754",
+        focusConfirm: false,
+        preConfirm: () => ({
+          driverKey: document.getElementById("excelDriverSelect").value,
+          statusFilter: document.getElementById("excelStatusSelect").value,
+        }),
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const { driverKey, statusFilter } = result.value;
+
+        const base =
+          driverKey === "__all__"
+            ? driverGroups
+            : { [driverKey]: driverGroups[driverKey] };
+
+        const finalGroups = filterGroupsByStatus(base, statusFilter);
+
+        if (Object.keys(finalGroups).length === 0) {
+          showToast("info", "No shipments match that filter.");
+          return;
+        }
+
+        buildShipmentWorkbook(finalGroups);
+      });
+    }
+
+    const STATUS_FILL = {
+      Pending: "FFFFF3CD",
+      "In Transit": "FFCFF4FC",
+      Dispatched: "FFE2E3E5",
+      Delivered: "FFD1E7DD",
+      Cancelled: "FFF8D7DA",
+    };
+    const STATUS_FONT = {
+      Pending: "FF664D03",
+      "In Transit": "FF055160",
+      Dispatched: "FF41464B",
+      Delivered: "FF0F5132",
+      Cancelled: "FF842029",
+    };
+
+    const HEADER_FILL = "FF198754";
+    const HEADER_FONT = "FFFFFFFF";
+    const THIN_BORDER = {
+      top: { style: "thin", color: { argb: "FFD0D0D0" } },
+      left: { style: "thin", color: { argb: "FFD0D0D0" } },
+      bottom: { style: "thin", color: { argb: "FFD0D0D0" } },
+      right: { style: "thin", color: { argb: "FFD0D0D0" } },
+    };
+
+    const _measureCanvas = document.createElement("canvas");
+    const _measureCtx = _measureCanvas.getContext("2d");
+
+    function countWrappedLines(text, pixelWidth, font) {
+      if (!text) return 1;
+
+      _measureCtx.font = font;
+
+      const words = String(text).split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 1;
+
+      let lines = 1;
+      let currentLineWidth = 0;
+      const spaceWidth = _measureCtx.measureText(" ").width;
+
+      for (const word of words) {
+        const wordWidth = _measureCtx.measureText(word).width;
+
+        if (wordWidth > pixelWidth) {
+          lines += Math.ceil(wordWidth / pixelWidth);
+          currentLineWidth = 0;
+          continue;
+        }
+
+        const testWidth =
+          currentLineWidth === 0
+            ? wordWidth
+            : currentLineWidth + spaceWidth + wordWidth;
+
+        if (testWidth > pixelWidth) {
+          lines++;
+          currentLineWidth = wordWidth;
+        } else {
+          currentLineWidth = testWidth;
+        }
+      }
+
+      return lines;
+    }
+
+    function excelColWidthToPixels(charWidth) {
+      const rawPixels = charWidth * 7 + 5;
+      const CELL_PADDING = 10;
+      const SAFETY_FACTOR = 0.92;
+      return Math.floor((rawPixels - CELL_PADDING) * SAFETY_FACTOR);
+    }
+
+    function filterGroupsByStatus(driverGroups, statusFilter) {
+      if (statusFilter === "__all__") return driverGroups;
+
+      const filtered = {};
+
+      Object.entries(driverGroups).forEach(([key, group]) => {
+        const shipments = group.shipments.filter((s) => {
+          const isDelivered = s.dispatch.dispatch_status === "Delivered";
+          return statusFilter === "delivered" ? isDelivered : !isDelivered;
+        });
+
+        if (shipments.length > 0) {
+          filtered[key] = { ...group, shipments };
+        }
+      });
+
+      return filtered;
+    }
+
+    async function buildShipmentWorkbook(driverGroups) {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Shipment System";
+      workbook.created = new Date();
+
+      const FONT_SPEC = "11px Calibri, Arial, sans-serif";
+
+      const columns = [
+        { header: "Ticket #", key: "ticket", width: 14 },
+        { header: "Dispatch #", key: "dispatch", width: 16 },
+        { header: "Store", key: "store", width: 24 },
+        { header: "Priority", key: "priority", width: 10 },
+        { header: "Type", key: "type", width: 25 },
+        { header: "Item", key: "item", width: 26 },
+        { header: "Unit", key: "unit", width: 10 },
+        { header: "Qty", key: "qty", width: 8 },
+        { header: "Status", key: "status", width: 14 },
+        { header: "Dispatch Date", key: "dispatchDate", width: 25 },
+        { header: "Est. / Delivered", key: "deliveryDate", width: 25 },
+        { header: "Helper", key: "helper", width: 16 },
+        { header: "Remarks", key: "remarks", width: 24 },
+      ];
+
+      for (const group of Object.values(driverGroups)) {
+        const safeName = group.driverLabel
+          .replace(/[\[\]\*\?\/\\:]/g, "")
+          .slice(0, 31);
+
+        const sheet = workbook.addWorksheet(safeName || "Driver", {
+          views: [{ state: "frozen", ySplit: 3 }],
+          pageSetup: {
+            orientation: "landscape",
+            paperSize: 9,
+            fitToPage: true,
+            fitToWidth: 1,
+            fitToHeight: 0,
+            margins: {
+              left: 0.4,
+              right: 0.4,
+              top: 0.5,
+              bottom: 0.6,
+              header: 0.2,
+              footer: 0.3,
+            },
+            horizontalCentered: true,
+          },
+        });
+
+        sheet.columns = columns;
+        sheet.pageSetup.printTitlesRow = "3:3";
+
+        sheet.headerFooter = {
+          oddHeader: `&L&8Shipment Report — ${group.driverLabel}&R&8Generated: ${new Date().toLocaleString()}`,
+          oddFooter: `&C&8Page &P of &N&R&8Confidential — Internal Use Only`,
+        };
+        sheet.columns = columns;
+        sheet.pageSetup.printTitlesRow = "3:3";
+
+        sheet.mergeCells(1, 1, 1, columns.length);
+        const titleCell = sheet.getCell(1, 1);
+        titleCell.value = `Assigned Shipments — ${group.driverLabel}`;
+        titleCell.font = { bold: true, size: 14, color: { argb: HEADER_FONT } };
+        titleCell.alignment = { vertical: "middle", horizontal: "center" };
+        titleCell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: HEADER_FILL },
+        };
+        sheet.getRow(1).height = 26;
+
+        sheet.mergeCells(2, 1, 2, columns.length);
+        const subCell = sheet.getCell(2, 1);
+        subCell.value = `Vehicle: ${group.vehicleLabel}   |   Generated: ${new Date().toLocaleString()}`;
+        subCell.font = { italic: true, size: 10, color: { argb: "FF555555" } };
+        subCell.alignment = { vertical: "middle", horizontal: "center" };
+
+        const headerRow = sheet.getRow(3);
+        columns.forEach((col, i) => {
+          const cell = headerRow.getCell(i + 1);
+          cell.value = col.header;
+          cell.font = { bold: true, color: { argb: HEADER_FONT } };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: HEADER_FILL },
+          };
+          cell.border = THIN_BORDER;
+          cell.alignment = {
+            vertical: "middle",
+            horizontal: "center",
+            wrapText: true,
+          };
+        });
+        headerRow.height = 20;
+
+        let rowIndex = 4;
+        group.shipments.forEach(({ header, items, dispatch }) => {
+          items.forEach((item, itemIdx) => {
+            const row = sheet.getRow(rowIndex);
+            row.values = {
+              ticket: header.ticket_number,
+              dispatch: dispatch.dispatch_number || "-",
+              store: header.store_name || "-",
+              priority: header.priority,
+              type: item.type_name || "-",
+              item: item.product_name || item.inventory_name || "-",
+              unit: item.unit_name || "-",
+              qty: item.quantity,
+              status: dispatch.dispatch_status || "-",
+              dispatchDate: dispatch.dispatch_date
+                ? new Date(dispatch.dispatch_date).toLocaleString()
+                : "-",
+              deliveryDate:
+                dispatch.dispatch_status === "Delivered"
+                  ? dispatch.delivered_at
+                    ? new Date(dispatch.delivered_at).toLocaleString()
+                    : "-"
+                  : dispatch.estimated_delivery
+                    ? new Date(dispatch.estimated_delivery).toLocaleString()
+                    : "-",
+              helper: dispatch.helper_name || "-",
+              remarks: itemIdx === 0 ? dispatch.remarks || "" : "",
+            };
+
+            const bandFill = rowIndex % 2 === 0 ? "FFF7F7F7" : "FFFFFFFF";
+
+            columns.forEach((col, i) => {
+              const cell = row.getCell(i + 1);
+              cell.border = THIN_BORDER;
+              cell.alignment = {
+                vertical: "middle",
+                horizontal: "center",
+                wrapText: true,
+              };
+              if (col.key !== "status") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: bandFill },
+                };
+              }
+            });
+
+            const statusCell = row.getCell(9);
+            statusCell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: {
+                argb: STATUS_FILL[dispatch.dispatch_status] || "FFF1F1F1",
+              },
+            };
+            statusCell.font = {
+              bold: true,
+              color: {
+                argb: STATUS_FONT[dispatch.dispatch_status] || "FF333333",
+              },
+            };
+            statusCell.alignment = {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            };
+
+            const estimatedLines = Math.max(
+              ...columns.map((col, i) => {
+                const value = row.getCell(i + 1).value;
+                const text = value ? String(value) : "";
+                const pixelWidth = excelColWidthToPixels(col.width);
+                return countWrappedLines(text, pixelWidth, FONT_SPEC);
+              }),
+            );
+
+            row.height = Math.min(150, Math.max(18, estimatedLines * 15 + 4));
+
+            rowIndex++;
+          });
+        });
+
+        sheet.autoFilter = {
+          from: { row: 3, column: 1 },
+          to: { row: 3, column: columns.length },
+        };
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const filename = `assigned-shipments-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      saveAs(blob, filename);
+    }
+
+    /* ============================================================
+   PRINT ASSIGNED — WITH DRIVER SELECTION
+   ============================================================ */
+    $(document).on("click", "#printAssignedBtn", function () {
+      const assignedTickets = allShipments
+        .filter((s) => Number(s.is_assigned) === 1)
+        .map((s) => s.ticket_number);
+
+      if (assignedTickets.length === 0) {
+        showToast("info", "No assigned shipments found.");
+        return;
+      }
+
+      Swal.fire({
+        title: "Loading drivers...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
+
+      fetchShipmentDetails(assignedTickets).then((results) => {
+        Swal.close();
+
+        const grouped = groupByDriver(results);
+        const driverKeys = Object.keys(grouped);
+
+        if (driverKeys.length === 0) {
+          showToast("info", "No dispatch records found for these shipments.");
+          return;
+        }
+
+        showDriverPicker(grouped);
+      });
+    });
+
+    function showDriverPicker(driverGroups) {
+      const entries = Object.entries(driverGroups);
+
+      let optionsHtml = `<option value="__all__">All Drivers (${entries.length})</option>`;
+      entries.forEach(([key, group]) => {
+        optionsHtml += `<option value="${key}">${group.driverLabel} (${group.shipments.length} shipment${group.shipments.length > 1 ? "s" : ""})</option>`;
+      });
+
+      Swal.fire({
+        title: "Print Assigned Shipments",
+        html: `
+      <div class="text-start">
+        <label for="printDriverSelect" class="form-label small text-muted mb-1">Select Driver</label>
+        <select id="printDriverSelect" class="form-select mb-2">
+          ${optionsHtml}
+        </select>
+
+        <label for="printStatusSelect" class="form-label small text-muted mb-1">Delivery Status</label>
+        <select id="printStatusSelect" class="form-select">
+          <option value="__all__">All (Pending + Delivered)</option>
+          <option value="pending">Pending / In Transit only</option>
+          <option value="delivered">Delivered only</option>
+        </select>
+      </div>
+    `,
+        showCancelButton: true,
+        confirmButtonText: `<i class="bi bi-printer"></i> Print`,
+        confirmButtonColor: "#198754",
+        focusConfirm: false,
+        preConfirm: () => ({
+          driverKey: document.getElementById("printDriverSelect").value,
+          statusFilter: document.getElementById("printStatusSelect").value,
+        }),
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const { driverKey, statusFilter } = result.value;
+
+        const base =
+          driverKey === "__all__"
+            ? driverGroups
+            : { [driverKey]: driverGroups[driverKey] };
+
+        const finalGroups = filterGroupsByStatus(base, statusFilter);
+
+        if (Object.keys(finalGroups).length === 0) {
+          showToast("info", "No shipments match that filter.");
+          return;
+        }
+
+        openPrintWindow(buildDriverPrintHtml(finalGroups));
+      });
+    }
+
+    // ==============================
+    // VIEW SHIPMENT
+    // ==============================
+    $(document).on("click", ".viewShipmentBtn", function () {
+      viewShipment($(this).data("ticket"));
+    });
+
+    // ==============================
+    // EDIT SHIPMENT
+    // ==============================
+    $(document).on("click", ".editShipmentBtn", function () {
+      editShipment($(this).data("ticket"));
+    });
+
+    // ==============================
+    // NEW SHIPMENT REQUEST FORM (items + save)
+    // ==============================
+    function addItem() {
+      const typeId = $("#typeSelect").val();
+      const typeName = $("#typeSelect option:selected").text();
+      const productId = $("#productSelect").val();
+      const productName = $("#productSelect option:selected").text();
+      const unitId = $("#unitSelect").val();
+      const unitName = $("#unitSelect option:selected").text();
+      const quantity = parseFloat($("#quantity").val());
+
+      if (!typeId || !productId || !unitId || quantity <= 0) {
+        showToast("warning", "Please complete all item details.");
+        return;
+      }
+
+      const exists = requestItems.find((item) => item.productId == productId);
+      if (exists) {
+        showToast("warning", "This item has already been added.");
+        return;
+      }
+
+      requestItems.push({
+        typeId,
+        typeName,
+        productId,
+        productName,
+        unitId,
+        unitName,
+        quantity,
+      });
+      renderItems();
+
+      $("#productSelect").val("");
+      $("#unitSelect").val("");
+      $("#quantity").val("");
+      validateItemFields();
+    }
+
+    function renderItems() {
+      let html = "";
+
+      if (requestItems.length === 0) {
+        html = `
+        <tr>
+          <td colspan="5" class="text-center text-muted py-4">
+            <i class="bi bi-cart-x fs-3"></i><br>
+            No items added yet.
+          </td>
+        </tr>
+      `;
+      } else {
+        requestItems.forEach((item, index) => {
+          html += `
+          <tr>
+            <td>${item.typeName}</td>
+            <td>${item.productName}</td>
+            <td>${item.unitName}</td>
+            <td width="120">
+              <input type="number" min="1" class="form-control quantityInput" data-index="${index}" value="${item.quantity}">
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn btn-danger btn-sm removeItemBtn" data-index="${index}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        });
+      }
+
+      $("#requestItemsBody").html(html);
+    }
+
+    function validateItemFields() {
+      const typeId = $("#typeSelect").val();
+      const productId = $("#productSelect").val();
+      const unitId = $("#unitSelect").val();
+      const quantity = $("#quantity").val();
+      const complete =
+        typeId && productId && unitId && quantity && parseFloat(quantity) > 0;
+
+      $("#addItemBtn").prop("disabled", !complete);
+      $("#addItemBtn")
+        .toggleClass("btn-success", !!complete)
+        .toggleClass("btn-secondary", !complete);
+    }
+
+    function saveShipment() {
+      if ($("#storeSelect").val() == "") {
+        showToast("warning", "Please select a store.");
+        return;
+      }
+      if ($("#priority").val() == "") {
+        showToast("warning", "Please select a priority.");
+        return;
+      }
+      if (requestItems.length === 0) {
+        showToast("warning", "Please add at least one item.");
+        return;
+      }
+
+      const invalidQty = requestItems.find(
+        (item) => !item.quantity || Number(item.quantity) <= 0,
+      );
+      if (invalidQty) {
+        showToast("warning", "All quantities must be greater than zero.");
+        return;
+      }
+
+      const data = {
+        request_type: $("#requestType").val(),
+        ticket_number: $("#ticket_number").val(),
+        store_id: $("#storeSelect").val(),
+        priority: $("#priority").val(),
+        notes: $("#notes").val(),
+        items: requestItems,
+      };
+
+      $.ajax({
+        url: "/shipmentRequest/add-shipment",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+
+        beforeSend: function () {
+          $("#saveShipmentBtn").prop("disabled", true).html(`
+          <span class="spinner-border spinner-border-sm me-2"></span> Saving...
+        `);
+        },
+
+        success: function (res) {
+          showToast("success", res.message || "Shipment saved successfully.");
+
+          loadShipments(function () {
+            $("#shipmentId").val(res.shipment.shipment_id);
+            $("#ticketNumber").val(res.shipment.ticket_number);
+            $("#dispatchNumber").val(res.shipment.dispatch_number);
+            $("#shipmentPriority").val(res.shipment.priority);
+
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            $("#dispatchDate").val(now.toISOString().slice(0, 16));
+
+            loadDrivers();
+            loadVehicles();
+
+            const shipmentModal = bootstrap.Modal.getInstance(
+              document.getElementById("addShipmentRequestModal"),
+            );
+            shipmentModal.hide();
+
+            $("#addShipmentRequestModal").one("hidden.bs.modal", function () {
+              requestItems = [];
+              editingRowIndex = -1;
+              renderItems();
+
+              $("#shipmentRequestForm")[0].reset();
+              $("#ticket_number")
+                .val("")
+                .prop("disabled", true)
+                .prop("readonly", true);
+
+              $("#productSelect").empty();
+              $("#unitSelect").empty();
+              $("#quantity").val("");
+
+              loadProducts();
+              validateItemFields();
+
+              bootstrap.Modal.getOrCreateInstance(
+                document.getElementById("assignModal"),
+              ).show();
+            });
+          });
+        },
+
+        error: function (xhr) {
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to save shipment.",
+          );
+        },
+
+        complete: function () {
+          $("#saveShipmentBtn").prop("disabled", false).html(`
+          <i class="bi bi-save me-1"></i> Save Shipment
+        `);
+        },
+      });
+    }
+
+    // ==============================
+    // POST-CREATE "ASSIGN" MODAL (#assignModal)
+    // ==============================
+    function loadDrivers() {
+      $.ajax({
+        url: "/shipmentRequest/drivers/list",
+        type: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Driver</option>`;
+          if (res.length === 0) {
+            options += `<option disabled>No available drivers</option>`;
+          } else {
+            res.forEach((driver) => {
+              options += `<option value="${driver.id}">${driver.driver_code} - ${driver.driver_name}</option>`;
+            });
+          }
+          $("#driverSelect").html(options);
+        },
+        error: function () {
+          showToast("error", "Unable to load drivers.");
+        },
+      });
+    }
+
+    function loadVehicles() {
+      $.ajax({
+        url: "/shipmentRequest/vehicles/list",
+        type: "GET",
+        success: function (res) {
+          let options = `<option value="">Select Vehicle</option>`;
+          if (res.length === 0) {
+            options += `<option disabled>No available vehicles</option>`;
+          } else {
+            res.forEach((vehicle) => {
+              options += `<option value="${vehicle.id}">${vehicle.vehicle_code} (${vehicle.plate_number})</option>`;
+            });
+          }
+          $("#vehicleSelect").html(options);
+        },
+        error: function () {
+          showToast("error", "Unable to load vehicles.");
+        },
+      });
+    }
+
+    $("#btnSaveAssignment").click(function () {
+      const data = {
+        shipment_id: $("#shipmentId").val(),
+        dispatch_number: $("#dispatchNumber").val(),
+        driver_id: $("#driverSelect").val(),
+        vehicle_id: $("#vehicleSelect").val(),
+        helper_name: $("#helperName").val(),
+        dispatch_date: $("#dispatchDate").val(),
+        estimated_delivery: $("#estimatedDelivery").val(),
+        remarks: $("#assignmentRemarks").val(),
+      };
+
+      if (!data.shipment_id) {
+        showToast("warning", "Shipment ID is missing.");
+        return;
+      }
+      if (!data.driver_id) {
+        showToast("warning", "Please select a driver.");
+        return;
+      }
+      if (!data.vehicle_id) {
+        showToast("warning", "Please select a vehicle.");
+        return;
+      }
+
+      $.ajax({
+        url: "/shipmentDispatch/assign",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+
+        beforeSend: function () {
+          $("#btnSaveAssignment").prop("disabled", true).html(`
+          <span class="spinner-border spinner-border-sm"></span> Saving...
+        `);
+        },
+
+        success: function (res) {
+          showToast("success", res.message || "Assignment saved.");
+          bootstrap.Modal.getInstance(
+            document.getElementById("assignModal"),
+          ).hide();
+          loadShipments();
+        },
+
+        error: function (xhr) {
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to save assignment.",
+          );
+        },
+
+        complete: function () {
+          $("#btnSaveAssignment").prop("disabled", false).html(`
+          <i class="bi bi-check-circle"></i> Save Assignment
+        `);
+        },
+      });
+    });
+
+    // ==============================
+    // EVENTS
+    // ==============================
+    function bindEvents() {
+      $("#typeSelect").change(function () {
+        const text = $("#typeSelect option:selected").text().toLowerCase();
+        if (text.includes("non-serialized")) {
+          $("#unitGroup").removeClass("d-none");
+        } else {
+          $("#unitGroup").addClass("d-none");
+          $("#unitSelect").val("");
+        }
+        validateItemFields();
+      });
+
+      $("#addItemBtn").click(addItem);
+
+      $("#shipmentRequestForm").submit(function (e) {
+        e.preventDefault();
+        saveShipment();
+      });
+
+      $(document).on("click", ".removeItemBtn", function () {
+        requestItems.splice($(this).data("index"), 1);
+        renderItems();
+      });
+
+      $(document).on("input", ".quantityInput", function () {
+        const index = $(this).data("index");
+        const qty = parseFloat($(this).val());
+        if (qty > 0) requestItems[index].quantity = qty;
+      });
+
+      $("#productSelect").on("change", validateItemFields);
+      $("#unitSelect").on("change", validateItemFields);
+      $("#quantity").on("keyup change", validateItemFields);
+
+      $("#requestType").change(function () {
+        const type = $(this).val();
+        $(
+          "#targetBranchGroup, #storeGroup, #ticketGroup, #customerGroup, #unitGroup",
+        ).addClass("d-none");
+
+        if (type == "1") {
+          $("#storeGroup, #ticketGroup").removeClass("d-none");
+        } else if (type == "2") {
+          $("#targetBranchGroup").removeClass("d-none");
+        } else if (type == "3") {
+          $("#customerGroup, #unitGroup").removeClass("d-none");
+        }
+      });
+
+      $("#searchShipment").on("keyup", applyFilters);
+      $("#filterPriority").change(applyFilters);
+      $("#filterStatus").change(applyFilters);
+
+      $(document).on("click", "#previousPage", function (e) {
+        e.preventDefault();
+        if (currentPage > 1) {
+          currentPage--;
+          renderShipmentTable();
+        }
+      });
+
+      $(document).on("click", "#nextPage", function (e) {
+        e.preventDefault();
+        const totalPages = Math.ceil(filteredShipments.length / rowsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderShipmentTable();
+        }
+      });
+
+      $(document).on("click", ".pageNumber", function (e) {
+        e.preventDefault();
+        currentPage = Number($(this).data("page"));
+        renderShipmentTable();
+      });
+
+      $(document).on("click", "#printBarcodeBtn", function () {
+        const svg = document.getElementById("viewBarcodeSvg").outerHTML;
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
+    <html>
+      <head><title>Print Barcode</title></head>
+      <body style="text-align:center; margin-top:40px;">
+        ${svg}
+      </body>
+    </html>
+  `);
+        printWindow.document.close();
+        printWindow.print();
+      });
+    }
+  });
+
+  // Keep it focused by default so scans land here without clicking first
+  $("#barcodeScanInput").trigger("focus");
+  $(document).on("click", function (e) {
+    if (!$(e.target).is("input, textarea, select, button, .btn")) {
+      $("#barcodeScanInput").trigger("focus");
+    }
+  });
+
+  $("#barcodeScanInput").on("keypress", function (e) {
+    if (e.which === 13) {
+      e.preventDefault();
+      submitBarcodeInput();
+    }
+  });
+
+  $(document).on("click", "#barcodeSubmitBtn", function () {
+    submitBarcodeInput();
+  });
+
+  function submitBarcodeInput() {
+    const scannedValue = $("#barcodeScanInput").val().trim();
+    $("#barcodeScanInput").val("");
+    handleBarcodeScan(scannedValue);
+  }
+
+  function showToast(icon, message) {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: icon, // 'success' | 'error' | 'warning' | 'info'
+      title: message,
+      showConfirmButton: false,
+      timer: 2200,
+      timerProgressBar: true,
+    });
+  }
+
+  function handleBarcodeScan(barcodeValue) {
+    if (!barcodeValue) return;
+
+    const shipment = allShipments.find(
+      (x) => String(x.barcode) === barcodeValue,
+    );
+
+    if (!shipment) {
+      showToast("error", `No shipment found for barcode: ${barcodeValue}`);
+      flashScanInput("danger");
+      return;
+    }
+
+    if (Number(shipment.is_assigned) === 1) {
+      showToast("warning", `${shipment.ticket_number} is already assigned.`);
+      flashScanInput("warning");
+      return;
+    }
+
+    flashScanInput("success");
+    showToast(
+      "success",
+      `Scanned ${shipment.ticket_number} — opening assignment...`,
+    );
+
+    openAssignShipmentModal(
+      shipment.shipment_id,
+      shipment.ticket_number,
+      shipment.priority,
+    );
+  }
+
+  function flashScanInput(type) {
+    const input = $("#barcodeScanInput");
+    const cls = type === "success" ? "is-valid" : "is-invalid";
+    input.addClass(cls);
+    setTimeout(() => input.removeClass(cls), 600);
+  }
+
+  // ==============================
+  // BULK SELECTION
+  // ==============================
+  $(document).on("change", "#selectAllShipments", function () {
+    $(".shipmentCheckbox").prop("checked", $(this).is(":checked"));
+    updateBulkAssignState();
+  });
+
+  $(document).on("change", ".shipmentCheckbox", updateBulkAssignState);
+
+  function updateBulkAssignState() {
+    const count = $(".shipmentCheckbox:checked").length;
+    $("#bulkAssignBtn").prop("disabled", count === 0);
+    $("#selectedCountLabel").text(count > 0 ? `${count} selected` : "");
+  }
+
+  $("#bulkAssignBtn").click(function () {
+    const selectedIds = $(".shipmentCheckbox:checked")
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    if (selectedIds.length === 0) return;
+
+    $("#bulkAssignSummary").text(
+      `Assigning ${selectedIds.length} shipment(s) to one driver and vehicle.`,
+    );
+    $(
+      "#bulkDispatchDate, #bulkEstimatedDelivery, #bulkHelperName, #bulkRemarks",
+    ).val("");
+
+    $("#bulkAssignDriver").html(`<option value="">Loading...</option>`);
+    $("#bulkAssignVehicle").html(`<option value="">Loading...</option>`);
+
+    $.when(
+      $.get("/shipmentRequest/drivers/list"),
+      $.get("/shipmentRequest/vehicles/list"),
+    ).done(function (driverRes, vehicleRes) {
+      const drivers = driverRes[0];
+      const vehicles = vehicleRes[0];
+
+      let driverOptions = `<option value="">Select Driver</option>`;
+      drivers.forEach((d) => {
+        driverOptions += `<option value="${d.id}">${d.driver_code} - ${d.driver_name}</option>`;
+      });
+      $("#bulkAssignDriver").html(driverOptions);
+
+      let vehicleOptions = `<option value="">Select Vehicle</option>`;
+      vehicles.forEach((v) => {
+        vehicleOptions += `<option value="${v.id}">${v.vehicle_code} (${v.plate_number})</option>`;
+      });
+      $("#bulkAssignVehicle").html(vehicleOptions);
+    });
+
+    bootstrap.Modal.getOrCreateInstance(
+      document.getElementById("bulkAssignModal"),
+    ).show();
+  });
+
+  $("#saveBulkAssignBtn").click(function () {
+    const selectedIds = $(".shipmentCheckbox:checked")
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    const driverId = $("#bulkAssignDriver").val();
+    const vehicleId = $("#bulkAssignVehicle").val();
+    const dispatchDate = $("#bulkDispatchDate").val();
+    const estimatedDelivery = $("#bulkEstimatedDelivery").val();
+    const helperName = $("#bulkHelperName").val();
+    const remarks = $("#bulkRemarks").val();
+
+    if (!driverId) {
+      showToast("warning", "Please select a driver.");
+      return;
+    }
+    if (!vehicleId) {
+      showToast("warning", "Please select a vehicle.");
+      return;
+    }
+    if (!dispatchDate) {
+      showToast("warning", "Please set a dispatch date.");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      showToast("warning", "No shipments selected.");
+      return;
+    }
+
+    $.ajax({
+      url: "/shipmentDispatch/assign",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        shipment_ids: selectedIds,
+        dispatch_number: generateDispatchNumber(selectedIds[0]),
+        driver_id: driverId,
+        vehicle_id: vehicleId,
+        helper_name: helperName,
+        dispatch_date: dispatchDate,
+        estimated_delivery: estimatedDelivery,
+        remarks: remarks,
+      }),
+
+      beforeSend: function () {
+        $("#saveBulkAssignBtn").prop("disabled", true).html(`
+        <span class="spinner-border spinner-border-sm"></span> Assigning...
+      `);
+      },
+      success: function (res) {
+        $("#bulkAssignModal").modal("hide");
+        $("#selectAllShipments").prop("checked", false);
+
+        showToast("success", res.message || "Shipments assigned.");
+
+        const tickets = allShipments
+          .filter((s) => selectedIds.includes(String(s.shipment_id)))
+          .map((s) => s.ticket_number);
+        printShipmentsByTickets(tickets);
+
+        loadShipments();
+      },
+
+      error: function (xhr) {
+        showToast(
+          "error",
+          xhr.responseJSON?.message || "Unable to assign shipments.",
+        );
+      },
+
+      complete: function () {
+        $("#saveBulkAssignBtn").prop("disabled", false).html(`
+        <i class="bi bi-check-circle me-1"></i> Assign All
+      `);
+      },
+    });
+  });
+
+  /* ============================================================
+   VIEW SHIPMENT
+   ============================================================ */
+  function viewShipment(ticket) {
+    $("#viewItemsBody").html(`
+    <tr>
+      <td colspan="5" class="text-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary"></div>
+        <br><br>
+        Loading shipment...
+      </td>
+    </tr>
+  `);
+
+    $.ajax({
+      url: "/shipmentRequest/get-shipment/" + ticket,
+      type: "GET",
+      cache: false,
+
+      success: function (res) {
+        const shipment = res.header;
+        const items = res.items || [];
+        const dispatch = res.dispatch || null;
+        const statusColors = {
+          Pending: "warning",
+          Approved: "primary",
+          Preparing: "info",
+          "In Transit": "info",
+          Dispatched: "dark",
+          Delivered: "success",
+          Rejected: "danger",
+          Cancelled: "danger",
+          Picked: "secondary",
+          Arrived: "info",
+        };
+        $("#viewTicketNumber").val(shipment.ticket_number);
+        $("#viewStore").val(shipment.store_name);
+        $("#viewPriority").val(shipment.priority);
+        $("#viewStatus").val(shipment.status);
+        $("#viewCreatedAt").val(new Date(shipment.created_at).toLocaleString());
+        $("#viewNotes").val(shipment.notes || "");
+
+        if (shipment.barcode) {
+          JsBarcode("#viewBarcodeSvg", shipment.barcode, {
+            format: "CODE128",
+            displayValue: true,
+            height: 60,
+          });
+          $("#viewBarcodeSvg").closest(".card").show();
+        } else {
+          $("#viewBarcodeSvg").closest(".card").hide();
+        }
+
+        let rows = "";
+        if (items.length === 0) {
+          rows = `
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+              <i class="bi bi-box-seam fs-3"></i><br><br>
+              No items found.
+            </td>
+          </tr>
+        `;
+        } else {
+          items.forEach((item, index) => {
+            const productName =
+              item.product_name ||
+              item.inventory_name ||
+              item.productName ||
+              "-";
+            rows += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.type_name || "-"}</td>
+              <td>${productName}</td>
+              <td>${item.unit_name || "-"}</td>
+              <td class="text-center">${item.quantity}</td>
+            </tr>
+          `;
+          });
+        }
+
+        if (dispatch) {
+          $("#viewDispatchSection").removeClass("d-none");
+
+          $("#viewDriver").val(
+            dispatch.driver_name
+              ? `${dispatch.driver_code || ""} - ${dispatch.driver_name}`.trim()
+              : "Not assigned",
+          );
+          $("#viewVehicle").val(
+            dispatch.vehicle_code
+              ? `${dispatch.vehicle_code} (${dispatch.plate_number || ""})`
+              : "Not assigned",
+          );
+
+          $("#viewDispatchStatus")
+            .text(dispatch.dispatch_status || "-")
+            .attr(
+              "class",
+              `badge rounded-pill px-3 py-2 bg-${statusColors[dispatch.dispatch_status] || "secondary"}`,
+            );
+
+          $("#viewDeliveredAt").val(
+            dispatch.delivered_at
+              ? new Date(dispatch.delivered_at).toLocaleString()
+              : "Not yet delivered",
+          );
+          $("#viewDispatchDate").val(
+            dispatch.dispatch_date
+              ? new Date(dispatch.dispatch_date).toLocaleString()
+              : "-",
+          );
+          $("#viewEstimatedDelivery").val(
+            dispatch.estimated_delivery
+              ? new Date(dispatch.estimated_delivery).toLocaleString()
+              : "-",
+          );
+          $("#viewDeliveryRemarks").val(dispatch.remarks || "");
+
+          if (dispatch.proof_photo_path) {
+            let photoPaths = [];
+            try {
+              const parsed = JSON.parse(dispatch.proof_photo_path);
+              photoPaths = Array.isArray(parsed)
+                ? parsed
+                : [dispatch.proof_photo_path];
+            } catch (e) {
+              photoPaths = [dispatch.proof_photo_path];
+            }
+
+            if (photoPaths.length > 0) {
+              $("#viewProofPhotoGrid").html(
+                photoPaths
+                  .map(
+                    (src) => `
+                  <img src="${src}"
+                    class="rounded border viewProofPhotoImg"
+                    style="width:140px;height:140px;object-fit:cover;cursor:zoom-in;">
+                `,
+                  )
+                  .join(""),
+              );
+              $("#viewProofPhotoGrid")
+                .find(".viewProofPhotoImg")
+                .on("click", function () {
+                  window.open(this.src, "_blank");
+                });
+              $("#viewProofPhotoGrid").show();
+              $("#viewProofPhotoEmpty").hide();
+            } else {
+              $("#viewProofPhotoGrid").hide().empty();
+              $("#viewProofPhotoEmpty").show();
+            }
+          } else {
+            $("#viewProofPhotoGrid").hide().empty();
+            $("#viewProofPhotoEmpty").show();
+          }
+        } else {
+          $("#viewDispatchSection").addClass("d-none");
+        }
+        $("#viewItemsBody").html(rows);
+        $("#viewShipmentModal").modal("show");
+      },
+
+      error: function (xhr) {
+        showToast(
+          "error",
+          xhr.responseJSON?.message || "Unable to load shipment.",
+        );
+      },
+    });
+  }
+
+  /* ============================================================
+   EDIT SHIPMENT MODAL
+
+   STEP 1 ("form"): normal item-editing UI + "Save Changes".
+   STEP 2 ("decision"): shown after a successful save, only when
+   the shipment is still Pending and not dispatched — footer swaps
+   to Approve / Reject instead of closing the modal outright.
+   Re-opening the modal (editShipment()) always resets to Step 1.
+   ============================================================ */
+  function editShipment(ticket) {
+    editShipmentId = null;
+    editTicketNumber = ticket;
+    editPriorityValue = null;
+    editItems = [];
+    editingRowIndex = -1;
+    editIsDispatched = false;
+    editStep = "form";
+
+    $("#editShipmentId").val("");
+    $("#editTicketNumber").val("");
+    $("#editPriority").val("");
+    $("#editNotes").val("");
+    $("#editRequestItemsBody").empty();
+    $("#editDispatchWarning").remove();
+    setEditLocked(false);
+    setEditModalStep("form");
+
+    $.ajax({
+      url: `/shipmentRequest/get-shipment/${ticket}`,
+      type: "GET",
+
+      beforeSend: function () {
+        $("#editShipmentModal").modal("show");
+        $("#editRequestItemsBody").html(`
+        <tr>
+          <td colspan="5" class="text-center">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Loading shipment...
+          </td>
+        </tr>
+      `);
+      },
+
+      success: function (res) {
+        const { header, items, dispatch } = res;
+
+        editShipmentId = header.shipment_id;
+        editTicketNumber = header.ticket_number;
+        editPriorityValue = header.priority;
+        editIsDispatched = !!dispatch;
+
+        $("#editShipmentId").val(header.shipment_id);
+        $("#editTicketNumber").val(header.ticket_number);
+        $("#editPriority").val(header.priority);
+        $("#editStatus").val(header.status);
+        $("#editNotes").val(header.notes);
+
+        loadEditStores(header.store_id);
+        loadEditTypes();
+        loadEditUnits();
+        loadEditProducts();
+
+        editItems = items.map((item) => ({
+          shipment_detail_id: item.shipment_detail_id,
+          shipment_id: item.shipment_id,
+          typeId: item.type_id,
+          typeName: item.type_name,
+          productId: item.product_id,
+          productName: item.product_name,
+          unitId: item.unit_id,
+          unitName: item.unit_name,
+          quantity: item.quantity,
+        }));
+
+        renderEditItems();
+        setEditLocked(editIsDispatched);
+
+        if (editIsDispatched) {
+          $("#editRequestItemsBody").closest("table").before(`
+            <div id="editDispatchWarning" class="alert alert-warning py-2 mb-2">
+              <i class="bi bi-lock-fill me-1"></i>
+              This shipment has already been dispatched and can no longer be edited.
+            </div>
+          `);
+        }
+      },
+
+      error: function (xhr) {
+        $("#editShipmentModal").modal("hide");
+        showToast(
+          "error",
+          xhr.responseJSON?.message || "Unable to load shipment.",
+        );
+      },
+    });
+  }
+
+  // Switches the edit modal's FOOTER between the item-editing step
+  // and the approve/reject decision step. Does not touch the body —
+  // the item form stays underneath, just visually locked, so the
+  // decision step still shows what was just saved.
+  function setEditModalStep(step) {
+    editStep = step;
+
+    if (step === "decision") {
+      $("#editFormFooterBtns").addClass("d-none");
+      $("#editDecisionFooterBtns").removeClass("d-none");
+      setEditLocked(true);
+    } else {
+      $("#editFormFooterBtns").removeClass("d-none");
+      $("#editDecisionFooterBtns").addClass("d-none");
+    }
+  }
+
+  function setEditLocked(locked) {
+    $(
+      "#editStoreSelect, #editPriority, #editStatus, #editNotes, " +
+        "#editTypeSelect, #editProductSelect, #editUnitSelect, #editQuantity, " +
+        "#editAddItemBtn, #updateShipmentBtn",
+    ).prop("disabled", locked);
+
+    $(".editItemRow, .removeItemRow").prop("disabled", locked);
+  }
+
+  function loadEditStores(selected = "") {
+    $.ajax({
+      url: "/store/get-stores",
+      method: "GET",
+      success: function (res) {
+        const stores = Array.isArray(res)
+          ? res
+          : (res.data ?? res.stores ?? []);
+
+        let options = `<option value="">Select Store</option>`;
+
+        stores.forEach((store) => {
+          options += `
+                    <option value="${store.id}">
+                        ${store.store_name} (${store.store_code})
+                    </option>
+                `;
+        });
+
+        $("#editStoreSelect").html(options);
+
+        if (selected) {
+          $("#editStoreSelect").val(String(selected));
+        }
+      },
+    });
+  }
+
+  function loadEditTypes(selected = "") {
+    $.ajax({
+      url: "/types/get-types",
+      method: "GET",
+      success: function (res) {
+        let options = `<option value="">Select Type</option>`;
+        res.forEach((type) => {
+          options += `<option value="${type.id}">${type.type_name}</option>`;
+        });
+        $("#editTypeSelect").html(options).val(selected);
+      },
+    });
+  }
+
+  function loadEditUnits(selected = "") {
+    $.ajax({
+      url: "/units/get-units",
+      method: "GET",
+      success: function (res) {
+        let options = `<option value="">Select Unit</option>`;
+        res.forEach((unit) => {
+          options += `<option value="${unit.id}">${unit.unit_name}</option>`;
+        });
+        $("#editUnitSelect").html(options).val(selected);
+      },
+    });
+  }
+
+  function loadEditProducts(selected = "") {
+    $.ajax({
+      url: "/products/get-products",
+      method: "GET",
+      success: function (res) {
+        let options = `<option value="">Select Item</option>`;
+        res.forEach((p) => {
+          options += `<option value="${p.id}">${p.inventory_name}</option>`;
+        });
+        $("#editProductSelect").html(options);
+        if (selected) $("#editProductSelect").val(selected);
+      },
+      error: function (xhr) {
+        console.log(xhr.responseText);
+      },
+    });
+  }
+
+  function renderEditItems() {
+    let rows = "";
+
+    if (editItems.length === 0) {
+      rows = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">No items found.</td>
+      </tr>
+    `;
+    } else {
+      editItems.forEach((item, index) => {
+        rows += `
+        <tr>
+          <td>${item.typeName ?? item.type_name ?? "-"}</td>
+          <td>${item.productName ?? item.product_name ?? item.inventory_name ?? "-"}</td>
+          <td>${item.unitName ?? item.unit_name ?? "-"}</td>
+          <td class="text-center">${item.quantity}</td>
+          <td class="text-center">
+            <button class="btn btn-warning btn-sm editItemRow" data-index="${index}" ${editIsDispatched ? "disabled" : ""}>
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-danger btn-sm removeItemRow" data-index="${index}" ${editIsDispatched ? "disabled" : ""}>
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      });
+    }
+
+    $("#editRequestItemsBody").html(rows);
+  }
+
+  function clearEditItemFields() {
+    $("#editTypeSelect").val("");
+    $("#editProductSelect").val("");
+    $("#editUnitSelect").val("");
+    $("#editQuantity").val("");
+  }
+
+  $(document).on("click", ".editItemRow", function () {
+    if (editIsDispatched) return;
+
+    editingRowIndex = $(this).data("index");
+    const item = editItems[editingRowIndex];
+
+    $("#editTypeSelect").val(item.typeId);
+    loadEditProducts(item.productId);
+    $("#editUnitSelect").val(item.unitId);
+    $("#editQuantity").val(item.quantity);
+
+    $("#editAddItemBtn")
+      .removeClass("btn-success")
+      .addClass("btn-primary")
+      .html(`<i class="bi bi-check-lg"></i> Update Item`);
+  });
+
+  $(document).on("click", ".removeItemRow", function () {
+    if (editIsDispatched) return;
+
+    editItems.splice($(this).data("index"), 1);
+    renderEditItems();
+  });
+
+  $("#editAddItemBtn").click(function () {
+    if (editIsDispatched) return;
+
+    if ($("#editProductSelect").val() == "") {
+      showToast("warning", "Please select a product.");
+      return;
+    }
+    if (
+      $("#editQuantity").val() == "" ||
+      Number($("#editQuantity").val()) <= 0
+    ) {
+      showToast("warning", "Please enter a valid quantity.");
+      return;
+    }
+
+    const duplicate = editItems.find((item, index) => {
+      return (
+        item.typeId == $("#editTypeSelect").val() &&
+        item.productId == $("#editProductSelect").val() &&
+        item.unitId == $("#editUnitSelect").val() &&
+        index !== editingRowIndex
+      );
+    });
+
+    if (duplicate) {
+      showToast("warning", "This product has already been added.");
+      return;
+    }
+
+    const item = {
+      typeId: $("#editTypeSelect").val(),
+      typeName: $("#editTypeSelect option:selected").text(),
+      productId: $("#editProductSelect").val(),
+      productName: $("#editProductSelect option:selected").text(),
+      unitId: $("#editUnitSelect").val(),
+      unitName: $("#editUnitSelect option:selected").text(),
+      quantity: Number($("#editQuantity").val()),
+    };
+
+    if (editingRowIndex === -1) {
+      editItems.push(item);
+    } else {
+      editItems[editingRowIndex] = item;
+      editingRowIndex = -1;
+      $("#editAddItemBtn")
+        .removeClass("btn-primary")
+        .addClass("btn-success")
+        .html(`<i class="bi bi-plus-lg"></i>`);
+    }
+
+    renderEditItems();
+    clearEditItemFields();
+  });
+
+  // "Save Changes" — saves the item edits. If the shipment is still
+  // Pending (and not dispatched), the footer swaps to Approve/Reject
+  // instead of closing the modal.
+  $("#updateShipmentBtn")
+    .off("click")
+    .on("click", function () {
+      if (editIsDispatched) {
+        showToast(
+          "warning",
+          "This shipment has already been dispatched and can no longer be edited.",
+        );
+        return;
+      }
+
+      if ($("#editStoreSelect").val() == "") {
+        showToast("warning", "Please select a store.");
+        return;
+      }
+      if ($("#editPriority").val() == "") {
+        showToast("warning", "Please select priority.");
+        return;
+      }
+      if ($("#editStatus").val() == "") {
+        showToast("warning", "Please select a status.");
+        return;
+      }
+      if (editItems.length === 0) {
+        showToast("warning", "Please add at least one item.");
+        return;
+      }
+
+      const invalidQty = editItems.find(
+        (item) => !item.quantity || item.quantity <= 0,
+      );
+      if (invalidQty) {
+        showToast("warning", "All quantities must be greater than zero.");
+        return;
+      }
+
+      editPriorityValue = $("#editPriority").val();
+
+      $.ajax({
+        url: "/shipmentRequest/update-shipment",
+        type: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify({
+          shipment_id: editShipmentId,
+          store_id: $("#editStoreSelect").val(),
+          priority: $("#editPriority").val(),
+          notes: $("#editNotes").val(),
+          status: $("#editStatus").val(),
+          items: editItems,
+        }),
+
+        beforeSend: function () {
+          $("#updateShipmentBtn")
+            .prop("disabled", true)
+            .html(
+              `<span class="spinner-border spinner-border-sm"></span> Saving...`,
+            );
+        },
+
+        success: function (res) {
+          showToast("success", res.message || "Shipment updated.");
+          window.loadShipments();
+
+          const statusNow = $("#editStatus").val();
+          if (statusNow === "Pending") {
+            // Move to the Approve/Reject decision step instead of closing.
+            setEditModalStep("decision");
+          } else {
+            document.activeElement.blur();
+            $("#editShipmentModal").modal("hide");
+            editItems = [];
+            editingRowIndex = -1;
+            renderEditItems();
+          }
+        },
+
+        error: function (xhr) {
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to update shipment.",
+          );
+        },
+
+        complete: function () {
+          $("#updateShipmentBtn")
+            .prop("disabled", false)
+            .html(`<i class="bi bi-save"></i> Save Changes`);
+        },
+      });
+    });
+
+  // Decision step — Approve: confirm, mark Approved, then hand off
+  // straight into the existing Assign Driver & Vehicle modal.
+  $(document).on("click", "#editApproveBtn", function () {
+    Swal.fire({
+      title: "Approve Shipment?",
+      text: `Ticket No. ${editTicketNumber}`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0dcaf0",
+      confirmButtonText: "Yes, Approve",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      $.ajax({
+        url: "/shipmentRequest/approve-shipment/" + editTicketNumber,
+        type: "PUT",
+        success: function (res) {
+          showToast("success", res.message || "Shipment approved.");
+
+          document.activeElement.blur();
+          $("#editShipmentModal").modal("hide");
+          window.loadShipments();
+
+          $("#editShipmentModal").one("hidden.bs.modal", function () {
+            // Bootstrap needs a beat to finish tearing down the previous
+            // modal's backdrop before a new one opens cleanly; combined
+            // with getOrCreateInstance() above, this avoids the
+            // "reading 'backdrop'" crash when this fires right after hide.
+            setTimeout(function () {
+              openAssignShipmentModal(
+                editShipmentId,
+                editTicketNumber,
+                editPriorityValue,
+              );
+            }, 50);
+          });
+        },
+        error: function (xhr) {
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to approve shipment.",
+          );
+        },
+      });
+    });
+  });
+
+  // Decision step — Reject: confirm, mark Rejected, close out.
+  $(document).on("click", "#editRejectBtn", function () {
+    Swal.fire({
+      title: "Reject Shipment?",
+      text: `Ticket No. ${editTicketNumber}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, Reject",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      $.ajax({
+        url: "/shipmentRequest/reject-shipment/" + editTicketNumber,
+        type: "PUT",
+        success: function (res) {
+          showToast("success", res.message || "Shipment rejected.");
+
+          document.activeElement.blur();
+          $("#editShipmentModal").modal("hide");
+          window.loadShipments();
+        },
+        error: function (xhr) {
+          showToast(
+            "error",
+            xhr.responseJSON?.message || "Unable to reject shipment.",
+          );
+        },
+      });
+    });
+  });
+
+  /* ============================================================
+   HELPERS
+   ============================================================ */
+  function generateDispatchNumber(shipmentId) {
+    const year = new Date().getFullYear();
+    return `DSP-${year}-${String(shipmentId).padStart(6, "0")}`;
+  }
+
+  function generateBarcode(shipmentId) {
+    return `SHP-${String(shipmentId).padStart(6, "0")}`;
+  }
+</script>
+ 

@@ -1,5 +1,5 @@
-
-<div class="container-fluid px-3 px-lg-4">
+<div class="container-fluid px-3 px-lg-4 d-flex align-items-center gap-3">
+  <!-- SIDEBAR TOGGLE -->
   <button
     class="sidebar-toggle"
     type="button"
@@ -13,7 +13,8 @@
     <span></span>
   </button>
 
-  <form class="d-none d-md-flex ms-3 flex-grow-1" role="search">
+  <!-- SEARCH -->
+  <form class="d-none d-md-flex flex-grow-1" role="search">
     <input
       class="form-control search-input"
       type="search"
@@ -22,7 +23,9 @@
     />
   </form>
 
-  <div class="navbar-actions ms-auto">
+  <!-- RIGHT ACTIONS -->
+  <div class="navbar-actions ms-auto d-flex align-items-center gap-2">
+    <!-- THEME TOGGLE -->
     <button
       class="icon-button theme-toggle"
       type="button"
@@ -30,57 +33,72 @@
       aria-label="Switch color theme"
       title="Switch color theme"
     >
-      <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+      <i class="bi bi-moon-stars" data-theme-icon></i>
     </button>
+
+    <!-- NOTIFICATIONS -->
     <div class="dropdown">
       <button
-        class="icon-button"
+        class="icon-button position-relative"
         type="button"
         data-bs-toggle="dropdown"
         aria-expanded="false"
         aria-label="Notifications"
       >
         <span class="notification-dot"></span>
-        <i class="bi bi-bell" aria-hidden="true"></i>
+        <i class="bi bi-bell"></i>
       </button>
-      <div class="dropdown-menu dropdown-menu-end notification-menu">
-        <div class="dropdown-header fw-bold text-body">Notifications</div>
-        <a class="dropdown-item" href="users.html">
-          <span class="notification-title">New user registered</span>
-          <span class="notification-time">4 minutes ago</span>
+
+      <div class="dropdown-menu dropdown-menu-end notification-menu p-0">
+        <div class="dropdown-header fw-bold px-3 py-2">Notifications</div>
+
+        <a class="dropdown-item py-2" href="/users">
+          <div class="notification-title">New user registered</div>
+          <small class="text-muted">4 minutes ago</small>
         </a>
-        <a class="dropdown-item" href="charts.html">
-          <span class="notification-title">Revenue target reached</span>
-          <span class="notification-time">32 minutes ago</span>
+
+        <a class="dropdown-item py-2" href="/charts">
+          <div class="notification-title">Revenue target reached</div>
+          <small class="text-muted">32 minutes ago</small>
         </a>
-        <a class="dropdown-item" href="settings.html">
-          <span class="notification-title">Security review completed</span>
-          <span class="notification-time">1 hour ago</span>
+
+        <a class="dropdown-item py-2" href="/settings">
+          <div class="notification-title">Security review completed</div>
+          <small class="text-muted">1 hour ago</small>
         </a>
       </div>
     </div>
 
+    <!-- PROFILE -->
     <div class="dropdown">
       <button
-        class="profile-button dropdown-toggle"
+        class="profile-button dropdown-toggle d-flex align-items-center gap-2"
         type="button"
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        <img
-          class="avatar-img avatar-sm"
-          src="../assets/images/avatar/xxx.jpg"
-          alt="Charles Darwin Magbanua"
-        />
-        Charles Darwin Magbanua
+        <span id="username" class="username-text">
+          <span class="username-full">Loading...</span>
+          <span class="username-initials">--</span>
+        </span>
       </button>
+
       <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="profile.html">Profile</a></li>
         <li>
-          <a class="dropdown-item" href="settings.html">Account settings</a>
+          <a class="dropdown-item" href="/profile"> Profile </a>
         </li>
+
+        <li>
+          <a class="dropdown-item" href="/settings"> Account settings </a>
+        </li>
+
         <li><hr class="dropdown-divider" /></li>
-        <li><a class="dropdown-item" href="/login">Sign out</a></li>
+
+        <li>
+          <a class="dropdown-item text-danger" href="/login/logout">
+            Sign out
+          </a>
+        </li>
       </ul>
     </div>
   </div>

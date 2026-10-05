@@ -1,12 +1,144 @@
-<div class="modal fade" id="trackingDateRangeModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title">
-          <i class="bi bi-calendar-range"></i>
-          Select Date Range
-        </h5>
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <!-- PANEL -->
+    <section class="panel">
+      <!-- HEADER -->
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
+      >
+        <div>
+          <h2 class="mb-0">
+            <i class="bi bi-geo-alt-fill"></i> Shipment Tracking
+          </h2>
+          <p class="text-muted mb-0">
+            Monitor shipment movement and delivery status in real time.
+          </p>
+        </div>
 
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-ghost btn-sm" id="syncBtn">
+            <i class="bi bi-arrow-repeat"></i> Sync
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" id="bulkImportBtn">
+            <i class="bi bi-upload"></i> Bulk Import
+          </button>
+          <input
+            type="file"
+            id="bulkImportFile"
+            accept=".xlsx,.xls,.csv"
+            class="d-none"
+          />
+          <button class="btn btn-outline-primary btn-sm" id="exportExcelBtn">
+            <i class="bi bi-file-earmark-excel"></i> Export to Excel
+          </button>
+          <button
+            class="btn btn-accent btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#trackingDateRangeModal"
+          >
+            <i class="bi bi-calendar-range"></i> Date Range
+          </button>
+        </div>
+      </div>
+
+      <!-- TOOL STRIP -->
+      <div
+        class="tool-strip p-3 border-bottom d-flex flex-wrap gap-2 align-items-center"
+      >
+        <div class="search-box flex-grow-1" style="min-width: 220px">
+          <i class="bi bi-search"></i>
+          <input
+            type="search"
+            id="searchInput"
+            placeholder="Search tracking, customer, route…"
+            class="form-control"
+          />
+        </div>
+
+        <!-- 1) TOOL STRIP — #filterStatus dropdown -->
+        <select
+          id="filterStatus"
+          class="form-select form-select-sm"
+          style="max-width: 200px"
+        >
+          <option value="">All Statuses</option>
+          <option value="Preparing">Preparing</option>
+          <option value="Picked">Picked</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Arrived">Arrived</option>
+          <option value="Delayed">Delayed</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+
+        <div class="pill-filters" id="statusPills"></div>
+
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <button class="btn btn-success btn-sm" id="bulkStatusBtn" disabled>
+            <i class="bi bi-pencil-square"></i> Update Selected Status
+          </button>
+          <span class="text-muted small" id="selectedCountLabel"></span>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-scroll">
+        <table class="track-table">
+          <thead>
+            <tr>
+              <th class="text-center">
+                <input type="checkbox" id="selectAllTracking" />
+              </th>
+              <th>Tracking No.</th>
+              <th>Customer</th>
+              <th>Route</th>
+              <th>Driver / Vehicle</th>
+              <th>Priority</th>
+              <th>Progress</th>
+              <th>ETA</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="trackTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION FOOTER -->
+      <div
+        class="d-flex justify-content-between align-items-center p-3 border-top flex-wrap gap-2"
+      >
+        <span class="text-muted small" id="paginationInfo"></span>
+        <ul class="pagination pagination-sm mb-0" id="trackingPagination"></ul>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ================================================================
+     MODAL — VIEW TRACKING
+     ================================================================ -->
+<div class="modal fade" id="viewTrackingModal" tabindex="-1">
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span
+            class="icon-badge"
+            style="background: var(--azure-bg); color: var(--azure-ink)"
+          >
+            <i class="bi bi-box-seam"></i>
+          </span>
+          <div>
+            Shipment Tracking Details
+            <small id="vt-sub"
+              >Tracking Number &middot;
+              <span class="mono" id="vt-trackno">—</span></small
+            >
+          </div>
+        </div>
         <button
           type="button"
           class="btn-close"
@@ -15,186 +147,87 @@
       </div>
 
       <div class="modal-body">
+        <div class="section-lbl">Tracking Information</div>
         <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label"> Filter Type </label>
-
-            <select class="form-select">
-              <option>Dispatch Date</option>
-              <option>Tracking Date</option>
-              <option>Delivery Date</option>
-              <option>Last Updated Date</option>
-            </select>
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">Status</div>
+              <div class="val" id="vt-status">—</div>
+            </div>
           </div>
-
-          <div class="col-12">
-            <label class="form-label">Quick Range</label>
-
-            <select class="form-select">
-              <option>Today</option>
-              <option>Yesterday</option>
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-              <option>This Month</option>
-              <option>Last Month</option>
-              <option>Custom Date Range</option>
-            </select>
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">Priority</div>
+              <div class="val" id="vt-priority">—</div>
+            </div>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label"> From Date </label>
-
-            <input type="date" class="form-control" />
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">ETA</div>
+              <div class="val" id="vt-eta">—</div>
+              <div class="sub" id="vt-eta-sub"></div>
+            </div>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label"> To Date </label>
-
-            <input type="date" class="form-control" />
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
-        <button class="btn btn-primary">
-          <i class="bi bi-search"></i>
-          Fetch Data
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trackingTimelineModal">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-clock-history"></i>
-          Shipment Timeline
-        </h5>
-
-        <button
-          class="btn-close btn-close-white"
-          data-bs-dismiss="modal"
-        ></button>
-      </div>
-
-      <div class="modal-body">
-        <ul class="list-group">
-          <li class="list-group-item">
-            <strong>08:00 AM</strong> - Shipment Dispatched
-          </li>
-
-          <li class="list-group-item">
-            <strong>09:15 AM</strong> - Left Warehouse
-          </li>
-
-          <li class="list-group-item">
-            <strong>10:45 AM</strong> - Arrived at Quezon City Checkpoint
-          </li>
-
-          <li class="list-group-item">
-            <strong>12:00 PM</strong> - Estimated Arrival
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="viewTrackingModal">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-geo-alt"></i>
-          Shipment Tracking Details
-        </h5>
-
-        <button
-          class="btn-close btn-close-white"
-          data-bs-dismiss="modal"
-        ></button>
-      </div>
-
-      <div class="modal-body">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label class="form-label">Tracking No.</label>
-            <input
-              type="text"
-              class="form-control"
-              value="TRK-26-06-0001"
-              readonly
-            />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Dispatch No.</label>
-            <input
-              type="text"
-              class="form-control"
-              value="DSP-26-06-0001"
-              readonly
-            />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Vehicle</label>
-            <input type="text" class="form-control" value="TRK-001" readonly />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Driver</label>
-            <input
-              type="text"
-              class="form-control"
-              value="Juan Dela Cruz"
-              readonly
-            />
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Current Location</label>
-            <input
-              type="text"
-              class="form-control"
-              value="Quezon City"
-              readonly
-            />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Status</label>
-            <input
-              type="text"
-              class="form-control"
-              value="In Transit"
-              readonly
-            />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">ETA</label>
-            <input
-              type="text"
-              class="form-control"
-              value="06/01/2026 12:00 PM"
-              readonly
-            />
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">Dispatch No.</div>
+              <div class="val mono" id="vt-dispatch">—</div>
+            </div>
           </div>
         </div>
 
-        <hr />
+        <div class="section-lbl">Driver &amp; Vehicle</div>
+        <div class="row g-3">
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">Driver</div>
+              <div class="val" id="vt-driver">—</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="info-card">
+              <div class="lbl">Vehicle</div>
+              <div class="val" id="vt-vehicle">—</div>
+              <div class="sub" id="vt-vehicle-sub"></div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="info-card">
+              <div class="lbl">Current Location</div>
+              <div class="val">
+                <i
+                  class="bi bi-geo-alt-fill"
+                  style="color: var(--rose); font-size: 13px"
+                ></i>
+                <span id="vt-location">—</span>
+              </div>
+              <div class="sub" id="vt-route"></div>
+            </div>
+          </div>
+        </div>
 
-        <h6 class="fw-bold">Shipment Orders</h6>
+        <div class="section-lbl">Shipment Progress</div>
+        <div class="progress-block">
+          <div class="top">
+            <span class="pct" id="vt-progress-pct">0%</span>
+            <span class="lbl" id="vt-progress-lbl">In Transit</span>
+          </div>
+          <div class="track">
+            <div
+              class="fill"
+              id="vt-progress-fill"
+              style="width: 0%; background: var(--amber)"
+            ></div>
+          </div>
+          <div class="stops">
+            <span>Origin</span><span>In Transit</span><span>Destination</span>
+          </div>
+        </div>
 
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead class="table-dark">
+        <div class="section-lbl">Shipment Orders</div>
+        <div class="table-scroll">
+          <table class="items-table">
+            <thead>
               <tr>
                 <th>Order ID</th>
                 <th>Client</th>
@@ -205,125 +238,442 @@
                 <th>Unit</th>
               </tr>
             </thead>
-
-            <tbody>
-              <tr>
-                <td>SO-26-01-001</td>
-                <td>ABC Trading</td>
-                <td>PRD-001</td>
-                <td>Industrial Lubricant</td>
-                <td>Main Branch</td>
-                <td>50</td>
-                <td>PCS</td>
-              </tr>
-            </tbody>
+            <tbody id="vt-items"></tbody>
           </table>
+        </div>
+
+        <div class="section-lbl">Delivery Milestones</div>
+        <div id="vt-milestones"></div>
+
+        <div class="section-lbl">Live Timeline</div>
+        <div class="v-timeline" id="vt-timeline"></div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+          Close
+        </button>
+        <div class="d-flex gap-2">
+          <!--
+            NEW: Mark as Delivered. Hidden by default; shown by the
+            front-end script only when the shipment is not already
+            Delivered/Cancelled and we have a valid tracking_row_id.
+          -->
+          <button
+            class="btn btn-success btn-sm"
+            id="markDeliveredBtn"
+            style="display: none"
+          >
+            <i class="bi bi-check2-circle"></i> Mark as Delivered
+          </button>
+          <button class="btn btn-accent btn-sm">
+            <i class="bi bi-share"></i> Share Tracking Link
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<main class="dashboard-content">
-  <div class="container-fluid px-3 px-lg-4 py-4">
-    <section class="panel">
-      <!-- Header -->
-      <div
-        class="panel-header d-flex flex-wrap justify-content-between align-items-center gap-2"
-      >
-        <div>
-          <h2 class="h5 mb-1 section-title">
-            <i class="bi bi-geo-alt"></i>
-            <span style="font-weight: 700; color: #000">
-              Shipment Tracking
-            </span>
-          </h2>
-
-          <p class="text-muted mb-0">
-            Monitor shipment movement and delivery status in real time.
-          </p>
+<!-- ================================================================
+     MODAL — SHIPMENT TIMELINE
+     ================================================================ -->
+<div class="modal fade" id="trackingTimelineModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span
+            class="icon-badge"
+            style="background: var(--emerald-bg); color: var(--emerald-ink)"
+          >
+            <i class="bi bi-clock-history"></i>
+          </span>
+          <div>
+            Shipment Timeline
+            <small id="tl-sub"
+              >Tracking Number &middot;
+              <span class="mono" id="tl-trackno">—</span></small
+            >
+          </div>
         </div>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div id="tl-milestones"></div>
+        <div class="v-timeline" id="tl-timeline"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm w-100" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-repeat"></i>
-            Sync
-          </button>
-
-          <button
-            class="btn btn-warning btn-sm"
-            data-bs-toggle="modal"
-            data-bs-target="#trackingDateRangeModal"
+<!-- ================================================================
+     MODAL — DATE RANGE FILTER
+     ================================================================ -->
+<div class="modal fade" id="trackingDateRangeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span
+            class="icon-badge"
+            style="background: var(--amber-bg); color: var(--amber-ink)"
           >
             <i class="bi bi-calendar-range"></i>
-            Date Range
-          </button>
+          </span>
+          <div>
+            Date Filter
+            <small>Narrow results by date and range</small>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="filter-block">
+          <div class="f-title">
+            <i class="bi bi-funnel-fill"></i> Filter Type
+          </div>
+          <select class="form-select" id="dateFilterType">
+            <option>Dispatch Date</option>
+            <option>Delivery Date</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <div class="f-title">
+            <i class="bi bi-lightning-fill"></i> Quick Range
+          </div>
+          <div class="qr-grid" id="quickRangeGrid">
+            <button type="button" class="qr-btn active" data-range="today">
+              Today
+            </button>
+            <button type="button" class="qr-btn" data-range="yesterday">
+              Yesterday
+            </button>
+            <button type="button" class="qr-btn" data-range="7d">
+              Last 7 Days
+            </button>
+            <button type="button" class="qr-btn" data-range="30d">
+              Last 30 Days
+            </button>
+            <button type="button" class="qr-btn" data-range="month">
+              This Month
+            </button>
+            <button type="button" class="qr-btn" data-range="lastmonth">
+              Last Month
+            </button>
+            <button type="button" class="qr-btn" data-range="custom">
+              Custom Range
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-block mb-0">
+          <div class="f-title">
+            <i class="bi bi-calendar3"></i> Custom Range
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">From</label>
+              <input type="date" class="form-control" id="dateFromInput" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">To</label>
+              <input type="date" class="form-control" id="dateToInput" />
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Search -->
-      <div class="px-3 pb-2">
-        <input
-          type="search"
-          class="form-control form-control-sm"
-          placeholder="Search shipment..."
-        />
+      <div class="modal-footer d-flex justify-content-between">
+        <button class="btn btn-ghost btn-sm" id="resetFilterBtn">Reset</button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+            Close
+          </button>
+          <button class="btn btn-accent btn-sm" id="applyDateFilterBtn">
+            <i class="bi bi-search"></i> Apply Filter
+          </button>
+        </div>
       </div>
-
-      <!-- Table -->
-      <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead class="table-dark text-white">
-            <tr>
-              <th>ID</th>
-              <th>Tracking No.</th>
-              <th>Dispatch No.</th>
-              <th>Client</th>
-              <th>Vehicle</th>
-              <th>Driver</th>
-              <th>Current Location</th>
-              <th>Status</th>
-              <th>Last Update</th>
-              <th>ETA</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>TRK-26-06-0001</td>
-              <td>DSP-26-06-0001</td>
-              <td>ABC Trading Corp</td>
-              <td>TRK-001</td>
-              <td>Juan Dela Cruz</td>
-              <td>Quezon City</td>
-              <td>
-                <span class="badge bg-primary">In Transit</span>
-              </td>
-              <td>06/01/2026 10:45 AM</td>
-              <td>06/01/2026 12:00 PM</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewTrackingModal"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-
-                <button
-                  class="btn btn-success btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#trackingTimelineModal"
-                >
-                  <i class="bi bi-clock-history"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    </div>
   </div>
-</main>
+</div>
+
+<!-- ================================================================
+     MODAL — EXPORT TO EXCEL (status selection)
+     ================================================================ -->
+<div class="modal fade" id="exportExcelModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label small text-muted mb-2"
+          >Include statuses:</label
+        >
+
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            value="__all__"
+            id="exStatusAll"
+            checked
+          />
+          <label class="form-check-label fw-bold" for="exStatusAll"
+            >All Statuses</label
+          >
+        </div>
+        <hr class="my-2" />
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Preparing"
+            id="exStatusPreparing"
+            checked
+          />
+          <label class="form-check-label" for="exStatusPreparing"
+            >Preparing</label
+          >
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Picked"
+            id="exStatusPicked"
+            checked
+          />
+          <label class="form-check-label" for="exStatusPicked">Picked</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="In Transit"
+            id="exStatusTransit"
+            checked
+          />
+          <label class="form-check-label" for="exStatusTransit"
+            >In Transit</label
+          >
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Arrived"
+            id="exStatusArrived"
+            checked
+          />
+          <label class="form-check-label" for="exStatusArrived">Arrived</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Delayed"
+            id="exStatusDelayed"
+            checked
+          />
+          <label class="form-check-label" for="exStatusDelayed">Delayed</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Delivered"
+            id="exStatusDelivered"
+            checked
+          />
+          <label class="form-check-label" for="exStatusDelivered"
+            >Delivered</label
+          >
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input export-status-item"
+            type="checkbox"
+            value="Cancelled"
+            id="exStatusCancelled"
+            checked
+          />
+          <label class="form-check-label" for="exStatusCancelled"
+            >Cancelled</label
+          >
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-primary btn-sm" id="confirmExportExcelBtn">
+          <i class="bi bi-file-earmark-excel"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL — BULK IMPORT PREVIEW
+     ================================================================ -->
+<div class="modal fade" id="bulkImportModal" tabindex="-1">
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-upload me-1"></i> Bulk Import Preview
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info small mb-3">
+          Expected columns:
+          <strong
+            >ticket_number, status, remarks, dispatch_date,
+            estimated_delivery</strong
+          >. Rows with a missing <code>ticket_number</code> will be skipped.
+        </div>
+        <div class="table-scroll">
+          <table class="table table-sm table-bordered">
+            <thead id="bulkImportPreviewHead"></thead>
+            <tbody id="bulkImportPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-success btn-sm" id="confirmBulkImportBtn">
+          <i class="bi bi-check-circle"></i> Import All
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL — BULK STATUS UPDATE (selected checkboxes)
+     ================================================================ -->
+<div class="modal fade" id="bulkStatusModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square me-1"></i> Update Selected Status
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small" id="bulkStatusSummary"></p>
+        <label class="form-label">New Status</label>
+        <select class="form-select" id="bulkNewStatus">
+          <option value="">Select Status</option>
+          <option value="Preparing">Preparing</option>
+          <option value="Picked">Picked</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Arrived">Arrived</option>
+          <option value="Delayed">Delayed</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <label class="form-label mt-2">Remarks (optional)</label>
+        <textarea
+          class="form-control"
+          id="bulkStatusRemarks"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-success btn-sm" id="saveBulkStatusBtn">
+          <i class="bi bi-check-circle"></i> Update
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL — MARK AS DELIVERED (proof of delivery)  [NEW]
+     ================================================================ -->
+<div class="modal fade" id="markDeliveredModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-check2-circle me-1"></i> Mark as Delivered
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">
+          Tracking No. <span class="mono" id="md-trackno">—</span>
+        </p>
+
+        <label class="form-label">Proof of Delivery Photo</label>
+        <input
+          type="file"
+          class="form-control"
+          id="deliveryProofFile"
+          accept="image/jpeg,image/png,image/webp"
+        />
+        <div id="deliveryProofPreview" class="mt-2"></div>
+
+        <label class="form-label mt-3">Remarks (optional)</label>
+        <textarea class="form-control" id="deliveryRemarks" rows="2"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-success btn-sm" id="confirmMarkDeliveredBtn">
+          <i class="bi bi-check-circle"></i> Confirm Delivery
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

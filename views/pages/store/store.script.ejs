@@ -1,0 +1,662 @@
+<script>
+  $(document).ready(function () {
+    // =========================
+    // STATE
+    // =========================
+    let state = {
+      page: 1,
+      limit: 4,
+      search: "",
+    };
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+    });
+
+    // =========================
+    // VALIDATION — mirrors server-side rules in routes/store.js
+    // so the user sees errors instantly, before the request round-trip.
+    // Server remains the source of truth; these are UX, not a security boundary.
+    // =========================
+    const RULES = {
+      store_name: {
+        min: 3,
+        max: 100,
+        regex: /^[a-zA-Z0-9À-ÿ.,'&()\- ]+$/,
+        label: "Store name",
+      },
+      store_code: {
+        min: 2,
+        max: 20,
+        regex: /^[A-Z0-9\-]+$/,
+        label: "Store code",
+      },
+      store_address: { min: 5, max: 255, regex: null, label: "Store address" },
+      contact_person: {
+        min: 2,
+        max: 100,
+        regex: /^[a-zA-ZÀ-ÿ.\- ]+$/,
+        label: "Contact person",
+      },
+      contact_number: { regex: /^09\d{9}$/, label: "Contact number" },
+    };
+
+    function validateField(field, rawValue) {
+      const rule = RULES[field];
+      const value = (rawValue || "").trim();
+
+      if (field === "contact_number") {
+        if (!value) return "Contact number is required.";
+        if (!rule.regex.test(value))
+          return "Must be 11 digits starting with 09 (e.g. 09123456789).";
+        return null;
+      }
+
+      if (!value) return `${rule.label} is required.`;
+      if (value.length < rule.min)
+        return `${rule.label} must be at least ${rule.min} characters.`;
+      if (value.length > rule.max)
+        return `${rule.label} must be under ${rule.max} characters.`;
+      if (rule.regex && !rule.regex.test(value))
+        return `${rule.label} contains invalid characters.`;
+      return null;
+    }
+
+    function clearErrors(prefix) {
+      Object.keys(RULES).forEach((field) => {
+        const inputId = prefix ? `${prefix}_${field}` : field;
+        $(`#${inputId}`).removeClass("is-invalid");
+        $(`#${inputId}_error`).text("");
+      });
+    }
+
+    // Validates every field in a form, paints errors inline, returns
+    // { valid, data } — data is only populated when every field passes.
+    function validateForm(prefix) {
+      clearErrors(prefix);
+      let valid = true;
+      const data = {};
+
+      Object.keys(RULES).forEach((field) => {
+        const inputId = prefix ? `${prefix}_${field}` : field;
+        let value = $(`#${inputId}`).val();
+
+        if (field === "store_code" && value) {
+          value = value.toUpperCase();
+          $(`#${inputId}`).val(value);
+        }
+
+        const error = validateField(field, value);
+        data[field] = (value || "").trim();
+
+        if (error) {
+          valid = false;
+          $(`#${inputId}`).addClass("is-invalid");
+          $(`#${inputId}_error`).text(error);
+        }
+      });
+
+      return { valid, data };
+    }
+
+    // Paints field-level errors returned by the server (e.g. duplicate
+    // store code, which can only be known after hitting the DB).
+    function applyServerErrors(prefix, errors) {
+      if (!errors) return;
+      Object.keys(errors).forEach((field) => {
+        const inputId = prefix ? `${prefix}_${field}` : field;
+        $(`#${inputId}`).addClass("is-invalid");
+        $(`#${inputId}_error`).text(errors[field]);
+      });
+    }
+
+    // Live-uppercase store code fields as the user types
+    $("#store_code, #edit_store_code").on("input", function () {
+      const cursor = this.selectionStart;
+      $(this).val($(this).val().toUpperCase());
+      this.setSelectionRange(cursor, cursor);
+    });
+
+    // Digits-only, 11-char cap on contact number fields
+    $("#contact_number, #edit_contact_number").on("input", function () {
+      $(this).val($(this).val().replace(/\D/g, "").slice(0, 11));
+    });
+
+    function escapeHtml(str) {
+      return $("<div>")
+        .text(str == null ? "" : str)
+        .html();
+    }
+
+    // =========================
+    // LOAD STORES (paginated + searchable)
+    // =========================
+    function loadStores() {
+      $.ajax({
+        url: "/store/get-stores",
+        method: "GET",
+        data: { page: state.page, limit: state.limit, search: state.search },
+        success: function (res) {
+          renderTable(res.data);
+          renderPagination(res.pagination);
+        },
+        error: function () {
+          Toast.fire({ icon: "error", title: "Failed to load stores." });
+        },
+      });
+    }
+
+    // Builds one blank, invisible row matching the live column count (7),
+    // used to pad the table so its height never shifts between 1 row and
+    // a full page of state.limit rows.
+    function fillerRow() {
+      return `
+        <tr>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+          <td class="filler-row">&nbsp;</td>
+        </tr>
+      `;
+    }
+
+    function renderTable(stores) {
+      const target = state.limit; // pad to the current page size
+      let rows = "";
+
+      if (!stores || stores.length === 0) {
+        rows += `
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+              No stores found
+            </td>
+          </tr>
+        `;
+        for (let i = 1; i < target; i++) {
+          rows += fillerRow();
+        }
+        $("#storeTableBody").html(rows);
+        return;
+      }
+
+      stores.forEach((s) => {
+        rows += `
+        <tr>
+          <td>${s.id}</td>
+          <td title="${escapeHtml(s.store_name)}">${escapeHtml(s.store_name)}</td>
+          <td>${escapeHtml(s.store_code)}</td>
+          <td title="${escapeHtml(s.store_address || "-")}">${escapeHtml(s.store_address || "-")}</td>
+          <td>${escapeHtml(s.contact_person || "-")}</td>
+          <td>${escapeHtml(s.contact_number || "-")}</td>
+          <td>
+            <button class="btn btn-warning btn-sm editStoreBtn" data-id="${s.id}">
+               <i class="bi bi-pencil"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      });
+
+      for (let i = stores.length; i < target; i++) {
+        rows += fillerRow();
+      }
+
+      $("#storeTableBody").html(rows);
+    }
+
+    function renderPagination(pagination) {
+      const { page, totalPages, total, limit } = pagination;
+
+      if (total === 0) {
+        $("#storePaginationInfo").text("No entries");
+        $("#storePagination").html("");
+        return;
+      }
+
+      const start = (page - 1) * limit + 1;
+      const end = Math.min(page * limit, total);
+      $("#storePaginationInfo").text(
+        `Showing ${start}-${end} of ${total} entries`,
+      );
+
+      let html = "";
+      html += `<li class="page-item ${page <= 1 ? "disabled" : ""}">
+                <button class="page-link" data-page="${page - 1}">Prev</button>
+              </li>`;
+
+      // Windowed page numbers so this stays usable even with many pages
+      const windowSize = 5;
+      let startPage = Math.max(1, page - Math.floor(windowSize / 2));
+      let endPage = Math.min(totalPages, startPage + windowSize - 1);
+      startPage = Math.max(1, endPage - windowSize + 1);
+
+      if (startPage > 1) {
+        html += `<li class="page-item"><button class="page-link" data-page="1">1</button></li>`;
+        if (startPage > 2)
+          html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      }
+
+      for (let p = startPage; p <= endPage; p++) {
+        html += `<li class="page-item ${p === page ? "active" : ""}">
+                  <button class="page-link" data-page="${p}">${p}</button>
+                </li>`;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1)
+          html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+        html += `<li class="page-item"><button class="page-link" data-page="${totalPages}">${totalPages}</button></li>`;
+      }
+
+      html += `<li class="page-item ${page >= totalPages ? "disabled" : ""}">
+                <button class="page-link" data-page="${page + 1}">Next</button>
+              </li>`;
+
+      $("#storePagination").html(html);
+    }
+
+    $(document).on("click", "#storePagination .page-link", function () {
+      const p = parseInt($(this).data("page"), 10);
+      if (!p || p < 1) return;
+      state.page = p;
+      loadStores();
+    });
+
+    $("#entriesPerPage").on("change", function () {
+      state.limit = parseInt($(this).val(), 10);
+      state.page = 1;
+      loadStores();
+    });
+
+    // Debounced search — waits for a pause in typing before hitting the server
+    let searchTimer = null;
+    $("#storeSearchInput").on("input", function () {
+      const val = $(this).val();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.search = val.trim();
+        state.page = 1;
+        loadStores();
+      }, 400);
+    });
+
+    loadStores();
+
+    // =========================
+    // ADD STORE
+    // =========================
+    $("#addStoreBtn").click(function (e) {
+      e.preventDefault();
+
+      const { valid, data } = validateForm(null);
+      if (!valid) return;
+
+      $.ajax({
+        url: "/store/add-store",
+        method: "POST",
+        data: data,
+        dataType: "json",
+
+        beforeSend: function () {
+          $("#addStoreBtn")
+            .prop("disabled", true)
+            .html(
+              '<span class="spinner-border spinner-border-sm"></span> Saving...',
+            );
+        },
+
+        success: function (res) {
+          $("#addStoreModal").modal("hide");
+          $("#addStoreModal").find("input, textarea").val("");
+          clearErrors(null);
+
+          state.page = 1;
+          loadStores();
+
+          Toast.fire({
+            icon: "success",
+            title: res.message || "Store created successfully.",
+          });
+        },
+
+        error: function (err) {
+          const res = err.responseJSON;
+          if (res && res.errors) {
+            applyServerErrors(null, res.errors);
+          }
+          Toast.fire({
+            icon: "error",
+            title: res?.message || "Something went wrong.",
+          });
+        },
+
+        complete: function () {
+          $("#addStoreBtn").prop("disabled", false).html("Save Store");
+        },
+      });
+    });
+
+    $("#addStoreModal").on("hidden.bs.modal", function () {
+      clearErrors(null);
+      $(this).find("input, textarea").val("");
+    });
+
+    // =========================
+    // OPEN EDIT MODAL
+    // =========================
+    $(document).on("click", ".editStoreBtn", function () {
+      const id = $(this).data("id");
+
+      $.ajax({
+        url: `/store/get-store/${id}`,
+        method: "GET",
+
+        success: function (store) {
+          clearErrors("edit");
+          $("#edit_store_id").val(store.id);
+          $("#edit_store_name").val(store.store_name);
+          $("#edit_store_code").val(store.store_code);
+          $("#edit_store_address").val(store.store_address);
+          $("#edit_contact_person").val(store.contact_person);
+          $("#edit_contact_number").val(store.contact_number);
+
+          $("#editStoreModal").modal("show");
+        },
+
+        error: function () {
+          Toast.fire({ icon: "error", title: "Failed to load store data" });
+        },
+      });
+    });
+
+    // =========================
+    // UPDATE STORE
+    // =========================
+    $("#updateStoreBtn").click(function () {
+      const id = $("#edit_store_id").val();
+
+      const { valid, data } = validateForm("edit");
+      if (!valid) return;
+
+      $.ajax({
+        url: `/store/update-store/${id}`,
+        method: "PUT",
+        data: data,
+        dataType: "json",
+
+        beforeSend: function () {
+          $("#updateStoreBtn").prop("disabled", true).text("Updating...");
+        },
+
+        success: function (res) {
+          $("#editStoreModal").modal("hide");
+          loadStores();
+          Toast.fire({
+            icon: "success",
+            title: res.message || "Store updated successfully",
+          });
+        },
+
+        error: function (err) {
+          const res = err.responseJSON;
+          if (res && res.errors) {
+            applyServerErrors("edit", res.errors);
+          }
+          Toast.fire({ icon: "error", title: res?.message || "Update failed" });
+        },
+
+        complete: function () {
+          $("#updateStoreBtn").prop("disabled", false).text("Update Store");
+        },
+      });
+    });
+
+    // =========================
+    // EXPORT TO EXCEL — server-generated, styled, all stores (not just this page)
+    // =========================
+    $("#exportStoreExcelBtn").click(function () {
+      window.location.href = "/store/export-excel";
+    });
+
+    // =========================
+    // BULK UPLOAD
+    // =========================
+    $("#bulkUploadSubmitBtn").click(function () {
+      const fileInput = $("#bulkUploadFile")[0];
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        Toast.fire({ icon: "warning", title: "Please select a file first." });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      $.ajax({
+        url: "/store/bulk-upload",
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+
+        beforeSend: function () {
+          $("#bulkUploadSubmitBtn")
+            .prop("disabled", true)
+            .html(
+              '<span class="spinner-border spinner-border-sm"></span> Uploading...',
+            );
+          $("#bulkUploadReport").addClass("d-none");
+        },
+
+        success: function (res) {
+          showBulkReport(res.report, res.message);
+          state.page = 1;
+          loadStores();
+        },
+
+        error: function (err) {
+          const res = err.responseJSON;
+          if (res && res.report) {
+            showBulkReport(res.report, res.message);
+          } else {
+            Toast.fire({
+              icon: "error",
+              title: res?.message || "Bulk upload failed.",
+            });
+          }
+        },
+
+        complete: function () {
+          $("#bulkUploadSubmitBtn").prop("disabled", false).text("Upload File");
+        },
+      });
+    });
+
+    function showBulkReport(report, message) {
+      $("#bulkUploadReport").removeClass("d-none");
+
+      const summaryColor = report.failed > 0 ? "text-warning" : "text-success";
+      $("#bulkUploadSummary")
+        .removeClass()
+        .addClass(`fw-bold mb-2 ${summaryColor}`)
+        .text(message || `${report.success} of ${report.total} imported.`);
+
+      if (report.errors && report.errors.length > 0) {
+        let list = "<ul class='ps-3 mb-0'>";
+        report.errors.forEach((e) => {
+          list += `<li>Row ${e.row}: ${escapeHtml(e.message)}</li>`;
+        });
+        list += "</ul>";
+        $("#bulkUploadErrors").html(list);
+      } else {
+        $("#bulkUploadErrors").html("");
+      }
+    }
+
+    $("#bulkUploadStoreModal").on("hidden.bs.modal", function () {
+      $("#bulkUploadFile").val("");
+      $("#bulkUploadReport").addClass("d-none");
+    });
+
+    // =========================
+    // PRINT STORES — pulls the FULL list from the server (not just the
+    // current page) so the printed report isn't limited by pagination.
+    // =========================
+    $("#printStoreBtn").click(function () {
+      $(this).prop("disabled", true);
+
+      $.ajax({
+        url: "/store/get-stores",
+        method: "GET",
+        data: { page: 1, limit: 100000, search: state.search },
+
+        success: function (res) {
+          renderPrintReport(res.data, res.pagination.total);
+        },
+
+        error: function () {
+          Toast.fire({ icon: "error", title: "Failed to prepare the report." });
+        },
+
+        complete: function () {
+          $("#printStoreBtn").prop("disabled", false);
+        },
+      });
+    });
+
+    function renderPrintReport(stores, total) {
+      let rows = "";
+      stores.forEach((s, i) => {
+        rows += `
+        <tr class="${i % 2 === 0 ? "even" : ""}">
+          <td>${s.id}</td>
+          <td>${escapeHtml(s.store_name)}</td>
+          <td>${escapeHtml(s.store_code)}</td>
+          <td>${escapeHtml(s.store_address || "-")}</td>
+          <td>${escapeHtml(s.contact_person || "-")}</td>
+          <td>${escapeHtml(s.contact_number || "-")}</td>
+        </tr>
+      `;
+      });
+
+      const printWindow = window.open("", "_blank", "width=1000,height=700");
+
+      printWindow.document.write(`
+      <html>
+      <head>
+        <title>Store List Report</title>
+        <style>
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 32px;
+            color: #1f2937;
+          }
+          .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 12px;
+            margin-bottom: 4px;
+          }
+          .report-header h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #1e3a8a;
+          }
+          .report-header .badge {
+            background: #2563eb;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+          }
+          .meta {
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 12px;
+            margin: 8px 0 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+          }
+          thead th {
+            background: #2563eb;
+            color: #fff;
+            text-align: left;
+            padding: 10px 8px;
+          }
+          tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          tbody tr.even {
+            background: #f3f4f6;
+          }
+          .report-footer {
+            margin-top: 24px;
+            text-align: right;
+            font-size: 11px;
+            color: #9ca3af;
+          }
+          @media print {
+            body { padding: 12px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="report-header">
+          <h1>Store List Report</h1>
+          <span class="badge">${total} Total Store${total === 1 ? "" : "s"}</span>
+        </div>
+        <div class="meta">
+          <span>Generated on ${new Date().toLocaleString()}</span>
+          ${state.search ? `<span>Filtered by: "${escapeHtml(state.search)}"</span>` : ""}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Store Name</th>
+              <th>Store Code</th>
+              <th>Store Address</th>
+              <th>Contact Person</th>
+              <th>Contact Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+        <div class="report-footer">LMS &mdash; Store Management</div>
+      </body>
+      </html>
+    `);
+
+      printWindow.document.close();
+
+      printWindow.onload = function () {
+        printWindow.focus();
+        setTimeout(function () {
+          printWindow.print();
+          printWindow.onafterprint = function () {
+            printWindow.close();
+          };
+        }, 400);
+      };
+    }
+  });
+</script>

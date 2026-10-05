@@ -1,0 +1,387 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <button class="btn btn-outline-secondary" id="prevBtn">
+            <i class="bi bi-arrow-left"></i>
+            Previous
+          </button>
+
+          <h4 class="mb-0" id="sectionTitle">Vendor Master Data</h4>
+
+          <div class="d-flex gap-2">
+            <button
+              class="btn btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#navigationModal"
+            >
+              <i class="bi bi-grid"></i>
+              Modules
+            </button>
+
+            <button class="btn btn-primary" id="nextBtn">
+              Next
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Modal -->
+    <div class="modal fade" id="navigationModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-grid"></i>
+              Vendor Management Modules
+            </h5>
+
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="0"
+                >
+                  <i class="bi bi-building text-primary"></i>
+                  Vendor Master Data
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="1"
+                >
+                  <i class="bi bi-diagram-3 text-success"></i>
+                  Product Supplier Mapping
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="2"
+                >
+                  <i class="bi bi-file-earmark-text text-warning"></i>
+                  Purchase Requests
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="3"
+                >
+                  <i class="bi bi-cart-check text-info"></i>
+                  Purchase Orders
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="4"
+                >
+                  <i class="bi bi-box-seam text-secondary"></i>
+                  Receiving & Goods Receipt
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="5"
+                >
+                  <i class="bi bi-bar-chart text-danger"></i>
+                  Supplier Performance
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="6"
+                >
+                  <i class="bi bi-cash-stack text-success"></i>
+                  Vendor Price History
+                </button>
+              </div>
+
+              <div class="col-md-6">
+                <button
+                  class="btn btn-light border w-100 py-3 nav-module"
+                  data-page="7"
+                >
+                  <i class="bi bi-arrow-return-left text-dark"></i>
+                  Returns to Supplier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 1 ================= -->
+    <div class="wizard-page" id="page1">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <div>
+            <h5><i class="bi bi-building"></i> Vendor Master Data</h5>
+          </div>
+
+          <button class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            Add Vendor
+          </button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>Vendor Code</th>
+                <th>Company Name</th>
+                <th>Contact Person</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th width="150">Action</th>
+              </tr>
+            </thead>
+
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 2 ================= -->
+    <div class="wizard-page d-none" id="page2">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-diagram-3"></i>
+            Product Supplier Mapping
+          </h5>
+
+          <button class="btn btn-primary">Add Mapping</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Preferred Supplier</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 3 ================= -->
+    <div class="wizard-page d-none" id="page3">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-file-earmark-text"></i>
+            Purchase Requests
+          </h5>
+
+          <button class="btn btn-primary">Create PR</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>PR No.</th>
+                <th>Requested By</th>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 4 ================= -->
+    <div class="wizard-page d-none" id="page4">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-cart-check"></i>
+            Purchase Orders
+          </h5>
+
+          <button class="btn btn-primary">Create PO</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Vendor</th>
+                <th>Order Date</th>
+                <th>Expected Delivery Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 5 ================= -->
+    <div class="wizard-page d-none" id="page5">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-box-seam"></i>
+            Receiving and Goods Receipt
+          </h5>
+
+          <button class="btn btn-primary">Receive Items</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Receiving No.</th>
+                <th>PO Number</th>
+                <th>Vendor</th>
+                <th>Ordered Qty</th>
+                <th>Received Qty</th>
+                <th>Damaged Qty</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 6 ================= -->
+    <div class="wizard-page d-none" id="page6">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-bar-chart"></i>
+            Supplier Performance Monitoring
+          </h5>
+
+          <button class="btn btn-primary">Add Record</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Supplier</th>
+                <th>Orders</th>
+                <th>On-Time %</th>
+                <th>Late Deliveries</th>
+                <th>Rejected Items</th>
+                <th>Average Lead Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 7 ================= -->
+    <div class="wizard-page d-none" id="page7">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-cash-stack"></i>
+            Vendor Price History
+          </h5>
+
+          <button class="btn btn-primary">Add Price History</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Vendor</th>
+                <th>Price</th>
+                <th>Effective Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP 8 ================= -->
+    <div class="wizard-page d-none" id="page8">
+      <div class="panel">
+        <div
+          class="panel-header d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <h5>
+            <i class="bi bi-arrow-return-left"></i>
+            Returns to Supplier
+          </h5>
+
+          <button class="btn btn-primary">Create Return</button>
+        </div>
+
+        <div class="table-responsive p-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Return Number</th>
+                <th>Vendor</th>
+                <th>Product</th>
+                <th>Quantity Returned</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

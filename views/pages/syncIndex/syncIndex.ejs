@@ -1,0 +1,545 @@
+<main class="dashboard-content">
+  <div class="container-fluid px-3 px-lg-4 py-4">
+    <section class="panel">
+      <!-- ========================================= -->
+      <!-- PAGE HEADER -->
+      <!-- ========================================= -->
+
+      <div
+        class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-4 border-bottom"
+      >
+        <div>
+          <h2 class="h4 mb-1">
+            <i class="bi bi-box-seam"></i>
+
+            Stock Synchronization
+          </h2>
+
+          <p class="text-muted mb-0">
+            Synchronize warehouse assets from external inventory API.
+          </p>
+        </div>
+
+        <button class="btn btn-success" id="syncSelectedStocks">
+          <i class="bi bi-cloud-upload"></i>
+
+          Synchronize Selected
+        </button>
+      </div>
+
+      <!-- ========================================= -->
+      <!-- PANEL BODY -->
+      <!-- ========================================= -->
+
+      <div class="panel-body p-4">
+        <!-- API CONNECTION -->
+
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <i class="bi bi-link-45deg"></i>
+
+            API Connection
+          </div>
+
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-lg-9">
+                <label class="form-label"> Endpoint URL </label>
+
+                <input class="form-control" id="endpointURL" readonly />
+              </div>
+
+              <div class="col-lg-3 d-grid">
+                <label class="form-label">&nbsp;</label>
+
+                <button class="btn btn-dark" type="button" id="fetchToken">
+                  <i class="bi bi-arrow-repeat"></i>
+
+                  Fetch Token
+                </button>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label"> Access Token </label>
+
+                <textarea
+                  class="form-control"
+                  id="generatedToken"
+                  rows="3"
+                  readonly
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STOCK STATUS -->
+
+        <div class="card shadow-sm">
+          <div class="card-header p-0">
+            <ul
+              class="nav nav-tabs card-header-tabs px-3 pt-2"
+              id="stockStatusTabs"
+            >
+              <li class="nav-item">
+                <button
+                  class="nav-link active"
+                  data-bs-toggle="tab"
+                  data-bs-target="#warehouseTab"
+                >
+                  <i class="bi bi-house-door"></i>
+
+                  Warehouse
+
+                  <span class="badge bg-primary ms-1" id="warehouseCount">
+                    0
+                  </span>
+                </button>
+              </li>
+
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#deployedTab"
+                >
+                  <i class="bi bi-pc-display"></i>
+
+                  Deployed
+
+                  <span class="badge bg-primary ms-1" id="deployedCount">
+                    0
+                  </span>
+                </button>
+              </li>
+
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#transitTab"
+                >
+                  <i class="bi bi-truck"></i>
+
+                  In-Transit
+
+                  <span class="badge bg-primary ms-1" id="transitCount">
+                    0
+                  </span>
+                </button>
+              </li>
+
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#holdTab"
+                >
+                  <i class="bi bi-pause-circle"></i>
+
+                  On-Hold
+
+                  <span class="badge bg-primary ms-1" id="holdCount"> 0 </span>
+                </button>
+              </li>
+
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#defectiveTab"
+                >
+                  <i class="bi bi-tools"></i>
+
+                  Defective
+
+                  <span class="badge bg-primary ms-1" id="defectiveCount">
+                    0
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-body">
+            <div class="tab-content">
+              <!-- =================================== -->
+              <!-- WAREHOUSE -->
+              <!-- =================================== -->
+
+              <div class="tab-pane fade show active" id="warehouseTab">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover align-middle">
+                    <div class="row mb-3">
+                      <div class="col-lg-3">
+                        <button
+                          class="btn btn-primary w-100"
+                          id="fetchWarehouse"
+                        >
+                          <i class="bi bi-download"></i>
+
+                          Fetch Warehouse
+                        </button>
+                      </div>
+
+                      <div class="col-lg-6">
+                        <input
+                          class="form-control"
+                          id="searchWarehouse"
+                          placeholder="Search asset tag, serial number..."
+                        />
+                      </div>
+
+                      <div class="col-lg-3 text-end">
+                        <strong>
+                          Selected :
+
+                          <span id="warehouseSelected"> 0 </span>
+                        </strong>
+                      </div>
+                    </div>
+                    <thead>
+                      <tr>
+                        <th width="45">
+                          <input type="checkbox" id="warehouseAll" />
+                        </th>
+
+                        <th>ID</th>
+
+                        <th>INVENTORY NAME</th>
+
+                        <th>Inventory</th>
+
+                        <th>ASSET TAG</th>
+
+                        <th>SERIAL NUMBER</th>
+
+                        <th>BRANCH NAME</th>
+
+                        <th>UNIT</th>
+
+                        <th width="90">STATUS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="warehouseTable">
+                      <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                          <i class="bi bi-cloud-download fs-1"></i>
+
+                          <br /><br />
+
+                          Click
+
+                          <strong> Fetch Warehouse </strong>
+
+                          to retrieve records.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- DEPLOYED -->
+
+              <div class="tab-pane fade" id="deployedTab">
+                <div class="table-responsive">
+                  <div class="row mb-3">
+                    <div class="col-lg-3">
+                      <button class="btn btn-primary w-100" id="fetchDeployed">
+                        <i class="bi bi-download"></i>
+                        Fetch Deployed
+                      </button>
+                    </div>
+
+                    <div class="col-lg-6">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="searchDeployed"
+                        placeholder="Search deployed asset..."
+                      />
+                    </div>
+
+                    <div
+                      class="col-lg-3 text-end d-flex align-items-center justify-content-end"
+                    >
+                      <strong>
+                        Selected :
+                        <span id="deployedSelected">0</span>
+                      </strong>
+                    </div>
+                  </div>
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-success">
+                      <tr>
+                        <th width="45">
+                          <input type="checkbox" id="warehouseAll" />
+                        </th>
+
+                        <th>ID</th>
+
+                        <th>INVENTORY NAME</th>
+
+                        <th>Inventory</th>
+
+                        <th>ASSET TAG</th>
+
+                        <th>SERIAL NUMBER</th>
+
+                        <th>BRANCH NAME</th>
+
+                        <th>UNIT</th>
+
+                        <th width="90">STATUS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="deployedTable">
+                      <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                          <i class="bi bi-pc-display fs-1"></i>
+
+                          <br /><br />
+
+                          Click
+
+                          <strong>Fetch Deployed</strong>
+
+                          to retrieve deployed assets.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TRANSIT -->
+
+              <div class="tab-pane fade" id="transitTab">
+                <div class="table-responsive">
+                  <div class="row mb-3">
+                    <div class="col-lg-3">
+                      <button class="btn btn-primary w-100" id="fetchInTransit">
+                        <i class="bi bi-download"></i>
+                        Fetch In-Transit
+                      </button>
+                    </div>
+
+                    <div class="col-lg-6">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="searchInTransit"
+                        placeholder="Search in-transit asset..."
+                      />
+                    </div>
+
+                    <div
+                      class="col-lg-3 text-end d-flex align-items-center justify-content-end"
+                    >
+                      <strong>
+                        Selected :
+                        <span id="inTransitSelected">0</span>
+                      </strong>
+                    </div>
+                  </div>
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-info">
+                      <tr>
+                        <th width="45">
+                          <input type="checkbox" id="warehouseAll" />
+                        </th>
+
+                        <th>ID</th>
+
+                        <th>INVENTORY NAME</th>
+
+                        <th>Inventory</th>
+
+                        <th>ASSET TAG</th>
+
+                        <th>SERIAL NUMBER</th>
+
+                        <th>BRANCH NAME</th>
+
+                        <th>UNIT</th>
+
+                        <th width="90">STATUS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="transitTable">
+                      <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                          <i class="bi bi-truck fs-1"></i>
+
+                          <br /><br />
+
+                          Click
+
+                          <strong>Fetch In-Transit</strong>
+
+                          to retrieve shipment records.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- HOLD -->
+
+              <div class="tab-pane fade" id="holdTab">
+                <div class="table-responsive">
+                  <div class="row mb-3">
+                    <div class="col-lg-3">
+                      <button class="btn btn-primary w-100" id="fetchOnHold">
+                        <i class="bi bi-download"></i>
+                        Fetch On-Hold
+                      </button>
+                    </div>
+
+                    <div class="col-lg-6">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="searchOnHold"
+                        placeholder="Search on-hold asset..."
+                      />
+                    </div>
+
+                    <div
+                      class="col-lg-3 text-end d-flex align-items-center justify-content-end"
+                    >
+                      <strong>
+                        Selected :
+                        <span id="onHoldSelected">0</span>
+                      </strong>
+                    </div>
+                  </div>
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-warning">
+                      <tr>
+                        <th width="45">
+                          <input type="checkbox" id="warehouseAll" />
+                        </th>
+
+                        <th>ID</th>
+
+                        <th>INVENTORY NAME</th>
+
+                        <th>Inventory</th>
+
+                        <th>ASSET TAG</th>
+
+                        <th>SERIAL NUMBER</th>
+
+                        <th>BRANCH NAME</th>
+
+                        <th>UNIT</th>
+
+                        <th width="90">STATUS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="holdTable">
+                      <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                          <i class="bi bi-pause-circle fs-1"></i>
+
+                          <br /><br />
+
+                          Click
+
+                          <strong>Fetch On-Hold</strong>
+
+                          to retrieve held assets.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- DEFECTIVE -->
+
+              <div class="tab-pane fade" id="defectiveTab">
+                <div class="table-responsive">
+                  <div class="row mb-3">
+                    <div class="col-lg-3">
+                      <button class="btn btn-primary w-100" id="fetchDefective">
+                        <i class="bi bi-download"></i>
+                        Fetch Defective
+                      </button>
+                    </div>
+
+                    <div class="col-lg-6">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="searchDefective"
+                        placeholder="Search defective asset..."
+                      />
+                    </div>
+
+                    <div
+                      class="col-lg-3 text-end d-flex align-items-center justify-content-end"
+                    >
+                      <strong>
+                        Selected :
+                        <span id="defectiveSelected">0</span>
+                      </strong>
+                    </div>
+                  </div>
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-danger">
+                      <tr>
+                        <th width="45">
+                          <input type="checkbox" id="warehouseAll" />
+                        </th>
+
+                        <th>ID</th>
+
+                        <th>INVENTORY NAME</th>
+
+                        <th>Inventory</th>
+
+                        <th>ASSET TAG</th>
+
+                        <th>SERIAL NUMBER</th>
+
+                        <th>BRANCH NAME</th>
+
+                        <th>UNIT</th>
+
+                        <th width="90">STATUS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="defectiveTable">
+                      <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                          <i class="bi bi-tools fs-1"></i>
+
+                          <br /><br />
+
+                          Click
+
+                          <strong>Fetch Defective</strong>
+
+                          to retrieve defective assets.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>

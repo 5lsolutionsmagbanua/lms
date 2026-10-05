@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        background: #1b1b1b;
+        color: #fff;
+        font-family: system-ui, sans-serif;
+      }
+      .topbar a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      #swagger-ui {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <a href="/">&larr; Back to app</a>
+      <span>LMS API Documentation</span>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: "/api-docs.json",
+          dom_id: "#swagger-ui",
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIBundle.SwaggerUIStandalonePreset,
+          ],
+          layout: "BaseLayout",
+          deepLinking: true,
+        });
+      };
+    </script>
+  </body>
+</html>
